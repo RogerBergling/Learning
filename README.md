@@ -1,8 +1,8 @@
 # OneGate Learning Lab
 
-An interactive, offline study aid for **OpenID Connect, OAuth 2.0, SAML, federation, BFF and attribute providers** — built around how OneGate behaves as a reverse proxy, OpenID Provider, Relying Party, Backend-for-Frontend and token handler.
+An interactive, offline study aid for **OpenID Connect, OAuth 2.0, SAML, federation, BFF and attribute sources** — built around how OneGate behaves as a reverse proxy, OpenID Provider, Relying Party, Backend-for-Frontend and token handler.
 
-Sixteen animated scenarios. A live token vault. Eleven written chapters. No build step, no dependencies, no network calls.
+Seventeen animated scenarios. A live token vault. Twelve written chapters. No build step, no dependencies, no network calls.
 
 ```
 Browser → OneGate (proxy · OP · RP · BFF · token handler) → frontend · API · partner IdP
@@ -63,8 +63,8 @@ The Python launcher is the primary path; both serve exactly the same static file
 | Page | What it does |
 |---|---|
 | **Overview** (`#/`) | The topology, the five roles, where tokens may live, the learning path |
-| **Learn** (`#/learn`) | Eleven chapters, rendered from Markdown with a table of contents |
-| **Simulations** (`#/scenarios`) | Filter/search all 16 flows by category, level or keyword |
+| **Learn** (`#/learn`) | Twelve chapters, rendered from Markdown with a table of contents |
+| **Simulations** (`#/scenarios`) | Filter/search all 17 flows by category, level or keyword |
 | **Simulator** (`#/sim/{id}`) | Animated stage, live token vault, HTTP wire view, config, pitfalls |
 | **Compare** (`#/compare`) | JWT vs opaque, the storage matrix, a decision helper |
 | **Glossary** (`#/glossary`) | Every acronym in plain language |
@@ -84,41 +84,47 @@ Keyboard: `Space` play/pause, `←` `→` step, `R` restart. Click any vault chi
 
 ## The scenarios
 
+### Setup walkthrough
+
+| # | Scenario | Level | Steps | Teaches |
+|---|---|---|---|---|
+| 1 | Control Center setup | Core | 15 | Virtual Host Selector, Local Provider, Remote Client, RP, BFF, Web Resource + ACL, attribute source, Activate Changes |
+
 ### Foundations
 
 | # | Scenario | Level | Steps | Teaches |
 |---|---|---|---|---|
-| 1 | [Client credentials](public/docs/09-scenario-catalog.md) | Core | 8 | A service authenticates with client ID + secret; no user, no refresh token |
-| 2 | [JWT vs opaque](public/docs/07-tokens-and-lifecycle.md) | Core | 7–8 | Local validation vs introspection; revocation, latency, disclosure |
+| 2 | [Client credentials](public/docs/09-scenario-catalog.md) | Core | 8 | A service authenticates with client ID + secret; no user, no refresh token. The manual does not document this grant |
+| 3 | [JWT vs opaque](public/docs/07-tokens-and-lifecycle.md) | Core | 7–8 | Local validation vs introspection; revocation, latency, disclosure. The manual mentions introspection only as claim context; no endpoint is documented |
 
 ### Browser apps
 
 | # | Scenario | Level | Steps | Teaches |
 |---|---|---|---|---|
-| 3 | Public SPA — Authorization Code + PKCE | Core | 13 | A public client logs in safely; the token still reaches JavaScript |
-| 4 | Confidential web app | Core | 17 | Server-side code flow; browser gets only a session cookie |
-| 5 | BFF login | Core | 19 | OneGate as OP **and** RP; cookie + CSRF; tokens stay server-side |
-| 6 | Legacy app behind the proxy | Core | 14 | SSO without changing the app; trusted identity headers |
+| 4 | Public SPA — Authorization Code + PKCE | Core | 13 | A public client logs in safely; the token still reaches JavaScript |
+| 5 | Confidential web app | Core | 17 | Server-side code flow; browser gets only a session cookie |
+| 6 | BFF login | Core | 19 | OneGate as OP **and** RP; cookie + CSRF; tokens stay server-side |
+| 7 | Legacy app behind the proxy | Core | 14 | Web Resource + normal auth + ACL; configured `X-USERID`; no app changes |
 
 ### Tokens, sessions and delegation
 
 | # | Scenario | Level | Steps | Teaches |
 |---|---|---|---|---|
-| 7 | Refresh token rotation | Advanced | 10 | Rotate on use; reuse detection; revoke the family |
-| 8 | Multi-audience | Advanced | 12 | One login, one token per API; `aud` and resource indicators |
-| 9 | Logout | Core | 10 | Local session, OP session, partner session, revocation |
-| 10 | BFF with a partner IdP | Advanced | 17 | The same BFF, federated; local user mapping; reject vs JIT |
-| 11 | BFF exchange | Advanced | 13 | Delegation with `sub` + `act`; never trust `requested_subject` |
+| 8 | Refresh token rotation | Advanced | 10 | Rotate on use; reuse detection; invalidate the set |
+| 9 | Multi-audience | Advanced | 12 | One login, one token per API; `aud` and resource indicators |
+| 10 | Logout | Core | 10 | Local session, OP session, partner session, revocation caveats |
+| 11 | BFF with a partner IdP | Advanced | 17 | The same BFF, federated; local user mapping; reject vs JIT |
+| 12 | BFF exchange | Advanced | 13 | Delegation with `sub` + `act`; never trust `requested_subject` |
 
 ### Federation, SAML and attributes
 
 | # | Scenario | Level | Steps | Teaches |
 |---|---|---|---|---|
-| 12 | Federation in — OneGate as RP | Advanced | 16 | Validate a partner ID token, map the user, enrich, create a local session |
-| 13 | Federation in — OneGate as SAML SP | Advanced | 11 | Validate an inbound assertion; link the identity |
-| 14 | Federation out — OneGate as SAML IdP | Advanced | 11 | Issue a signed assertion to a partner SP |
-| 15 | Attribute provider (REST/JVAP) | Core | 14 | Lookup at issuance, caching, claims mapping |
-| 16 | Delegated attributes | Advanced | 14 | The actor parameter; cache keyed by subject + actor |
+| 13 | Federation in — OneGate as RP | Advanced | 16 | Validate a partner ID token, map the user, enrich, create a local session |
+| 14 | Federation in — OneGate as SAML SP | Advanced | 11 | Validate an inbound assertion; link the identity |
+| 15 | Federation out — OneGate as SAML IdP | Advanced | 11 | Issue a signed assertion to a partner SP |
+| 16 | Attribute source (REST) | Core | 14 | Lookup at issuance, `realm`/`subject`/`requested_attributes`, caching, claims mapping |
+| 17 | Delegated attributes | Advanced | 14 | The `actor` object; cache keyed by subject + actor |
 
 Every scenario is reachable from the Simulations page and from the written chapters. The catalog with “start here if…” guidance is in [chapter 9](public/docs/09-scenario-catalog.md).
 
@@ -184,11 +190,12 @@ All in [`public/docs/`](public/docs/), rendered by the site and readable on GitH
 | 3 | [Configuring the OpenID Provider](public/docs/03-onegate-local-provider.md) | Local Providers, Realm Settings, Remote Clients, keys, a worked registration |
 | 4 | [Federation: RP, SAML IdP, SAML SP](public/docs/04-federation-rp-saml.md) | Inbound OIDC, user mapping, assertions, NameID, validation |
 | 5 | [Backend for Frontend](public/docs/05-bff.md) | Cookie/CSRF model, self-OP/RP, exchange, logout, the debug trap |
-| 6 | [Attribute providers & JVAP](public/docs/06-attribute-providers.md) | Subject/actor/ext, signed requests, JsonPath, caching, delegation |
+| 6 | [Attribute sources & the User Attribute API](public/docs/06-attribute-providers.md) | LDAP/REST/Graph, subject/actor/ext, access tokens, JsonPath, caching, delegation |
 | 7 | [Tokens, storage and lifetimes](public/docs/07-tokens-and-lifecycle.md) | JWT vs opaque, storage, rotation, revocation, logging |
 | 8 | [Server-to-server](public/docs/08-server-to-server.md) | Client credentials, secret rotation, audience design, exchange |
 | 9 | [Scenario catalog](public/docs/09-scenario-catalog.md) | Every simulation, how to read the stage, suggested routes |
 | 10 | [Troubleshooting](public/docs/10-troubleshooting.md) | Error codes, cookies, CORS, clocks, JWKS, SAML, a triage checklist |
+| 11 | [The Control Center, end to end](public/docs/11-control-center.md) | Virtual Host Selector, Monitoring, Administration, Server/Auth/Federation, Activate Changes, manual caveats |
 | — | [Glossary](public/docs/glossary.md) | Every acronym in the lab |
 
 The Markdown is the single source of truth: the site fetches and renders the same files you read on GitHub.
@@ -210,9 +217,9 @@ OIDC-OAUTH-BFF/
 │   │       ├── tokens.js         Simulated JWTs, stores, token kinds
 │   │       ├── ui.js             Icons, toast, helpers
 │   │       ├── pages/            Home, learn, list, simulator, compare, selftest
-│   │       ├── scenarios/        Sixteen scenario definitions + helpers
+│   │       ├── scenarios/        Seventeen scenario definitions + helpers
 │   │       └── sim/              Layout geometry + the animation player
-│   └── docs/                     Eleven Markdown chapters
+│   └── docs/                     Twelve Markdown chapters
 ├── start.py                     Python stdlib server (primary launcher)
 ├── start.sh                     Linux/macOS launcher
 ├── start.bat                    Windows launcher
@@ -251,8 +258,11 @@ If a chapter 404s, make sure you are serving `public/` (the launcher does) rathe
 ## Notes and disclaimers
 
 - **Everything is simulated.** Tokens are structurally valid JWTs with fake signatures. No request leaves your browser.
-- **Endpoint paths are illustrative.** Examples use `/mg-local/portal/...`, `/bff/login`, `/bff/callback`, `ONEGATE_BFF` and `X-CSRFTOKEN`. Real OneGate deployments generate their own paths, cookie names and menu labels; confirm them in your environment.
-- Menu names follow the federation feature set (Local Providers, Realm Settings, Remote Clients, RP Authentication, Remote Providers, BFF, SAML IdP/SP, REST/JVAP attribute sources) and can differ slightly between versions.
+- **Endpoint paths are illustrative.** Examples use `/mg-local/portal/...`, `/bff/login`, `/rp/callback`, `ONEGATE_BFF` and `X-CSRFTOKEN`. The Administration Manual names only `/mg-local/(realm)/bff/logout` and `/mg-local/(realm)/bff/accessToken`; the rest are examples. Real deployments generate their own paths, cookie names and menu labels; confirm them in your environment.
+- **Menu names follow the OneGate Administration Manual.** The core objects are Local Providers, Realm Settings, Remote Clients, Remote Providers, RP Authentication, Backend For Frontend, Attribute Sources, Remote/Local Service Providers, Remote IDPs, Attribute Profiles, Access Control Lists (ACL), the Virtual Host Selector and Activate Changes. Labels can differ slightly between versions.
+- **The manual is authoritative; generic OIDC is background.** The manual does not document the client-credentials grant, a token introspection endpoint, token revocation, OIDC back-channel logout, a public-client `none` auth method, a consent screen/policy, or a “PKCE required” switch. Where the lab uses one of these, it is labelled as generic OAuth/OIDC and marked “verify in your deployment”.
+- **Earlier versions of this lab used “JVAP”.** That term does not appear in the manual. The feature is **Attribute Sources**; a REST source calls the **User Attribute API** contract. The lab now uses the manual’s terminology.
+- **Checked against the vendor manual.** This edition was reviewed against the **OneGate Administration Manual**; the PDF is kept locally for reference and is not redistributed in the repository.
 - The lab is an unofficial study aid, not affiliated with the vendor. It is not a substitute for the product documentation or a security review.
 - No analytics, no external fonts, no CDN, no cookies.
 

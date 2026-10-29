@@ -2,16 +2,16 @@ import { add, del, ITEM, CFG, cfg } from './helpers.js';
 
 export const attrRest = {
   id: 'attr-rest',
-  title: 'Attribute provider — enriching a token with JVAP / REST data',
+  title: 'Attribute source — enriching a token with REST data',
   category: 'attributes',
   level: 'core',
   minutes: 10,
   summary:
-    'The user store knows who someone is; the attribute service knows what they may do. During token issuance OneGate calls the REST / JVAP attribute API, caches the answer, and maps it into claims through the attribute profile.',
+    'The user store knows who someone is; the attribute source knows what they may do. During token issuance OneGate calls the configured REST attribute source, caches the answer, and maps it into claims through the attribute profile.',
   nodes: ['user', 'onegate', 'frontend', 'backend', 'attr'],
   nodeLabels: {
     frontend: { name: 'Web app server', sub: 'confidential client' },
-    attr: { name: 'Attribute service', sub: 'User Attribute API (REST / JVAP)' },
+    attr: { name: 'Attribute service', sub: 'REST Attribute Source' },
   },
   steps: [
     {
@@ -41,12 +41,12 @@ export const attrRest = {
     {
       from: 'og.attr', to: 'attr', badge: 'POST /attributes',
       detail:
-        'The REST call carries exactly the context the API needs: `realm` (which user population), `subject` (`PARM{mguid}`), the `requested_attributes` list, optional `ext`, and — if configured — an `actor` block for delegated lookups.\n\nWhen **Include Access Token** is enabled, the call is signed with a JWT so the attribute service can verify that the request really comes from OneGate.',
+        'The REST call carries exactly the context the API needs: `realm` (which user population), `subject` (`PARM{mguid}`), the `requested_attributes` list, optional `ext`, and — if configured — an `actor` block (`{ "subject": "..." }`) for delegated lookups.\n\nWhen **Include Access Token** is enabled, the call carries a JWT access token (`iss`, `aud`, `sub`) so the attribute service can verify that the request really comes from OneGate.',
       channel: 'attr',
       http: {
         req: `POST /attribute-api/v1/users HTTP/1.1
 Host: attributes.internal
-Authorization: Bearer <signed attribute-request JWT>
+Authorization: Bearer <access token from Include Access Token>
 Content-Type: application/json
 
 {
@@ -66,7 +66,7 @@ Content-Type: application/json
   }
 }`,
       },
-      tags: ['realm', 'subject', 'requested_attributes', 'signed request'],
+      tags: ['realm', 'subject', 'requested_attributes', 'Include Access Token'],
     },
     {
       from: 'attr', to: 'og.attr', badge: 'JSON attributes', channel: 'attr',
@@ -77,7 +77,7 @@ Content-Type: application/json
     {
       from: 'og.attr', to: 'og.attr', badge: 'JsonPath + cache',
       detail:
-        'If the JSON is nested, **JsonPath** extracts what you need and gives it a friendly name — e.g. `$.customers[?(@.active==true)].cust_no` becomes `PARM{attr-0.activeCustomers}`.\n\nThe whole result is cached in the local session for **Valid time** (seconds). Too short and you hammer the attribute service on every request; too long and a revoked role keeps working.',
+        'If the JSON is nested, **JsonPath** extracts what you need. Give the attribute a distinct **Attribute Name** — that name is what you reference, e.g. `$.customers[?(@.active==true)].cust_no` becomes `PARM{attr-0.activeCustomers}`. **Friendly Name** is only a GUI label.\n\nThe whole result is cached in the local session for **Valid time** (seconds). Too short and you hammer the attribute service on every request; too long and a revoked role keeps working.',
       channel: 'internal',
       vault: [add('onegate', ITEM.claims({ id: 'attr', name: 'Attribute cache', meta: 'department · roles · costCentre (TTL 300 s)' }))],
       tags: ['JsonPath', 'TTL'],
@@ -146,15 +146,15 @@ Content-Type: application/json
     CFG.attributeSource('attr-0'),
     cfg('Attribute source → Attributes', [
       'Add `department`, `roles`, `costCentre` by remote name.',
-      'For complex JSON, add a JsonPath attribute with a friendly name and reference it as `PARM{attr-0.<name>}`.',
+      'For complex JSON, add a JsonPath attribute with a distinct **Attribute Name** and reference it as `PARM{attr-0.<name>}`. **Friendly Name** is GUI-only.',
       '**Valid time** = cache TTL in the local session. Start around 300 s and tune.',
     ]),
-    cfg('Local Provider → Realm Settings → Default Attribute Profile', [
+    cfg('Federation → OpenID Connect → Local Providers → Realm Settings → Default Attribute Profile', [
       'Map the new parameters into claims: `department: PARM{attr-0.attributes.department}`.',
       'Add the claims to a custom scope, e.g. `department`, and allow that scope on the remote client.',
       'Use the **Access Token Attribute Profile** only for claims the APIs actually need.',
     ]),
-    cfg('Remote Client → scope', [
+    cfg('Federation → OpenID Connect → Local Providers → Remote Clients → scope', [
       'Add the custom scope so clients can request it.',
       'Remember: a claim that is not mapped in the profile returns nothing — mapping and scope are two separate switches.',
     ]),
@@ -217,12 +217,12 @@ X-CSRFTOKEN: 7d1c…
     {
       from: 'og.attr', to: 'attr', badge: 'POST with actor',
       detail:
-        'The request body follows the User Attribute API shape. The `actor` block uses the RFC 8693 style nesting — a subject inside an actor — so the service can tell *who* is asking for *whose* attributes.',
+        'The request body follows the attribute-source REST contract. The `actor` block is an object with its own `subject`, so the service can tell *who* is asking for *whose* attributes.',
       channel: 'attr',
       http: {
         req: `POST /attribute-api/v1/users HTTP/1.1
 Host: attributes.internal
-Authorization: Bearer <signed attribute-request JWT>
+Authorization: Bearer <access token from Include Access Token>
 
 {
   "realm": "support",

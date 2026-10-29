@@ -5,6 +5,7 @@ import { bffLogin, bffThirdParty, bffExchange, logout } from './bff.js';
 import { fedOidcInbound, fedSamlIdp, fedSamlSp } from './federation.js';
 import { attrRest, attrDelegation } from './attributes.js';
 import { legacyProxySso } from './proxy.js';
+import { controlCenterSetup } from './setup.js';
 
 const FLOW = {
   'client-credentials': 'Service → token endpoint → API',
@@ -15,14 +16,15 @@ const FLOW = {
   'legacy-proxy-sso': 'Browser ⇄ proxy → legacy app',
   'refresh-rotation': 'App server ⇄ token endpoint (rotate + detect)',
   'multi-audience': 'One login → one token per API',
-  'logout': 'BFF + SSO + back-channel',
+  'logout': 'BFF + SSO + logout',
   'bff-thirdparty': 'Browser → partner IdP → OneGate → API',
   'bff-exchange': 'Agent → BFF exchange → delegated token → API',
   'fed-oidc-inbound': 'Partner IdP → OneGate RP → proxy → legacy app',
   'fed-saml-sp': 'Partner IdP → OneGate SAML SP → local session',
   'fed-saml-idp': 'OneGate SAML IdP → partner SP',
-  'attr-rest': 'User → profile → JVAP lookup → claims',
+  'attr-rest': 'User → profile → REST lookup → claims',
   'attr-delegation': 'Agent → actor lookup → delegated token',
+  'control-center-setup': 'Control Center → Local Provider → RP → BFF → Web Resource',
 };
 
 const ALL = [
@@ -42,6 +44,7 @@ const ALL = [
   fedSamlIdp,
   attrRest,
   attrDelegation,
+  controlCenterSetup,
 ];
 
 const FEATURED = new Set(['bff-login', 'token-formats', 'webapp-confidential', 'attr-rest']);

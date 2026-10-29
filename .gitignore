@@ -17,6 +17,9 @@ node_modules/
 dist/
 build/
 
-# Lokala editorer och loggar
+# Local editorer och loggar
 .vscode/
 *.log
+
+# Vendor documentation kept locally for reference (not redistributed)
+OneGate Administration Manual.pdf

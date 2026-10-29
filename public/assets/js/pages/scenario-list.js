@@ -51,7 +51,8 @@ export function renderScenarioList(view) {
     <div class="scenario-grid" data-grid></div>
 
     <div class="callout" style="margin-top:2rem">
-      <strong>Not sure where to start?</strong> <a href="#/sim/bff-login">BFF login</a> is the flagship:
+      <strong>Not sure where to start?</strong> <a href="#/sim/control-center-setup">Control Center setup</a> maps
+      every menu item before any protocol starts. <a href="#/sim/bff-login">BFF login</a> is the flagship:
       OneGate acts as both OP and RP in the same flow. <a href="#/sim/token-formats">JWT vs opaque</a> is the
       shortest way to understand why the API sometimes has to call home. <a href="#/learn/09-scenario-catalog">Chapter 9</a>
       describes every scenario in one table.

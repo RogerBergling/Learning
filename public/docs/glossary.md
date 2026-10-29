@@ -6,15 +6,23 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 
 **Access token** — the credential an API accepts. Carries (or points to) the subject, scope and audience. Short-lived. [JWT vs opaque](#/sim/token-formats).
 
+**Access Control List (ACL)** — the allow/deny rules on a OneGate **Web Resource**. They can match group, IP address, date/time and authentication method, and are evaluated before the request reaches the protected app.
+
 **ACS (Assertion Consumer Service)** — the SAML SP endpoint that receives the assertion by POST. Must match the `Destination` and be registered at the IdP.
+
+**Activate Changes** — the maintenance action that makes saved configuration live. **Reload configuration** applies it without logging users out; **Reindex files** is needed after changing files under `server/`; **Restart service** is the heavy option. Nothing you configure is live until you activate it.
 
 **`acr` (Authentication Context Class Reference)** — a claim/request value describing *how* the user authenticated (password, MFA, hardware key). Used for step-up.
 
-**Actor (`act` claim)** — in delegation, who is acting on behalf of the subject. `sub = customer, act = agent` preserves accountability. [BFF exchange](#/sim/bff-exchange).
+**Actor (`act` claim)** — in delegation, who is acting on behalf of the subject. `sub = customer, act = agent` preserves accountability. [BFF exchange](#/sim/bff-exchange). In a REST attribute request the actor is an object: `{ "subject": "..." }`.
 
 **`amr` (Authentication Methods References)** — the methods actually used, e.g. `pwd`, `mfa`, `otp`.
 
 **Assertion** — a signed SAML statement about a subject, containing authentication and attribute statements. The SAML analogue of an ID token.
+
+**Attribute profile** — the mapping that turns `PARM{...}` values into claims for the access token, ID token or UserInfo. A claim that is not mapped returns nothing. See [Realm Settings](#/learn/03-onegate-local-provider).
+
+**Attribute source** — the manual’s name for an LDAP, REST or Graph API service that OneGate calls to enrich an authenticated subject. Configured under **Authentication → Attribute Sources**; a REST source receives `realm`, `subject`, `actor`, `requested_attributes` and optional `ext`. [Attribute sources](#/learn/06-attribute-providers).
 
 **Audience (`aud`)** — the intended recipient of a token. An API must reject a token whose `aud` does not include it. [Multi-audience](#/sim/multi-audience).
 
@@ -23,6 +31,8 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 **Authorization server / OP** — the component that authenticates the user and issues tokens. In this lab: OneGate Local Provider or a partner IdP.
 
 **BFF (Backend for Frontend)** — a server-side tier that holds tokens and gives the browser only an HttpOnly cookie. [BFF login](#/sim/bff-login).
+
+**BFF cookie** — the opaque session pointer set by OneGate’s BFF (`SameSite` + `HttpOnly`). The browser sends it on each request; OneGate validates it and attaches a bearer access token server-side. It contains no claims, so it is not a token.
 
 **Bearer token** — any token where possession is enough. Access tokens are bearer credentials; protect them in transit and at rest.
 
@@ -50,7 +60,7 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 
 **Federation** — trusting an external identity provider or service provider. OneGate can be RP, SAML IdP or SAML SP. [Federation chapter](#/learn/04-federation-rp-saml).
 
-**Grant type** — the OAuth flow used at the token endpoint: `authorization_code`, `refresh_token`, `client_credentials`, or token exchange.
+**Grant type** — the OAuth flow used at the token endpoint: `authorization_code`, `refresh_token`, `client_credentials`, or token exchange. The manual documents the code flow and refresh; the others are generic OAuth patterns to confirm in your deployment.
 
 **ID token** — an OIDC JWT proving authentication to the **client**. Audience is the client ID. Never an API credential.
 
@@ -64,8 +74,6 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 
 **JWKS (JSON Web Key Set)** — the public keys used to verify JWT signatures. Cache it; refresh on an unknown `kid`.
 
-**JVAP** — the JSON/attribute provider interface used by OneGate attribute sources in this lab. It resolves attributes for a subject (and optional actor). [Attribute providers](#/learn/06-attribute-providers).
-
 **`jti` (JWT ID)** — a unique token identifier, useful for correlation and replay caches.
 
 ## K–P
@@ -76,7 +84,7 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 
 **mTLS (mutual TLS)** — client certificate authentication. Strong client authentication without a shared secret.
 
-**NameID** — the SAML subject identifier. Formats: `persistent`, `transient`, `emailAddress`, `unspecified`. Agree with the SP.
+**NameID** — the SAML subject identifier. Common formats are `persistent`, `transient`, `emailAddress` and `unspecified`; the format is configurable. Agree with the SP.
 
 **Nonce** — a random value sent in the authorization request and embedded in the ID token; the client checks it to prevent replay.
 
@@ -94,13 +102,13 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 
 **Private key JWT** — client authentication where the client signs an assertion instead of sending a secret.
 
-**Public client** — a client that cannot keep a secret (SPA, mobile app). Uses PKCE and no client secret.
+**Public client** — a client that cannot keep a secret (SPA, mobile app). Uses PKCE and no client secret. The manual does not document a `token_endpoint_auth_method = none` option, so verify public-client support; the BFF exists so browser apps do not need one.
 
 ## R–S
 
 **Realm** — a trust/configuration domain. Appears in paths (`/mg-local/{realm}/...`) and in `iss`.
 
-**Redirect URI** — where the OP sends the browser after authorization. Must match the registration exactly.
+**Redirect URI** — where the OP sends the browser after authorization. On a **Remote Client** it must match the comma-separated `redirect_uris` whitelist; on a **BFF** the **Client Redirect URIs** are matched against the **beginning** of the requested URI.
 
 **Refresh token** — a long-lived credential for obtaining new access tokens. Server-side only; rotate on every use; detect reuse. [Refresh rotation](#/sim/refresh-rotation).
 
@@ -127,6 +135,10 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 **UserInfo** — the OIDC endpoint returning claims about the authenticated user, called with an access token.
 
 **Virtual host** — the public hostname OneGate serves for a provider/BFF. Affects issuer, cookies and redirect URIs.
+
+**Virtual Host Selector** — the Control Center control at the top left that chooses which virtual host you are editing. Almost every setting is scoped to it, and configuring the wrong host is a classic “my change did nothing” cause.
+
+**Web Resource** — OneGate’s reverse-proxy object for publishing an internal application. Its **Authentication type** (normally **Normal**), **Access Control List** and **Advanced → Send Custom Headers** replace any idea of a special resource-SSO mode. [Legacy proxy SSO](#/sim/legacy-proxy-sso).
 
 **XMLDSig** — the XML signature standard used by SAML. Validation includes canonicalisation, which is why “the XML looks the same” is not enough.
 

@@ -30,38 +30,58 @@ At the partner:
 At OneGate:
 
 - create a **Remote Provider** pointing at the partner’s discovery document (or manual metadata);
-- create an **RP → Authentication** entry that uses that provider;
+- create an **RP Authentication** entry that uses that provider;
 - decide how partner users map to local users;
-- attach the RP to the BFF or the proxied resource that should use it.
+- attach the RP to the BFF, or enable the corresponding authentication method for the proxied resource’s ACL.
+
+### Remote Provider fields
+
+A Remote Provider is either **Manually configured** or uses a **Discovery URL**. The manual documents:
+
+| Setting | Notes |
+|---|---|
+| **Description** | Name shown in the UI |
+| **Manually configured / Use Discovery URL** | Discovery is easier; manual metadata is explicit |
+| **Connect Timeout (ms)** | How long a connection to the OP may take |
+| **Read Timeout (ms)** | How long reading from the OP may take |
+| **Skip SSL check** | Keep off in production |
+| **Discovery URL** | Usually `issuer + /.well-known/openid-configuration` |
+| **Manual Metadata** | `issuer`, `authorization_endpoint`, `token_endpoint`, `userinfo_endpoint`, `jwks_uri`, `subject_types_supported` |
+
+`subject_types_supported` is `public` (the same `sub` to every client) or `pairwise` (a different `sub` per client).
 
 ### RP settings that matter
 
 | Setting | What it controls | Advice |
 |---|---|---|
+| **Description** | Name shown in the UI | Make it obvious which partner/client it is |
+| **Unique Name** | Also forms the callback endpoint | Stable, lowercase |
+| **Virtual Host Domain** | The host this RP is configured for | Must match the virtual host |
 | **Remote Provider** | Where the RP sends the authorization request | Prefer discovery; verify the issuer |
-| **Client ID / secret** | How OneGate authenticates at the partner token endpoint | Store the secret in a secret manager |
-| **Scopes** | What identity data you ask for | Minimum: `openid profile email` only if you use email |
-| **Response type** | `code` | Never implicit |
-| **Token endpoint auth** | Basic, POST, private_key_jwt, mTLS | Match the partner exactly |
-| **PKCE** | Whether OneGate sends a verifier | Use it if the partner supports it |
-| **Signing algs** | What ID token signatures you accept | Pin to what the partner actually uses |
-| **Clock leeway** | Tolerance for `exp`/`nbf` | 60–120 s; more hides real problems |
+| **scope** | What identity data you ask for | Must contain `openid`; `profile`, `email`, `address`, `phone` are pre-defined |
+| **response_types** | `code` | Never implicit |
+| **token_endpoint_auth_method** | Basic or POST, depending on the partner | Match the partner exactly |
+| **client_id / client_secret** | How OneGate authenticates at the partner | Store the secret in a secret manager |
+| **id_token_signed_response_alg** | What ID token signature you expect | Pin to what the partner actually uses |
+| **prompt** | Whether to force reauthentication/consent | Usually empty; `none`/`login`/`consent`/`select_account` are available |
 | **Local user handling** | How `sub`/email maps to a local user | Decide before go-live |
 | **Handle unknown users** | Reject / Allow / No user db check | Reject is the safe default |
 | **Session Properties** | Copy values into the local session | Use `PARM{...}` references |
-| **Logout / post-logout URL** | Where to go after RP logout | Coordinate with the partner |
+
+The manual does not document PKCE, clock leeway or a per-RP signing-algorithm list as RP settings. Treat those as generic OIDC hygiene and verify what your version exposes.
 
 ### Local user mapping
 
 The partner’s `sub` is stable **for that partner**, not for you. You need a local key.
 
-Three patterns:
+Four patterns (the manual’s **Local user handling** options):
 
 | Pattern | How | Risk |
 |---|---|---|
-| Map on email | `Custom User Id attribute = email` | Email changes create a new person or lock someone out |
-| Map on a custom attribute | Store `partnerObjectId` on the local user and match on it | Requires a provisioning step |
-| Just-in-time provisioning | Create a local user on first login | Anyone the partner authenticates gets an account; needs policy |
+| Map on email / custom attribute | **Custom User Id attribute** = `email` or `upn` | Email changes create a new person or lock someone out |
+| Use the partner `sub` | **Use it as the username** | Only if the partner `sub` is stable and human-usable |
+| Map to a local attribute | **Map it to a custom attribute** (`partnerObjectId`) | Requires a provisioning step |
+| Just-in-time provisioning | **Handle unknown users = Allow** / **No user db check** | Anyone the partner authenticates gets an account; needs policy |
 
 Recommended: map on a stable partner identifier (object ID, employee number), store it as a custom attribute, and reject unknown users unless you have an explicit JIT policy. If you must use email, treat a change as an identity event with an approval flow.
 
@@ -91,7 +111,7 @@ Some partners need a user hint or specific authentication context:
 5. OneGate exchanges the code at the partner token endpoint using its client credentials.
 6. OneGate validates the ID token: signature via partner JWKS, `iss`, `aud`, `exp`, `nonce`, `azp` if present.
 7. OneGate maps the subject to a local user (or rejects/JIT).
-8. OneGate optionally enriches attributes from a REST/JVAP source.
+8. OneGate optionally enriches attributes from a REST attribute source.
 9. OneGate creates a **local** session and issues **local** tokens if an app needs them.
 10. The proxied app or BFF continues with the local identity; the partner token is not forwarded.
 
@@ -118,19 +138,35 @@ Used by [SAML IdP](#/sim/fed-saml-idp). A partner application speaks SAML and wi
 - **Whether the SP wants the response signed, the assertion signed, or both.**
 - **Whether the SP validates `InResponseTo` and `Destination`.**
 
-### OneGate SP configuration
+### OneGate remote SP configuration
 
 | Setting | Notes |
 |---|---|
-| **SP name / EntityID** | Must match what the SP sends in its `AuthnRequest` |
-| **ACS URL** | Where the assertion is posted; exact match |
-| **NameID format** | `persistent`, `transient`, `emailAddress`, `unspecified` — agree with the SP |
-| **NameID value** | Usually the local stable user ID, not the email |
+| **EntityID** | Matched against the `EntityID` in the `AuthnRequest`; by default also used as the audience restriction. May be a regular expression for dynamic SPs |
+| **Assertion Consumer URL** | Matched against `AssertionConsumerServiceURL`; may be a regular expression for dynamic SPs |
+| **Login page URL** | Optional address where a user starts a session |
+| **Logout Request / Response URL** | Where SLO messages are sent |
+| **Unique Name / Description** | Human labels in the list |
+| **NameID format** | Common formats include `persistent`, `transient`, `emailAddress` and `unspecified`; other formats are configurable. Agree with the SP |
 | **Attributes** | Map local claims to the SP’s expected names |
 | **Signing** | Sign the assertion and/or response; publish the certificate |
 | **Assertion lifetime** | Short, e.g. 5 minutes; the SP creates its own session |
-| **Audience** | The SP EntityID; the SP must reject anything else |
+| **Audience restriction** | Choose whether the audience is the SP EntityID or the ACS URL, matching what the SP validates |
 | **Destination** | The ACS URL; must match the actual endpoint |
+
+Specific SPs should sort above wildcard SPs in the list. **Remote SP groups** let one policy cover many SPs, and **Trusted Metadata Providers** can import and refresh remote SPs automatically.
+
+#### Response and strictness
+
+| Setting | Effect |
+|---|---|
+| **Allow different Authn Context Class** | Accept an assertion whose AuthnContext differs from what was requested |
+| **Allow Unsolicited** | Permit IdP-initiated authentication |
+| **Require signed logout request / response** | Reject unsigned SLO messages |
+| **Strict Check** | Require `InResponseTo`, `NotOnOrAfter` and `Recipient` in SubjectConfirmationData; require `NotOnOrAfter` and `AudienceRestriction` in Conditions |
+| **Force Authentication** | Require the user to log in actively even with an existing IdP session |
+
+**Metadata Providers** can import remote SPs from metadata XML. **Min refresh delay** and **Max refresh delay** bound how often metadata is fetched; the manual recommends not setting the minimum below 600 seconds because the refresh task itself runs every ten minutes.
 
 ### The SAML flow
 
@@ -186,9 +222,26 @@ Used by [SAML SP](#/sim/fed-saml-sp). A partner IdP initiates SSO and posts an a
 
 - Import the partner IdP metadata (or enter EntityID, SSO URL and signing certificate manually).
 - Register OneGate as an SP at the partner, with the ACS URL OneGate generates.
+- Create a **Local Service Provider**: description, unique name, optional custom EntityID, signing/encryption keys, and the ACS/metadata endpoints OneGate generates.
+- Configure **Remote IDPs** and enable them under **Active remote IDPs** for the virtual host.
+- Add at least one **Method mapping** whose **Map Pattern** matches the remote IDP’s authentication method, or users cannot log in.
 - Map the partner’s NameID (or an attribute) to a local user.
-- Decide whether the partner IdP initiates (IdP-initiated) or OneGate initiates (SP-initiated).
+- Decide whether the partner IdP initiates (IdP-initiated) or OneGate initiates (SP-initiated) — **Allow Unsolicited** controls the former.
 - Configure attribute enrichment after validation if needed.
+
+### SP-side settings that matter
+
+| Setting | Notes |
+|---|---|
+| **Allow Unsolicited** | Permit IdP-initiated SAML responses |
+| **Strict Check** | Require `InResponseTo`, `NotOnOrAfter` and `Recipient` in SubjectConfirmationData, plus `NotOnOrAfter` and `AudienceRestriction` in Conditions |
+| **Require signed logout request / response** | Reject unsigned SLO messages |
+| **Allow different Authn Context Class** | Accept an AuthnContext different from the one requested |
+| **Holder-of-Key WebSSO profile** | `Always`, `Use if available`, or `Never`; **Holder-of-Key CCP** selects the client-certificate provider |
+| **Default Attribute Profile / Requested attributes** | Populate `AttributeConsumingService` in the SP metadata |
+| **Method mapping** | `Map Pattern` (literal AuthnContext URI or regex) → **Local Method** (e.g. WebToken or **Custom**); **Limit mapping** restricts it to selected remote IDPs |
+
+The **Remote IDP** config can also name a custom attribute that carries the authentication method, for IdPs that do not use AuthnContext. This is separate from the outgoing **IDP AuthnContexts → Method mapping**.
 
 ### Validation checklist
 
@@ -212,15 +265,15 @@ After validation, OneGate creates a normal local session. From that point on, th
 
 ## Attribute enrichment during federation
 
-Both inbound directions can call a REST/JVAP attribute provider before issuing local tokens. This is how a partner identity gets your entitlements:
+Both inbound directions can call a REST attribute source before issuing local tokens. This is how a partner identity gets your entitlements:
 
 ```
-partner identity → local user → attribute provider (sub=mguid, actor optional) → claims → local token
+partner identity → local user → attribute source (sub=mguid, actor optional) → claims → local token
 ```
 
 Cache keyed by both identities if delegation is involved. If the attribute source is down, decide explicitly: fail closed (no token) or issue with a reduced claim set. Never silently issue a token with missing entitlements that the API might interpret as “allow”.
 
-See [attribute providers](#/learn/06-attribute-providers).
+See [attribute sources](#/learn/06-attribute-providers).
 
 ## Logout across federation
 
@@ -228,7 +281,7 @@ Logout has three independent layers:
 
 1. **Your local session** — delete it server-side; clear the cookie.
 2. **The partner session** — redirect to the partner’s end-session endpoint if supported.
-3. **Downstream apps** — SAML SLO, back-channel logout, or simply short sessions.
+3. **Downstream apps** — SAML SLO, or simply short sessions. OIDC back-channel logout is a generic pattern; the Administration Manual does not describe an endpoint for it, so verify support before relying on it.
 
 Do not claim “logout” when you only cleared a cookie. A partner SSO session that stays alive will silently log the user back in. See [logout](#/sim/logout).
 

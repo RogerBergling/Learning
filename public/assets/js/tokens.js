@@ -80,7 +80,7 @@ export const STORES = {
   backend:  { label: 'Backend / API',        hint: 'validated claims only — usually no raw token is kept' },
   idp:      { label: 'Partner IdP',          hint: 'the external identity provider' },
   sp:       { label: 'Partner SP / app',     hint: 'the external service provider' },
-  attr:     { label: 'Attribute provider',   hint: 'the user attribute / entitlement service' },
+  attr:     { label: 'Attribute source',     hint: 'the user attribute / entitlement service' },
 };
 
 /** Turn a scenario token definition into a concrete, displayable token. */

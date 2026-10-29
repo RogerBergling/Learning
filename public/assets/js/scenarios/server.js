@@ -173,16 +173,16 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6…`,
     'If the web tier is compromised, the tokens are compromised. Short token lifetimes and refresh-token rotation limit the damage.',
   ],
   config: [
-    cfg('OpenID Connect → Remote Clients → portal-web (confidential)', [
+    cfg('Federation → OpenID Connect → Local Providers → Remote Clients → portal-web (confidential)', [
       '`client_id = portal-web`, `client_secret = …` (long, random, stored in a secret manager).',
-      '`token_endpoint_auth_method = client_secret_basic` — matches the Basic header above. `client_secret_post` also exists; pick one and stay consistent.',
+      'The client authenticates with `client_id` + `client_secret`; `client_secret_basic` matches the Basic header above and is the manual’s recommended metadata method. `client_secret_post` also exists; pick one and stay consistent.',
       'Exact `redirect_uris = https://app.example.com/callback`.',
       '`grant_types = authorization_code` plus `refresh_token` if you use it.',
       '`scope = openid profile orders.read email`.',
     ]),
-    CFG.localProvider,
+    CFG.localProvider(),
     CFG.remoteClient('portal-web'),
-    cfg('Realm Settings → ID Token Attribute Profile', [
+    cfg('Federation → OpenID Connect → Local Providers → Realm Settings → ID Token Attribute Profile', [
       'Map `sub`, `name`, `email` and anything else the app needs from the local user store.',
       'Use `PARM{oidcclient.*}` local properties if two clients need different values for the same claim.',
     ]),
@@ -312,7 +312,7 @@ Cache-Control: no-store
     'Bind refresh tokens to the client and, where possible, to the device/session. A refresh token from another client must be rejected.',
   ],
   config: [
-    cfg('Local Provider → Refresh token', [
+    cfg('Federation → OpenID Connect → Local Providers → Provider Settings → Refresh token', [
       '**Refresh token lifetime (min)**: how long one token lives.',
       '**Refresh token total lifetime (min)**: cap for the whole family, counted from the first token.',
       '**Refresh token max idle (min)**: kills a family that stops being used.',
@@ -321,7 +321,7 @@ Cache-Control: no-store
       '**Reuse grace period (sec)**: small, e.g. 5–15 s, for retries.',
       '**Issue id token**: optional; useful if the app needs fresh identity claims after a refresh.',
     ]),
-    cfg('Remote Client', [
+    cfg('Federation → OpenID Connect → Local Providers → Remote Clients', [
       '`grant_types` must include `refresh_token`.',
       '`scope` controls the maximum scope a refresh may return; a refresh must never widen scope.',
     ]),
@@ -444,7 +444,7 @@ WWW-Authenticate: Bearer error="invalid_token",
     'Some deployments map scope names to audiences (`orders.read` → `api.orders`), which keeps clients simple and still gives each API its own audience.',
   ],
   config: [
-    cfg('Remote Client → Access Token JWT', [
+    cfg('Federation → OpenID Connect → Local Providers → Remote Clients → Access Token JWT', [
       '**Default resource (aud)**: used when the client does not ask for anything specific.',
       '**Allowed resources from parameter**: the URL-encoded list of audiences this client may request with `resource`.',
       '**Resource indicator from scope**: map a scope to an audience, e.g. `orders.read → api.orders`.',

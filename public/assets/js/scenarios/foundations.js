@@ -97,23 +97,24 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6…`,
     },
   ],
   notes: [
+    '**Manual caveat:** the Administration Manual does not describe the `client_credentials` grant. This scenario is generic OAuth 2.0 background; confirm that your OneGate version and licence expose the grant before designing around it.',
     'Client credentials is for **confidential clients only**. A SPA or mobile app cannot keep a secret, so it must never use this grant for user data.',
     'Prefer one client per service with the narrowest scope list that works. A shared "integration client" with `*` scope is how incidents happen.',
     'There is no consent screen and no user. If an audit needs to know *who* did something, the service must log the correlation ID, or use token exchange / on-behalf-of instead.',
     'For higher assurance, OneGate clients can use stronger authentication than a shared secret (for example `private_key_jwt` or mTLS) where the deployment supports it. A secret in an environment variable is the baseline, not the goal.',
   ],
   config: [
-    cfg('OpenID Connect → Remote Clients → fulfilment-svc', [
-      '`grant_types = client_credentials` (leave `authorization_code` off if the client never acts for a user).',
+    cfg('Federation → OpenID Connect → Local Providers → Remote Clients → fulfilment-svc', [
+      '`grant_types` must allow `client_credentials` (leave `authorization_code` off if the client never acts for a user).',
       '`scope = orders.read` — the exact scopes this service needs.',
-      '`token_endpoint_auth_method = client_secret_basic`.',
+      'The client authenticates with `client_id` + `client_secret`; the manual’s recommended metadata method is `client_secret_basic`.',
       'Under **Access Token JWT**, set the **default resource (aud)** to `api.orders`, or allow the client to ask with the `resource` parameter.',
     ]),
-    cfg('OpenID Connect → Local Providers → Provider Settings', [
+    cfg('Federation → OpenID Connect → Local Providers → Provider Settings', [
       'Access token lifetime: short, e.g. 5–15 minutes. There is no refresh token, so the service just re-authenticates.',
-      'Access Token Type: `jwt` if the API can verify offline, `opaque` if you want instant revocation.',
+      'Access Token Type: `jwt` if the API can verify offline, `opaque` if the API introspects (where that endpoint is available).',
     ]),
-    CFG.localProvider,
+    CFG.localProvider(),
   ],
   pitfalls: [
     '`invalid_client` — the Basic header is wrong or the secret was rotated on one side only.',
@@ -124,14 +125,14 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6…`,
   ],
 };
 
-const jwtCfg = cfg('Local Provider → Provider Settings → Access Token Type = jwt', [
+const jwtCfg = cfg('Federation → OpenID Connect → Local Providers → Provider Settings → Access Token Type = jwt', [
   'The access token is a signed JWT. The API validates it locally with `jwks_uri`.',
   'Include the claims the API needs in the **Access Token Attribute Profile** — nothing more.',
   'Keep the lifetime short (5–15 min). A JWT cannot be revoked by the OP; it is valid until `exp` unless the API keeps a deny-list.',
   'Key settings: RS256, publish `kid` so clients can pick the right key during rotation.',
 ]);
 
-const opaqueCfg = cfg('Local Provider → Provider Settings → Access Token Type = opaque', [
+const opaqueCfg = cfg('Federation → OpenID Connect → Local Providers → Provider Settings → Access Token Type = opaque', [
   'The access token is an opaque string: no claims are visible to the client or the API.',
   'The API must call the introspection endpoint, authenticating as a confidential client.',
   'Revocation is immediate: the introspection answer flips to `active: false`.',
@@ -312,12 +313,13 @@ Cache-Control: no-store
     },
   },
   notes: [
+    '**Manual caveat:** the manual documents **Access Token Type** (`opaque` or `jwt`) and mentions token introspection as a claim context, but it does not describe an introspection endpoint or its settings. This scenario is generic OAuth background; verify endpoint support in your deployment.',
     '**JWT**: the API can validate alone → great for scale, many APIs, and offline resilience. Cost: revocation lag and larger tokens.',
     '**Opaque**: the OP stays the source of truth → instant revocation, tiny tokens, no claims leak. Cost: a round trip and a dependency on the OP.',
     'A common production shape: short-lived JWT access tokens (5–15 min) plus refresh tokens, and introspection only for the highest-risk operations.',
     'Either way the API must check `aud`. A token issued for `api.orders` must be rejected by `api.billing`, even if the signature is perfect.',
   ],
-  config: [jwtCfg, opaqueCfg, CFG.localProvider],
+  config: [jwtCfg, opaqueCfg, CFG.localProvider()],
   pitfalls: [
     'Using a JWT but never checking the signature (or accepting `alg: none`) — this is the classic fatal bug.',
     'No `aud` check, so a token for one API is accepted by every API in the estate.',

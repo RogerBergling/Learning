@@ -38,7 +38,7 @@ Write down the first failing hop. That is your bug.
 | `invalid_request` | Missing/duplicate parameter, bad PKCE, `response_type` not allowed | The exact request URL; client registration |
 | `unauthorized_client` | Client may not use this grant/response type | Grant types in the remote client |
 | `access_denied` | User/policy refused, consent denied | Policy, consent, user state |
-| `redirect_uri_mismatch` | Exact-match failure | Scheme, host, port, path, trailing slash, realm, URL encoding |
+| `redirect_uri_mismatch` | Whitelist failure | Scheme, host, port, path, trailing slash, realm, URL encoding, or a wildcard that does not match the full URI |
 | `invalid_scope` | Scope not registered for the client | Client scopes vs requested string |
 | `login_required` | No session and prompt=none | SSO cookie, session lifetime |
 | `interaction_required` | Step-up/MFA/consent needed | `acr`, policy, MFA enrolment |
@@ -55,7 +55,7 @@ Write down the first failing hop. That is your bug.
 | `invalid_request` | Missing grant/code/verifier, duplicate params, wrong content type | `application/x-www-form-urlencoded` |
 | `invalid_scope` | Scope narrowed/widened at refresh | Original grant, client scopes |
 | `unsupported_grant_type` | Grant not enabled for the client | Registration |
-| `server_error` | OP-side failure | OP logs, attribute provider, key store |
+| `server_error` | OP-side failure | OP logs, attribute source, key store |
 
 ### API (401/403)
 
@@ -142,7 +142,7 @@ Rules: cache JWKS, refresh on unknown `kid`, publish overlapping keys, and never
 | Error | Check |
 |---|---|
 | `Invalid signature` | Certificate, signed assertion vs response, canonicalisation |
-| `Audience restriction failed` | SP EntityID mismatch |
+| `Audience restriction failed` | SP EntityID / ACS URL mismatch |
 | `Destination mismatch` | ACS URL, proxy rewriting, `Host` header |
 | `Response expired` | Assertion lifetime, clock skew |
 | `InResponseTo` mismatch | Lost request ID, load balancer without sticky sessions, replay |
@@ -155,11 +155,24 @@ Rules: cache JWKS, refresh on unknown `kid`, publish overlapping keys, and never
 | Symptom | Check |
 |---|---|
 | 502/504 | Upstream unreachable, TLS, DNS, timeout |
-| Redirect loop | Proxy adds auth after the app redirects; resource SSO wrong |
-| App sees no user | Header name mismatch, header stripped, SSO not applied |
-| User can spoof identity | Inbound `X-Forwarded-User`/`Authorization` not stripped |
+| Redirect loop | Proxy adds auth after the app redirects; Web Resource auth type/ACL wrong |
+| App sees no user | Custom header not configured, wrong header name, or `X-` entered in Control Center |
+| User can spoof identity | The app is reachable without the proxy, or the hop to the app is untrusted |
+| Header sent as `X-X-USERID` | You entered `X-USERID` in **Send Custom Headers**; enter `USERID` |
 | Static assets 401 | Proxy protects assets or the cookie path is too narrow |
 | Wrong redirect host | `X-Forwarded-Host`/`Proto`, external URL config |
+
+The manual’s model is **Authentication type = Normal** plus an **Access Control List**, with optional **Send Custom Headers**. There is no “resource SSO = BFF” mode; the BFF is a separate feature.
+
+## Configuration did not apply
+
+| Symptom | Check |
+|---|---|
+| Saved setting has no effect | **Maintenance → Activate Changes → Reload configuration** |
+| Changed a file under `server/` but nothing changed | **Reindex files** is required |
+| Edited the wrong host | **Virtual Host Selector** at the top left |
+| Endpoints changed unexpectedly | Wrong realm or virtual host domain |
+| Claims empty after adding a scope | The claim is not mapped in the attribute profile |
 
 ## Logs worth having
 
@@ -190,4 +203,4 @@ Correlate with a request ID, not with a token.
 
 If none of that explains it, open [Self-check](#/selftest) to rule out a broken lab file, then read the matching scenario’s **Watch out** tab.
 
-Next: [Glossary](#/glossary).
+Next: [The Control Center, end to end](#/learn/11-control-center).

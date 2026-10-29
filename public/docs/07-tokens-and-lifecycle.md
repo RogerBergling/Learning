@@ -24,7 +24,9 @@ Proof that authentication happened, for the **client**. It must not be used as a
 
 ### Refresh token
 
-A long-lived credential whose only job is to obtain new access tokens. It must live on a confidential server, rotate on every use, and be revocable. If a refresh token reaches a browser, the design is wrong.
+A long-lived credential whose only job is to obtain new access tokens. It must live on a confidential server, rotate on every use, and — ideally — be revocable. If a refresh token reaches a browser, the design is wrong.
+
+The manual’s Local Provider exposes the levers directly: **Refresh token lifetime**, **Refresh token total lifetime**, **Refresh token max idle**, **Update refresh token**, **Reuse detection**, **Reuse grace period** and **Issue id token**.
 
 ### Authorization code
 
@@ -116,16 +118,16 @@ refresh(RT2) → AT3 + RT3
 refresh(RT1) → ERROR, revoke the whole family
 ```
 
-Why it matters: a stolen refresh token is useful once, and the theft becomes visible when the legitimate client tries to use the old one. That is **reuse detection**.
+Why it matters: a stolen refresh token is useful once, and the theft becomes visible when the legitimate client tries to use the old one. That is **reuse detection** — an explicit setting in the manual. A short **Reuse grace period** covers legitimate parallel requests.
 
 Implementation rules:
 
 - Store only a hash of the refresh token, not the value.
 - Rotate atomically; a crash between “issue new” and “invalidate old” must not leave both valid.
 - Serialise refresh per session. Parallel requests from the same tab should share one refresh, not race.
-- On reuse, revoke the family and force re-authentication. Do not just return an error and continue.
-- Keep an absolute session cap; rotation must not extend a session forever.
-- Revoke on logout, password change, admin action and suspicious activity.
+- On reuse, invalidate the whole refresh-token set and force re-authentication. Do not just return an error and continue.
+- Keep an absolute session cap; rotation must not extend a session forever (the manual’s **total lifetime** is the cap).
+- Revoke or delete on logout, password change, admin action and suspicious activity.
 
 ## Revocation and logout
 
@@ -133,13 +135,15 @@ Revocation is not one operation:
 
 | Layer | Action |
 |---|---|
-| Refresh token | Revoke at the OP; delete server-side |
+| Refresh token | Revoke at the OP if supported; delete server-side |
 | Access token (opaque) | Introspection immediately returns `active: false` |
 | Access token (JWT) | Valid until `exp`; use short lifetimes or a deny-list |
 | Session | Delete server-side; expire the cookie |
 | OP SSO session | End at the OP (`/end_session`) |
 | Partner session | Partner logout / SAML SLO if available |
 | Client caches | Clear user data, in-memory tokens, service worker caches |
+
+The Administration Manual does not document a token revocation endpoint, an introspection endpoint or OIDC back-channel logout. Those are standard OAuth/OIDC capabilities that may exist in your deployment — verify before depending on them. What the manual does give you is the refresh-token lifecycle above, which is the main lever for bounding a stolen token.
 
 “Logout” that only deletes a cookie is a UI gesture. See [logout](#/sim/logout).
 

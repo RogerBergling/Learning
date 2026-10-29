@@ -87,7 +87,7 @@ const ROLES = [
   {
     icon: 'proxy',
     title: 'Reverse proxy',
-    text: 'Sits in front of the legacy app and injects identity headers, or protects it with SSO. The app keeps its old URLs and its old code.',
+    text: 'Sits in front of the legacy app as a Web Resource, enforces an Access Control List and injects configured custom headers. The app keeps its old URLs and its old code.',
     link: '#/sim/legacy-proxy-sso',
     cta: 'Legacy app behind the proxy',
   },
@@ -186,7 +186,7 @@ export function renderHome(view) {
 
     <section class="section-head">
       <div>
-        <h2>Four jobs, one product</h2>
+        <h2>Five jobs, one product</h2>
         <p>The same box plays every role. The trick is knowing which role is active at each hop — and which credential it is allowed to see.</p>
       </div>
       <a class="btn btn-ghost btn-sm" href="#/learn/01-architecture">${icon('arrow', 14)} The big picture</a>

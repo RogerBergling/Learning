@@ -73,7 +73,7 @@ The browser carries the code for exactly one hop. It never sees the client secre
 GET /mg-local/portal/authorize?
   response_type=code
   &client_id=bff-portal
-  &redirect_uri=https%3A%2F%2Flogin.example.com%2Fmg-local%2Fportal%2Fbff%2Fcallback
+  &redirect_uri=https%3A%2F%2Flogin.example.com%2Fmg-local%2Fportal%2Frp%2Fcallback
   &scope=openid%20profile%20orders.read
   &state=8f2c1d0a4b6e
   &nonce=3b91ae77c2d1
@@ -82,7 +82,7 @@ GET /mg-local/portal/authorize?
 Host: login.example.com
 ```
 
-Note that `redirect_uri` must match the registered value **byte for byte** (allowances for loopback ports aside). This is the single most common cause of `redirect_uri mismatch`.
+Note that `redirect_uri` is matched against the registered whitelist. Exact, literal URIs are the safest choice and the manual’s recommendation; wildcards are possible but dangerous. A mismatch is the single most common cause of `redirect_uri_mismatch`.
 
 ## PKCE in one minute
 

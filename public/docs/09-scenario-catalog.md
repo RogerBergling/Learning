@@ -1,6 +1,8 @@
 # Scenario catalog & how to read the simulator
 
-Sixteen scenarios, one fixed topology. This chapter explains the stage, the controls and what each scenario is for — so you can pick the right one instead of watching all of them in order.
+Seventeen scenarios, one fixed topology. This chapter explains the stage, the controls and what each scenario is for — so you can pick the right one instead of watching all of them in order.
+
+The first scenario, [Control Center setup](#/sim/control-center-setup), is new in this edition: it is a configuration walkthrough based on the **OneGate Administration Manual** rather than a protocol flow. Start there if the menu names in the other scenarios feel unmotivated.
 
 ## The stage
 
@@ -9,7 +11,7 @@ Sixteen scenarios, one fixed topology. This chapter explains the stage, the cont
                         │        ┌────────── OneGate ──────────┐        ┌── Frontend ──┐
  Partner IdP ───────────┼───────▶│ OP · RP · BFF · proxy       │───────▶│ SPA / web app│
                         │        │ token handler · attr client │        ├── Backend API─┤
- Attribute provider ────┘        └─────────────────────────────┘        └── Partner SP ─┘
+ Attribute source ──────┘        └─────────────────────────────┘        └── Partner SP ─┘
 ```
 
 - **Nodes** are the systems. OneGate has six **subnodes** so you can see which internal role is active: `OP`, `RP`, `BFF`, `proxy`, `token handler`, `attribute client`.
@@ -45,12 +47,18 @@ The simulator respects `prefers-reduced-motion`: packets jump to their destinati
 
 ## The scenarios
 
+### Setup walkthrough
+
+| Scenario | Level | Steps | Minutes | What it teaches | Start here if… |
+|---|---|---|---|---|---|
+| [Control Center setup](#/sim/control-center-setup) | Core | 15 | 14 | Where each object lives: Virtual Host Selector, Local Provider, Realm Settings, Remote Client, RP, BFF, Web Resource + ACL, attribute source, Activate Changes | You are configuring OneGate for the first time |
+
 ### Foundations
 
 | Scenario | Level | Steps | Minutes | What it teaches | Start here if… |
 |---|---|---|---|---|---|
-| [Client credentials](#/sim/client-credentials) | Core | 8 | 6 | A service authenticates with client ID + secret; no user, no refresh token; token endpoint auth | You are connecting two backends |
-| [JWT vs opaque](#/sim/token-formats) | Core | 7–8 | 8 | The API either validates locally or introspects; trade-offs in latency, revocation and disclosure | You are choosing a token format |
+| [Client credentials](#/sim/client-credentials) | Core | 8 | 6 | A service authenticates with client ID + secret; no user, no refresh token; token endpoint auth. The Administration Manual does not document this grant — treat it as generic OAuth | You are connecting two backends |
+| [JWT vs opaque](#/sim/token-formats) | Core | 7–8 | 8 | The API either validates locally or introspects; trade-offs in latency, revocation and disclosure. The manual mentions introspection only as claim context; no endpoint settings are documented | You are choosing a token format |
 
 ### Browser apps
 
@@ -87,19 +95,21 @@ The simulator respects `prefers-reduced-motion`: packets jump to their destinati
 
 | Scenario | Level | Steps | Minutes | What it teaches | Start here if… |
 |---|---|---|---|---|---|
-| [Attribute provider](#/sim/attr-rest) | Core | 14 | 10 | REST/JVAP lookup at issuance, caching, claims mapping | Entitlements live outside the user store |
-| [Delegated attributes](#/sim/attr-delegation) | Advanced | 14 | 9 | The actor parameter; cache keyed by subject + actor | An agent looks up a customer |
-| [Legacy proxy SSO](#/sim/legacy-proxy-sso) | Core | 14 | 9 | Authenticate at the proxy, inject a trusted identity, change no app code | The app cannot do OIDC |
+| [Attribute source](#/sim/attr-rest) | Core | 14 | 10 | REST attribute lookup at issuance, `realm`/`subject`/`requested_attributes`, caching, claim mapping | Entitlements live outside the user store |
+| [Delegated attributes](#/sim/attr-delegation) | Advanced | 14 | 9 | The `actor` object; cache keyed by subject + actor | An agent looks up a customer |
+| [Legacy proxy SSO](#/sim/legacy-proxy-sso) | Core | 14 | 9 | Web Resource + normal authentication + ACL, then a configured `X-USERID` header; change no app code | The app cannot do OIDC |
 
 ## Suggested routes
 
 **Ten minutes:** [BFF login](#/sim/bff-login) with the Tokens tab open. Then [JWT vs opaque](#/sim/token-formats).
 
-**An afternoon:** architecture chapter → OIDC basics → BFF login → confidential web app → JWT vs opaque → refresh rotation → logout.
+**Configuration first:** [Control Center setup](#/sim/control-center-setup) → [Local Provider chapter](#/learn/03-onegate-local-provider) → [BFF login](#/sim/bff-login).
 
-**Production review:** token formats → refresh rotation → multi-audience → BFF → logout → attribute provider → federation.
+**An afternoon:** architecture chapter → OIDC basics → Control Center setup → BFF login → confidential web app → JWT vs opaque → refresh rotation → logout.
 
-**Federation project:** RP inbound → SAML IdP → SAML SP → BFF with partner IdP → attribute provider.
+**Production review:** token formats → refresh rotation → multi-audience → BFF → logout → attribute source → federation.
+
+**Federation project:** RP inbound → SAML IdP → SAML SP → BFF with partner IdP → attribute source.
 
 **Incident prep:** BFF exchange → delegated attributes → logout → troubleshooting chapter.
 

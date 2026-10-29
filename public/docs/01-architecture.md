@@ -45,15 +45,15 @@ Read it left to right:
 
 The diagram is also the answer to “where does the token live?”. Tokens are created and consumed in the middle, presented to APIs on the right, and should almost never be stored on the left.
 
-## The four (five) roles in detail
+## The five roles in detail
 
 | Role | What it means | Where you configure it | Typical symptom when it is wrong |
 |---|---|---|---|
-| **Reverse proxy** | OneGate owns the public hostname and forwards requests to an internal app. It can inject identity headers or an `Authorization` header. | Proxy resource, SSO/authentication setting, header rules | 502/504, redirect loops, app sees no user, spoofable headers |
+| **Reverse proxy** | OneGate owns the public hostname and forwards requests to an internal app. As a **Web Resource** it can inject configured custom headers, and an **Access Control List (ACL)** decides who gets through. | Web Resource, Advanced → Send Custom Headers, Access Control List | 502/504, redirect loops, app sees no user, spoofable headers |
 | **OpenID Provider (OP)** | OneGate authenticates the user and issues codes, access tokens, ID tokens and refresh tokens. | Local Providers, Realm Settings, Remote Clients | `invalid_client`, `redirect_uri mismatch`, wrong claims, `invalid_token` at the API |
-| **Relying Party (RP)** | OneGate consumes someone else’s identity — a partner OP, a SAML IdP, or its own Local Provider. | RP → Authentication, Remote Providers, local user handling | `invalid ID token`, unknown user, duplicate accounts, clock skew |
+| **Relying Party (RP)** | OneGate consumes someone else’s identity — a partner OP, a SAML IdP, or its own Local Provider. | RP Authentication, Remote Providers, local user handling | `invalid ID token`, unknown user, duplicate accounts, clock skew |
 | **Backend for Frontend (BFF)** | OneGate keeps the browser token-free: HttpOnly cookie in, server-side tokens out. | BFF realm settings, RP Authentication, Local Provider, Remote Client | Cookie not sent, CSRF 403, callback mismatch, login loop |
-| **Token handler** | Issues, introspects, validates, exchanges and revokes tokens for clients and APIs. | Local Provider token settings, scopes, audiences, signing keys | API accepts the wrong audience, revocation is delayed, JWKS fetch fails |
+| **Token handler** | Issues, introspects, validates, exchanges and revokes tokens for clients and APIs. The Administration Manual documents issuing, refresh, exchange and key settings; it does not document introspection, revocation or back-channel logout, so verify those. | Local Provider token settings, scopes, audiences, signing keys | API accepts the wrong audience, revocation is delayed, JWKS fetch fails |
 
 A single scenario can use all five. The flagship [BFF login](#/sim/bff-login) does: proxy for the SPA, BFF for the session, OP to issue, RP to consume, token handler for the API.
 
@@ -70,7 +70,7 @@ BFF ──uses──▶ RP configuration ──remote provider──▶ OneGate 
 Why do it this way?
 
 - **One implementation.** The same code path is exercised whether the RP points at OneGate, Entra, Okta or a partner. A bug in federation is a bug in local login, and tests catch it.
-- **No special cases.** The token endpoint still requires `client_id` + `client_secret`, PKCE, exact redirect URIs and a single-use code.
+- **No special cases.** The token endpoint still requires `client_id` + `client_secret`, a whitelisted redirect URI and a single-use code — plus PKCE where the deployment enables it.
 - **Swappable identity.** Changing “log in locally” to “log in through the partner” is a configuration change on the RP, not a rewrite of the BFF.
 
 This is why the simulator draws wires between `OneGate · BFF`, `OneGate · RP` and `OneGate · OP` that loop back into the same box. It looks odd because we usually draw identity providers as separate companies. Architecturally, it is just an RP talking to an OP that happens to share a process boundary.
@@ -83,7 +83,7 @@ This is why the simulator draws wires between `OneGate · BFF`, `OneGate · RP` 
 | OneGate → frontend | Identity headers, a proxied request, a bearer token if the frontend is the resource | Raw partner tokens with a foreign issuer, debug dumps |
 | OneGate → backend API | A bearer token with the right `aud`, or validated claims if it is a trusted proxy | A token minted for a different audience, a user-controlled `Authorization` header |
 | OneGate ↔ partner IdP | Authorization requests/responses, assertions, metadata, JWKS | Local session cookies, local refresh tokens |
-| OneGate ↔ attribute provider | A signed attribute request (`sub`, optional `actor`, `ext`, `aud`) | The user’s refresh token, the client secret of an unrelated app |
+| OneGate ↔ attribute source | A REST attribute request (`realm`, `subject`, `actor`, `requested_attributes`, `ext`) and, with **Include Access Token**, a JWT with the configured `iss`/`aud`/`sub` | The user’s refresh token, the client secret of an unrelated app |
 
 Write these down for your own deployment. Most “mysterious” 401s are a credential that crossed a boundary it was never supposed to cross.
 
@@ -91,12 +91,12 @@ Write these down for your own deployment. Most “mysterious” 401s are a crede
 
 The roles combine into a few common architectures:
 
-1. **Proxy in front of a legacy app.** OneGate owns the hostname, handles SSO, injects a trusted identity. The app keeps its old code. See [legacy proxy SSO](#/sim/legacy-proxy-sso).
+1. **Proxy in front of a legacy app.** OneGate owns the hostname, handles normal authentication, enforces an ACL, injects configured custom headers. The app keeps its old code. See [legacy proxy SSO](#/sim/legacy-proxy-sso).
 2. **BFF in front of a SPA.** Browser gets a cookie, OneGate gets the tokens, APIs get bearer tokens. See [BFF login](#/sim/bff-login).
 3. **Confidential web app.** The app server itself is the client; OneGate is the OP. See [confidential web app](#/sim/webapp-confidential).
 4. **Federation hub.** OneGate is RP towards partners and OP towards your apps. See [inbound federation](#/sim/fed-oidc-inbound).
 5. **SAML bridge.** OIDC on one side, signed XML on the other. See [SAML IdP](#/sim/fed-saml-idp) and [SAML SP](#/sim/fed-saml-sp).
-6. **Attribute enrichment layer.** Tokens carry entitlements resolved at issuance from a REST/JVAP service. See [attribute providers](#/sim/attr-rest).
+6. **Attribute enrichment layer.** Tokens carry entitlements resolved at issuance from a REST attribute source. See [attribute sources](#/sim/attr-rest).
 
 Real deployments mix these. A single OneGate installation can proxy three legacy apps, serve BFF login for two SPAs, federate with a partner, and act as a SAML IdP for a SaaS product — with separate realms and clients for each.
 
@@ -110,6 +110,7 @@ It is not a real protocol implementation. Tokens are structurally valid JWTs wit
 
 ## Where to go next
 
+- [Control Center setup](#/sim/control-center-setup) — the manual’s map of where every object is configured, and Activate Changes.
 - [OIDC & OAuth 2.0, the parts you need](#/learn/02-oidc-basics) — the protocol vocabulary.
 - [Configuring the OneGate OpenID Provider](#/learn/03-onegate-local-provider) — the settings behind the roles.
 - [Scenario catalog](#/learn/09-scenario-catalog) — every simulation in one table.

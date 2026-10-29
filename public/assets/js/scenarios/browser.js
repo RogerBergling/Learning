@@ -46,7 +46,7 @@ Host: login.example.com`,
     {
       from: 'og.op', to: 'og.op', badge: 'validate request',
       detail:
-        'OneGate checks that the client exists, that `redirect_uri` **exactly** matches the whitelist, that `openid` is present, that every requested scope is allowed, and that the response type is allowed. A bad `redirect_uri` must never redirect — it gets an error page instead.',
+        'OneGate checks that the client exists, that `redirect_uri` **matches the configured whitelist**, that `openid` is present, that every requested scope is allowed, and that the response type is allowed. A bad `redirect_uri` must never redirect — it gets an error page instead.',
       channel: 'internal',
       tags: ['redirect_uri whitelist', 'scope check'],
     },
@@ -135,24 +135,25 @@ Access-Control-Request-Headers: authorization`,
     },
   ],
   notes: [
+    '**Manual caveat:** the Administration Manual’s Remote Client fields do not document `token_endpoint_auth_method = none`, and do not describe a public-client flow. This scenario is generic OAuth 2.0 + PKCE background. Verify public-client support in your OneGate version; if it is absent, use the BFF instead.',
     'PKCE (`S256`) is mandatory for public clients and recommended for confidential ones. It turns a stolen code into a useless string.',
     '`state` protects the redirect back to your app against CSRF and mix-ups; `nonce` binds the ID token to your request.',
     'Validate the ID token in the SPA as well: check `iss`, `aud`, `exp`, `nonce`, and the signature via JWKS. Do not use ID token claims as an authorisation decision for APIs.',
     'Never ship a `client_secret` in JavaScript "just for the token call". It is public by definition.',
   ],
   config: [
-    cfg('OpenID Connect → Remote Clients → portal-spa (public client)', [
+    cfg('Federation → OpenID Connect → Local Providers → Remote Clients → portal-spa (public client)', [
       '`response_types = code`, `grant_types = authorization_code`.',
       '`token_endpoint_auth_method = none` for a true public client (confirm the exact option in your OneGate version).',
       'Exact `redirect_uris`, e.g. `https://app.example.com/callback`. No wildcards.',
       '`scope = openid profile orders.read` — the SPA can only ask for what is listed here.',
       '**Do not** issue refresh tokens to this client.',
     ]),
-    cfg('Local Provider → Advanced Settings', [
+    cfg('Federation → OpenID Connect → Local Providers → Advanced Settings', [
       '`code_challenge_methods_supported` must include `S256`.',
       'Keep `response_types_supported = code` only: implicit and hybrid give you tokens in the URL fragment for no good reason.',
     ]),
-    CFG.localProvider,
+    CFG.localProvider(),
   ],
   pitfalls: [
     '`redirect_uri mismatch` — a trailing slash, a different port or http vs https. It must match exactly.',

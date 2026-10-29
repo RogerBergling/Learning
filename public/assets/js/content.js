@@ -2,7 +2,7 @@ export const DOCS = [
   {
     slug: '01-architecture',
     title: 'The big picture',
-    blurb: 'The four things OneGate can be in a single request — proxy, OpenID Provider, Relying Party and BFF — and the trust boundaries between them.',
+    blurb: 'The roles OneGate can play in a single request — proxy, OpenID Provider, Relying Party, BFF and token handler — and the trust boundaries between them.',
     chapter: 'Foundations',
     minutes: 12,
   },
@@ -36,8 +36,8 @@ export const DOCS = [
   },
   {
     slug: '06-attribute-providers',
-    title: 'Attribute providers & JVAP',
-    blurb: 'The User Attribute API, subject/actor/ext, signed requests, JsonPath, caching and how PARM values become claims.',
+    title: 'Attribute sources & the User Attribute API',
+    blurb: 'LDAP, REST and Graph sources, subject/actor/ext, access tokens, JsonPath, caching and how PARM values become claims.',
     chapter: 'OneGate configuration',
     minutes: 15,
   },
@@ -70,6 +70,13 @@ export const DOCS = [
     minutes: 14,
   },
   {
+    slug: '11-control-center',
+    title: 'The Control Center, end to end',
+    blurb: 'Virtual Host Selector, Monitoring, Administration, Server/Web Settings, Authentication, Federation and Activate Changes — the manual’s map of the product.',
+    chapter: 'OneGate configuration',
+    minutes: 14,
+  },
+  {
     slug: 'glossary',
     title: 'Glossary',
     blurb: 'Every acronym in this lab, in one place, in plain language.',
@@ -90,8 +97,9 @@ export const CATEGORIES = {
   tokens: { label: 'Token design', blurb: 'Formats, audiences and validation.' },
   federation: { label: 'Federation', blurb: 'OneGate as RP for someone else\'s IdP.' },
   saml: { label: 'SAML', blurb: 'The same identity, in a signed XML envelope.' },
-  attributes: { label: 'Attributes', blurb: 'JVAP / REST entitlements, caching and delegation.' },
+  attributes: { label: 'Attributes', blurb: 'REST / Graph attribute sources, caching and delegation.' },
   proxy: { label: 'Proxy & SSO', blurb: 'Protecting apps that know nothing about OIDC.' },
+  setup: { label: 'Setup walkthrough', blurb: 'Where each setting lives in the Control Center.' },
 };
 
 export const LEARNING_PATH = [
@@ -99,6 +107,7 @@ export const LEARNING_PATH = [
   '02-oidc-basics',
   '07-tokens-and-lifecycle',
   '03-onegate-local-provider',
+  '11-control-center',
   '05-bff',
   '06-attribute-providers',
   '04-federation-rp-saml',

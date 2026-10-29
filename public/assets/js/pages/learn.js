@@ -16,6 +16,7 @@ const RELATED = {
   '08-server-to-server': ['client-credentials', 'bff-exchange'],
   '09-scenario-catalog': ['bff-login', 'token-formats', 'attr-rest'],
   '10-troubleshooting': ['refresh-rotation', 'logout', 'bff-exchange'],
+  '11-control-center': ['control-center-setup', 'legacy-proxy-sso', 'bff-login', 'attr-rest'],
   glossary: [],
 };
 

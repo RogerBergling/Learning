@@ -7,7 +7,7 @@ export const fedOidcInbound = {
   level: 'advanced',
   minutes: 12,
   summary:
-    'A partner authenticates their own people. OneGate acts as the Relying Party, validates the partner token, maps the identity to a local user, enriches it from an attribute provider, and lets a legacy app behind the proxy see a trusted identity.',
+    'A partner authenticates their own people. OneGate acts as the Relying Party, validates the partner token, maps the identity to a local user, enriches it from an attribute source, and lets a legacy app behind the proxy see a trusted identity.',
   nodes: ['user', 'onegate', 'frontend', 'backend', 'idp', 'attr'],
   nodeLabels: {
     frontend: { name: 'Legacy app', sub: 'behind the proxy · no OIDC' },
@@ -22,7 +22,7 @@ export const fedOidcInbound = {
     },
     {
       from: 'og.proxy', to: 'user', badge: '302 RP login',
-      detail: 'The resource is protected by an RP Authentication method. OneGate redirects to that RP\'s login path, which starts an OIDC authorization request against the configured remote provider.',
+      detail: 'The Web Resource uses **Authentication type = Normal**, and its ACL requires an authentication method backed by the **RP Authentication** config. OneGate redirects to that method\'s login path, which starts an OIDC authorization request against the configured remote provider.',
       tags: ['RP auth'],
     },
     {
@@ -87,19 +87,19 @@ grant_type=authorization_code&code=…&redirect_uri=…&code_verifier=…`,
     {
       from: 'og.rp', to: 'og.attr', badge: 'resolve attributes',
       detail:
-        'The partner knows who the user is; your attribute provider knows what they may do. OneGate asks the REST / JVAP source for roles, department and entitlements using the local user ID.',
+        'The partner knows who the user is; your attribute source knows what they may do. OneGate asks the REST attribute source for roles, department and entitlements using the local user ID.',
       channel: 'internal',
       tags: ['enrichment'],
     },
     {
       from: 'og.attr', to: 'attr', badge: 'POST user attributes',
       detail:
-        'The User Attribute API request carries `realm`, `subject` (`PARM{mguid}`), the `requested_attributes` array, optional `ext`, and an `actor` block when the lookup is delegated. OneGate signs the request if **Include Access Token** is enabled.',
+        'The attribute-source request carries `realm`, `subject` (`PARM{mguid}`), the `requested_attributes` array, optional `ext`, and an `actor` object (`{ "subject": "..." }`) when the lookup is delegated. If **Include Access Token** is enabled, OneGate sends a JWT access token with the request.',
       channel: 'attr',
       http: {
         req: `POST /attribute-api/v1/users HTTP/1.1
 Host: attributes.internal
-Authorization: Bearer <signed attribute request JWT>
+Authorization: Bearer <access token from Include Access Token>
 
 {
   "realm": "corp",
@@ -133,15 +133,14 @@ Authorization: Bearer <signed attribute request JWT>
     {
       from: 'og.proxy', to: 'frontend', badge: 'GET /reports + headers',
       detail:
-        'The proxy forwards the original request to the legacy app with identity headers (or a basic-auth header, depending on the resource\'s SSO config). The app knows nothing about OIDC — it just trusts the proxy.\n\nThis trust boundary is why the proxy must **strip** any inbound copies of those headers.',
+        'The proxy forwards the original request to the legacy app with the custom headers configured on the Web Resource (**Advanced → Send Custom Headers**). Enter `USERID` and `DEPARTMENT` in Control Center; OneGate adds the `X-` prefix and sends `X-USERID` and `X-DEPARTMENT`.\n\nThe app knows nothing about OIDC — it just trusts the proxy. The manual notes that headers starting with `X` are never passed from clients, so a browser cannot spoof these values through OneGate.',
       http: {
         req: `GET /reports HTTP/1.1
 Host: app.internal
-X-Forwarded-User: roger.lind
-X-Forwarded-Department: Finance
-X-Forwarded-Roles: report-reader,cost-centre-42`,
+X-USERID: roger.lind
+X-DEPARTMENT: Finance`,
       },
-      tags: ['header injection', 'strip inbound'],
+      tags: ['custom headers', 'trust boundary'],
     },
     {
       from: 'frontend', to: 'user', badge: '200 report page',
@@ -162,27 +161,28 @@ X-Forwarded-Roles: report-reader,cost-centre-42`,
   ],
   config: [
     CFG.rp('partner-oidc'),
-    cfg('OpenID Connect → Remote Providers → partner-oidc', [
+    cfg('Federation → OpenID Connect RP → Remote Providers → partner-oidc', [
       '**Use Discovery URL** if the partner supports `/.well-known/openid-configuration`; otherwise paste the metadata manually.',
       'Keep **Skip SSL check** off outside test.',
       'Timeouts: fail fast (2–5 s) rather than hanging user logins.',
     ]),
-    cfg('OpenID Connect RP → Authentication → Local user handling', [
+    cfg('Federation → OpenID Connect RP → RP Authentication → Local user handling', [
       '**Custom User Id attribute** = `email`, or map `sub` to a custom attribute.',
       '**Handle unknown users** = Reject unless JIT provisioning is a deliberate decision.',
       '**Session Properties** to copy partner claims into the session, e.g. `partnerSub = PARM{prop-oidc.realm.userinfo.sub}`.',
     ]),
     CFG.attributeSource('attr-0'),
-    cfg('Proxy resource → SSO configuration', [
-      'Protect `/reports` with the RP authentication method, and map identity to headers.',
-      'Strip inbound `X-Forwarded-*` headers at the edge.',
+    cfg('Web Resource → Advanced / Access Control', [
+      'Protect `/reports` with **Authentication type = Normal** plus an ACL rule for the allowed groups.',
+      '**Send Custom Headers**: enter `USERID` (OneGate adds `X-`); add `DEPARTMENT` if the app needs it.',
+      'Do not rely on `X-Forwarded-User`; only configured custom headers are sent.',
     ]),
   ],
   pitfalls: [
     '`invalid_state` — the login took longer than the transaction lifetime, or the user opened the login in two tabs.',
     'Matching on email when the partner recycles addresses after someone leaves.',
     'Trusting partner `groups` claims directly for authorisation without mapping them to local roles.',
-    'Headers injected by the proxy are also accepted from the internet because nobody stripped them.',
+    'Configured custom headers (e.g. `X-USERID`) are only safe if the legacy app is reachable exclusively through OneGate.',
     'Attribute lookups on every request because the cache TTL is 0.',
   ],
 };
@@ -308,7 +308,7 @@ Content-Type: text/html
     {
       from: 'sp', to: 'sp', badge: 'validate assertion',
       detail:
-        'The SP validates the XML signature against OneGate\'s published certificate, checks `Audience` = its own entity ID, `NotBefore`/`NotOnOrAfter`, `Destination` = its ACS, `InResponseTo` (if it tracks requests), and that the assertion ID has not been replayed. Then it creates a session.',
+        'The SP validates the XML signature against OneGate\'s published certificate, checks `Audience` against the value it expects (its entity ID or ACS URL), `NotBefore`/`NotOnOrAfter`, `Destination` = its ACS, `InResponseTo` (if it tracks requests), and that the assertion ID has not been replayed. Then it creates a session.',
       channel: 'internal',
       tags: ['signature', 'audience', 'conditions', 'replay'],
     },
@@ -331,28 +331,39 @@ Content-Type: text/html
     'When users arrive from a partner, decide whether to include an attribute that identifies the upstream IdP. It is invaluable in audits.',
   ],
   config: [
-    cfg('SAML IDP → Local Identity Providers', [
+    cfg('Federation → SAML IDP → Local Identity Providers', [
       'Entity ID, SSO endpoint and signing certificate (published in metadata).',
       '**Active local IDPs**: which IdPs are enabled, and on which virtual hosts.',
-      '**Remote SPs**: entity ID, ACS URL, NameID format, signing requirements, attribute release.',
-      '**Remote SP groups**: share one policy across many SPs.',
+      '**Trusted Service Providers** / **Trusted Service Provider Groups** (configured under Remote SP groups): share one policy across many SPs.',
     ]),
-    cfg('Federation Settings → Attribute Profiles', [
+    cfg('Federation → SAML IDP → Remote Service Providers', [
+      '**EntityID** and **Assertion Consumer URL** identify which SP a request comes from. Both fields may be regular expressions to match SPs with dynamic addresses.',
+      'Specific SPs should sort above wildcard SPs. Other fields: **Login page URL**, **Logout Request URL**, **Logout Response URL**, **Unique Name**.',
+      '**Trusted Metadata Providers**: import remote SPs from metadata and keep them updated.',
+    ]),
+    cfg('Federation → SAML IDP → Remote Service Providers → (SP settings)', [
+      '**Allow different Authn Context Class** permits an assertion whose AuthnContext differs from the request.',
+      '**Allow Unsolicited** enables IdP-initiated authentication; leave it off unless the SP needs it.',
+      '**Strict Check** requires `InResponseTo`, `NotOnOrAfter` and `Recipient` in SubjectConfirmationData, plus `NotOnOrAfter` and `AudienceRestriction` in Conditions.',
+      '**Require signed logout request/response** and **Force Authentication** are separate controls.',
+    ]),
+    cfg('Federation → Federation Settings → Attribute Profiles', [
       'Map local attributes to SAML attributes: `givenName`, `surname`, `department`, `role`.',
       'OID names (`urn:oid:2.5.4.42`) are still common in enterprise SPs — the profile is where you translate.',
     ]),
-    cfg('SAML IDP → IDP AuthnContext → AuthnContext mapping', [
-      'Translate real authentication strength (password, MFA, certificate) into the class the SP requires.',
+    cfg('Federation → SAML IDP → IDP AuthnContexts → Method mapping', [
+      'Translate actual authentication strength (password, MFA, certificate) into the class the SP requires.',
       'A mismatch here is a common cause of "login works at the IdP but the SP rejects the assertion".',
     ]),
-    cfg('Federation Settings → Metadata Providers', [
+    cfg('Federation → SAML IDP → Metadata Providers', [
       'Pull SP metadata on a schedule instead of pasting XML by hand.',
+      '**Min refresh delay** / **Max refresh delay** bound how often metadata is fetched; the manual recommends not going below 600 s.',
       'Certificate rollover is the usual breakage: keep old and new certificates published during the overlap.',
     ]),
   ],
   pitfalls: [
     'Clock skew beyond the assertion validity window → "assertion expired" at the SP.',
-    'Audience mismatch: the SP checks that its own entity ID is in `Audience`.',
+    'Audience mismatch: the SP expects either its entity ID or its ACS URL in `Audience` — match the manual’s **Audience restriction** setting to what it validates.',
     'The SP validates the response signature but not the assertion signature (or vice versa) — decide and document.',
     'Replay: the same assertion posted twice. Keep an assertion-ID cache for at least the validity window.',
     'ACS URL changed at the SP but not in OneGate → the auto-post goes to the wrong place.',
@@ -447,20 +458,20 @@ SAMLResponse=PHNhbWxwOlJlc3BvbnNl…&RelayState=%2Freports`,
     {
       from: 'og.rp', to: 'og.rp', badge: 'map attributes',
       detail:
-        'The NameID and attributes are translated by the **Method mapping** and attribute profile: which attribute is the local username, which become session properties, which are only informational. Unknown users follow the same reject/allow/JIT policy as OIDC.',
+        'The **Remote IDP → Attributes** settings and **User Handling** decide which attribute is the local username, which become session properties, and which are only informational. **Method mapping** is separate: it translates the asserted authentication method into a local method for ACL. Unknown users follow the reject/allow/JIT policy.',
       channel: 'internal',
       tags: ['method mapping', 'local user'],
     },
     {
       from: 'og.rp', to: 'og.attr', badge: 'optional enrichment',
-      detail: 'If the assertion does not contain what your apps need (roles, cost centre), OneGate can enrich from a REST / JVAP attribute source before creating the session.',
+      detail: 'If the assertion does not contain what your apps need (roles, cost centre), OneGate can enrich from a REST attribute source before creating the session.',
       channel: 'internal',
       tags: ['optional'],
     },
     {
       from: 'og.rp', to: 'user', badge: 'Set-Cookie + 302',
       detail: 'The local session exists. OneGate sets its session cookie and redirects to the requested resource (or a default page for IdP-initiated logins with no target).',
-      vault: [add('browser', ITEM.cookie({ id: 'sso', name: 'OneGate session cookie', meta: 'HttpOnly · Secure' })), del('browser', 'code')],
+      vault: [add('browser', ITEM.cookie({ id: 'sso', name: 'OneGate session cookie', meta: 'HttpOnly · Secure' }))],
       tags: ['local session'],
     },
     {
@@ -487,19 +498,26 @@ SAMLResponse=PHNhbWxwOlJlc3BvbnNl…&RelayState=%2Freports`,
     'OneGate can be SP and IdP at the same time for different partners — that is the hub pattern, and each side has its own metadata.',
   ],
   config: [
-    cfg('SAML SP → Local Service Providers', [
-      'SP entity ID, ACS URL and the endpoints published in OneGate\'s SP metadata.',
-      '**Remote IDPs**: the partner IdP\'s entity ID and signing certificate.',
-      '**Active remote IDPs**: enable the ones you trust, per virtual host.',
-      'NameID format and attribute mapping to local user attributes.',
+    cfg('Federation → SAML SP → Local Service Providers', [
+      'Description, unique name and optional custom EntityID. OneGate generates the ACS and metadata endpoints.',
+      '**Allow Unsolicited** permits IdP-initiated SSO; **Strict Check** adds the SubjectConfirmationData and Conditions requirements.',
+      'Signing/encryption keys and the metadata options (validity, cache duration, UI extensions).',
+      '**Metadata**: publish OneGate\'s SP metadata for the partner IdP.',
     ]),
-    cfg('SAML SP → Method mapping', [
-      'Map assertion attributes to local parameters (username, email, groups).',
-      'Decide what happens when a mapped attribute is missing — fail closed.',
+    cfg('Federation → SAML SP → Remote IDPs', [
+      'Partner **EntityID**, SingleSignOnService Location, SingleLogoutService locations.',
+      '**Attributes / User Handling**: Username source (NameID or attribute), custom attribute carrying the authentication method, and the reject/allow/no-DB-check policy.',
+      '**Keys**: upload the partner\'s primary and secondary signing certificates; OneGate tries Key 1 then Key 2.',
     ]),
-    cfg('Federation Settings → Metadata Providers', [
-      'Fetch the partner metadata and rotate certificates automatically where possible.',
-      'Keep the previous certificate during rollover.',
+    cfg('Federation → SAML SP → Active remote IDPs / Method mapping', [
+      'Enable the remote IDPs you trust, per virtual host. At least one **Method mapping** must match or users cannot log in.',
+      '**Map Pattern** is a literal AuthnContext URI or a regular expression such as `.*Password.*`.',
+      '**Local Method** is a normal local method (e.g. WebToken) or **Custom**, which creates a new local method with a **Custom Name**.',
+      '**Limit mapping** restricts a mapping to selected remote IDPs; **Override RequestedAuthnContext** controls proxying.',
+    ]),
+    cfg('Certificate rollover', [
+      'Keep the previous IdP signing certificate as Key 2 while the partner rolls over.',
+      'An expired certificate is still accepted for signature validation, but do not rely on that as a rotation plan.',
     ]),
   ],
   pitfalls: [

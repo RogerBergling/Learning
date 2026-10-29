@@ -26,49 +26,63 @@ export const ITEM = {
 /** Config checklist block. */
 export const cfg = (title, items) => ({ title, items });
 
-/** Reusable OneGate config fragments. */
+/** Reusable OneGate config fragments (menu labels follow the Administration Manual). */
 export const CFG = {
-  localProvider: cfg('OpenID Connect → Local Providers → (your provider)', [
-    'General: realm + virtual host; Discovery URL is generated for you.',
-    'Metadata: `response_types_supported = code`, `grant_types_supported = authorization_code`, `token_endpoint_auth_methods_supported = client_secret_basic`, `id_token_signing_alg_values_supported = RS256`.',
-    'Provider settings: choose **Access Token Type** (opaque or JWT) and the access / ID token lifetimes.',
-    'Realm Settings: pick the **Default Attribute Profile** plus the Access Token and ID Token attribute profiles.',
-    'Remote Clients: create one entry per application, with an exact `redirect_uris` whitelist.',
+  localProvider: (realm = 'portal') => cfg(`Federation → OpenID Connect → Local Providers → ${realm}`, [
+    '**General**: Description, Virtual Host Domain and a unique **Realm** (the realm forms the endpoint paths). **Discovery URL** appears once the provider exists.',
+    '**Metadata**: `response_types_supported = code`, `grant_types_supported = authorization_code`, `token_endpoint_auth_methods_supported = client_secret_basic`, `token_endpoint_auth_signing_alg_values_supported = RS256`, `id_token_signing_alg_values_supported = RS256`, `subject_types_supported = public`.',
+    '**Provider Settings**: **Access Token Type** (`opaque` or `jwt`), **Access Token Lifetime (min)**, **ID Token Lifetime (min)**.',
+    '**Refresh token**: lifetime, total lifetime, max idle, **Update refresh token**, **Reuse detection**, **Reuse grace period (sec)**, **Issue id token**.',
+    '**Realm Settings**: enable the provider on the virtual host, choose the **Default Attribute Profile**, **Access Token Attribute Profile** and **ID Token Attribute Profile**.',
+    '**Key Settings**: RSA 2048/3072/4096, optional x5c certificate, `x5t` / `x5t#S256` thumbprints. OneGate can also generate EdDSA, EC and encryption keys; the manual provides **No EdDSA key** / **No EC key** / **No encryption keys** switches for clients that cannot consume them.',
+    '**Remote Clients**: one entry per application; see below.',
   ]),
-  remoteClient: (id = 'my-app', extra = []) => cfg(`OpenID Connect → Remote Clients → ${id}`, [
-    '`client_id` + `client_secret` (used by the client at the token endpoint).',
-    '`redirect_uris`: exact URIs only — no wildcards unless you really must.',
-    '`scope`: include `openid`, then `profile`, `email` and any custom scope your claims need.',
-    '`response_types = code`, `grant_types = authorization_code`.',
-    '`token_endpoint_auth_signing_alg = RS256`, `id_token_signed_response_alg = RS256`.',
+  remoteClient: (id = 'my-app', extra = []) => cfg(`Federation → OpenID Connect → Local Providers → Remote Clients → ${id}`, [
+    '**redirect_uris**: comma-separated whitelist; the incoming `redirect_uri` is matched against the whole list. Wildcards (`*`) are possible but the manual strongly advises exact URIs.',
+    '**scope**: space separated, must include `openid`; `profile`, `email`, `address`, `phone` are pre-defined. Every claim still needs a mapping in the attribute profile.',
+    '**response_types**: use `code`; the manual explicitly discourages implicit and hybrid.',
+    '**grant_types**: `authorization_code` is required for the code flow.',
+    '**token_endpoint_auth_signing_alg** `RS256`, **id_token_signed_response_alg** `RS256`, **userinfo_signed_response_alg** `RS256`.',
+    '**client_id** + **client_secret**: the client authenticates with both at the token endpoint.',
+    '**Local properties for claims**: values become `PARM{oidcclient.NAME}` during claim evaluation (e.g. a client-specific `sub`, or `PARM{oidcclient.name}` used as a REST attribute-source audience).',
+    '**Access Token JWT**: **Default resource (`aud`)** (overrides the default `client_id`), **Allowed resources from parameter** (`resource` request parameter), **Resource indicator from scope**.',
     ...extra,
   ]),
-  bff: (realm = 'portal', extra = []) => cfg(`OpenID Connect RP → Backend For Frontend → ${realm}`, [
-    '**Realm**: the `realm` path segment, e.g. `/mg-local/portal/bff/...`. Domain + realm must be unique.',
-    '**Limit for domains**: the host(s) this BFF is valid for.',
-    '**RP Authentication**: which remote provider authenticates the user.',
-    '**Local Provider** + **Remote Client**: which OneGate OP issues the tokens, and as which client.',
-    '**Client Redirect URIs**: prefix whitelist for the SPA redirect after login.',
-    '**CSRF Token header name**: `X-CSRFTOKEN`.',
+  bff: (realm = 'portal', extra = []) => cfg(`Federation → OpenID Connect RP → Backend For Frontend → ${realm}`, [
+    '**Description**, **Realm** (URL-safe path segment) and **Limit for domains** (comma separated). Domain + realm must be unique per BFF config.',
+    '**RP Authentication**: the OpenID remote provider used to authenticate the user.',
+    '**Local Provider** + **Remote Client**: the local OP that issues the tokens, and the client it issues them for.',
+    '**Client Redirect URIs**: comma-separated list; each string is matched against the **beginning** of the requested `redirect_uri` (prefix match).',
+    '**Logout URL**: returned by the response to `/mg-local/(realm)/bff/logout` after the session is logged out.',
+    '**Authenticate users from tokens**: check this only when a **third-party** OP authenticates the user. Leave it off when the BFF’s RP points at the same OneGate.',
+    '**Enable AT Endpoint (debug)**: exposes `/mg-local/(realm)/bff/accessToken`. Testing only — it defeats the point of the BFF.',
+    '**CSRF Token header name**: suggested `X-CSRFTOKEN`.',
+    '**Initial subject / ext / audience / realm** become `PARM{bffN.subject|ext|audience|realm}` after login. **Default exchange ext / audience / realm** apply when an exchange request omits them.',
+    '**Actor claims**: comma-separated claim names copied from the original token into the `act` claim of the exchanged token; the authenticated user’s `sub` is always added.',
     ...extra,
   ]),
-  rp: (name = 'corp-entra') => cfg(`OpenID Connect RP → Authentication → ${name}`, [
-    '**Remote Provider**: points at the partner OP (discovery or manual metadata).',
-    '**scope** `openid profile email`, **response_types** `code`, **token_endpoint_auth_method** `client_secret_basic`.',
-    '`client_id` / `client_secret` as registered at the partner OP.',
-    '**Local user handling**: how `sub` (or another attribute) maps to a local user; what to do with unknown users.',
-    '**Session Properties**: copy values out of the response, e.g. `profile = PARM{prop-oidc.realm.userinfo.profile}`.',
+  rp: (name = 'corp-entra') => cfg(`Federation → OpenID Connect RP → RP Authentication → ${name}`, [
+    '**Description** + **Unique Name** (also forms the callback endpoint) + **Virtual Host Domain**.',
+    '**Remote Provider**: the partner OP, configured with a Discovery URL or manual metadata (`issuer`, `authorization_endpoint`, `token_endpoint`, `userinfo_endpoint`, `jwks_uri`).',
+    '**scope** must include `openid`; **response_types** `code`; **token_endpoint_auth_method** usually `client_secret_basic` or `client_secret_post`.',
+    '**client_id** / **client_secret** as registered at the partner OP; **id_token_signed_response_alg** per the OP.',
+    '**Local user handling**: custom UserId attribute, use `sub` as username, or map to a local attribute. **Handle unknown users**: reject, allow (try local match), or no user-db check.',
+    '**Session Properties**: copy response values, e.g. `profile = PARM{prop-oidc.realm.userinfo.profile}`.',
+    '**prompt**: normally left empty. `none`, `login`, `consent`, `select_account` are available but this lab’s flows do not rely on them.',
   ]),
-  resourceSSO: cfg('Proxy resource → SSO / authentication = your BFF config', [
-    'Protect the resource with the BFF instead of a plain form login.',
-    'OneGate validates the BFF cookie on every request and injects the bearer token towards the backend.',
-    'Strip any inbound `X-Forwarded-User` / `Authorization` headers at the edge so clients cannot spoof identity.',
+  webResource: cfg('Administration → User Services → Web Resource → Advanced / Access Control', [
+    '**Send Custom Headers** (Advanced tab): enter the header **without** the `X-` prefix, e.g. `USERID`; OneGate adds `X-` and sends `X-USERID` to the web resource.',
+    'The manual states headers starting with `X` are **never passed from the client** — so an inbound `X-USERID` cannot be spoofed through OneGate.',
+    '**Access Control (ACL)**: authorise by group, IP address, date/time and authentication method before the request reaches the app.',
+    '**SSO Settings → Authentication type = Normal** means no resource-specific SSO; normal OneGate authentication plus the ACL protects the app.',
   ]),
-  attributeSource: (id = 'attr-0') => cfg(`Attribute source (REST / JVAP) → ${id}`, [
-    '**API URL** + method (`GET`/`POST`), connect/read timeout, skip-SSL only for internal self-signed services.',
-    '**Realm**, **Audience**, **Subject** (`PARM{mguid}`), optional **Actor** and **Ext**.',
-    '**Include Access Token**: signs the attribute request with `iss`, `aud`, `sub` and a key.',
-    '**Valid time**: how long resolved attributes are cached in the local session.',
-    '**Attributes**: remote names to request, optional **JsonPath**, then use `PARM{attr-0.attributes.department}` in the attribute profile.',
+  attributeSource: (id = '0') => cfg(`Authentication → Attribute Sources → ${id}`, [
+    '**Description**; **Log out user on fail** logs the user out when they are not found in the source.',
+    '**Type**: LDAP, REST or Graph API service.',
+    '**API URL** + method, connect/read timeout, skip-SSL only for internal self-signed services.',
+    'REST request body: **realm**, **subject**, **actor** as `{ "subject": "..." }`, **requested_attributes**, optional **Ext**.',
+    '**Include Access Token**: check to send a JWT to the attribute service; set **`iss`**, **`aud`**, **`sub`** and the sign/encrypt **Key**.',
+    '**Valid time**: how long resolved attributes are cached in the local session. **Attributes**: Attribute Name, optional **JsonPath** and **Friendly Name** (GUI label only).',
+    'Use `PARM{attr-0.attributes.NAME}` (or `PARM{attr-0.ATTRIBUTE_NAME}` for a JsonPath attribute) in an attribute profile to turn the value into a claim.',
   ]),
 };

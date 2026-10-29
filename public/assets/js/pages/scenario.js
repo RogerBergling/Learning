@@ -13,16 +13,18 @@ const DOCS_FOR = {
   saml: ['04-federation-rp-saml'],
   attributes: ['06-attribute-providers'],
   proxy: ['01-architecture', '05-bff'],
+  setup: ['11-control-center', '01-architecture'],
 };
 
 const DOC_TITLES = {
   '01-architecture': 'The big picture',
   '02-oidc-basics': 'OIDC & OAuth 2.0',
   '05-bff': 'Backend for Frontend',
-  '06-attribute-providers': 'Attribute providers & JVAP',
+  '06-attribute-providers': 'Attribute sources & the User Attribute API',
   '07-tokens-and-lifecycle': 'Tokens, storage & lifetimes',
   '08-server-to-server': 'Server-to-server',
   '04-federation-rp-saml': 'Federation & SAML',
+  '11-control-center': 'The Control Center, end to end',
 };
 
 export async function renderScenarioPage(view, id) {

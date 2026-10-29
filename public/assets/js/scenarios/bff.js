@@ -16,7 +16,7 @@ export const bffLogin = {
     {
       from: 'user', to: 'og.bff', badge: 'GET /bff/login',
       detail:
-        'The SPA sends the user to the BFF login endpoint. The only parameter is where to go afterwards, and it is checked against the **Client Redirect URIs** prefix whitelist.\n\nOneGate creates a login transaction in its server-side session: `state`, `nonce`, `code_verifier`, the return URL. Nothing is issued yet.',
+        'The SPA sends the user to the BFF login endpoint. The only parameter is where to go afterwards, and it is checked against the **Client Redirect URIs** prefix whitelist.\n\nThe manual documents the `/bff/logout` and `/bff/accessToken` endpoints. The login, RP-callback and exchange paths shown in this lab are illustrative — treat them as examples and read your own deployment.\n\nOneGate creates a login transaction in its server-side session: `state`, `nonce`, `code_verifier`, the return URL. Nothing is issued yet.',
       http: {
         req: `GET /mg-local/portal/bff/login?redirect_uri=https%3A%2F%2Fapp.example.com%2F
 Host: app.example.com`,
@@ -37,13 +37,13 @@ Location: /mg-local/portal/authorize?…`,
     {
       from: 'og.rp', to: 'user', badge: '302 /authorize',
       detail:
-        'The browser is redirected to the Local Provider with a normal authorization request. The `redirect_uri` points back into OneGate itself: `/mg-local/portal/bff/callback`.\n\nThe RP authenticates as the remote client `bff-portal`, which is a **confidential** client registered on the local provider.',
+        'The browser is redirected to the Local Provider with a normal authorization request. The `redirect_uri` points back into OneGate\'s **RP callback** — not the SPA and not the BFF callback; the exact path is deployment-specific.\n\nThe RP authenticates as the remote client `bff-portal`, which is a **confidential** client registered on the local provider.',
       http: {
         res: `HTTP/1.1 302 Found
 Location: https://login.example.com/mg-local/portal/authorize?
   response_type=code
   &client_id=bff-portal
-  &redirect_uri=https%3A%2F%2Flogin.example.com%2Fmg-local%2Fportal%2Fbff%2Fcallback
+  &redirect_uri=https%3A%2F%2Flogin.example.com%2Fmg-local%2Fportal%2Frp%2Fcallback
   &scope=openid%20profile%20orders.read
   &state=8f2c1d…
   &nonce=3b91ae…
@@ -71,20 +71,20 @@ Location: https://login.example.com/mg-local/portal/authorize?
     },
     {
       from: 'og.op', to: 'user', badge: '302 ?code=…',
-      detail: 'OneGate redirects to the BFF callback with a one-time code. The browser carries it for exactly one hop.',
+      detail: 'OneGate redirects to the **RP callback** with a one-time code. The browser carries it for exactly one hop.',
       vault: [add('browser', ITEM.code())],
       tags: ['front channel', 'single use'],
     },
     {
-      from: 'user', to: 'og.bff', badge: 'GET /bff/callback',
+      from: 'user', to: 'og.rp', badge: 'GET RP callback',
       detail:
-        'The BFF callback checks the `state` against the transaction it stored in step 1, then consumes the transaction. An unknown or replayed `state` is rejected — this is what stops login CSRF and session fixation.',
+        'The **RP callback** checks `state` against the RP transaction, then consumes it. An unknown or replayed `state` is rejected — this is what stops login CSRF and session fixation. The BFF then completes its own login transaction and creates the BFF session.',
       tags: ['state check'],
     },
     {
-      from: 'og.bff', to: 'og.token', badge: 'POST /token (Basic)',
+      from: 'og.rp', to: 'og.token', badge: 'POST /token (Basic)',
       detail:
-        'The back channel. Even though client and provider live in the same product, the exchange follows the spec: `client_id:client_secret` in HTTP Basic, the code, the `redirect_uri`, and the PKCE `code_verifier`.\n\nNo shortcut, no "trusted local call". That is a feature: the flow you test is the flow you get.',
+        'The back channel. Even though RP and provider live in the same product, the exchange follows the spec: `client_id:client_secret` in HTTP Basic, the code, the `redirect_uri`, and the PKCE `code_verifier`.\n\nNo shortcut, no "trusted local call". That is a feature: the flow you test is the flow you get.',
       channel: 'back',
       http: {
         req: `POST /mg-local/portal/token HTTP/1.1
@@ -94,7 +94,7 @@ Content-Type: application/x-www-form-urlencoded
 
 grant_type=authorization_code
 &code=ac_7Kd2…
-&redirect_uri=https%3A%2F%2Flogin.example.com%2Fmg-local%2Fportal%2Fbff%2Fcallback
+&redirect_uri=https%3A%2F%2Flogin.example.com%2Fmg-local%2Fportal%2Frp%2Fcallback
 &code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk`,
         res: `HTTP/1.1 200 OK
 Cache-Control: no-store
@@ -105,9 +105,9 @@ Cache-Control: no-store
       tags: ['back channel', 'client secret', 'PKCE'],
     },
     {
-      from: 'og.token', to: 'og.bff', badge: 'AT + ID + RT', channel: 'back',
+      from: 'og.token', to: 'og.rp', badge: 'AT + ID + RT', channel: 'back',
       detail:
-        'The tokens land in the BFF session, server-side. The access token is what the proxy will use towards APIs. The ID token establishes the user identity. The refresh token lets the BFF renew silently.',
+        'The tokens land in the RP session, server-side. The access token is what the BFF/proxy will use towards APIs. The ID token establishes the user identity. The refresh token lets the session renew silently when configured.',
       vault: [
         add('onegate', ITEM.access({ name: 'Access token (BFF session)', meta: 'aud=api.orders · server-side' })),
         add('onegate', ITEM.id()),
@@ -199,22 +199,23 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6…`,
       '**Local Provider**: the OneGate OP that issues the tokens.',
       '**Remote Client**: `bff-portal` — the client the BFF authenticates as at the token endpoint.',
       '**Client Redirect URIs**: `https://app.example.com/` — prefix whitelist for the post-login redirect.',
-      '**Logout URL**: where the browser goes after `/bff/logout`.',
+      '**Logout URL**: where the browser goes after `/mg-local/portal/bff/logout`.',
+      '**Authenticate users from tokens**: leave **off** — the user is authenticated by the same OneGate, not a third-party OP.',
       '**Enable AT Endpoint (debug)**: leave **off**.',
     ]),
-    cfg('OpenID Connect RP → Authentication → bff-portal-rp', [
+    cfg('Federation → OpenID Connect RP → RP Authentication → bff-portal-rp', [
       '**Remote Provider**: points at the OneGate Local Provider (discovery or manual metadata).',
-      '`client_id = bff-portal`, `client_secret = …` — a confidential client on the local provider.',
-      '`response_types = code`, `token_endpoint_auth_method = client_secret_basic`, `scope = openid profile orders.read`.',
+      '**client_id = bff-portal**, **client_secret = …** — a confidential client on the local provider.',
+      '**response_types = code**, **token_endpoint_auth_method = client_secret_basic**, **scope = openid profile orders.read**.',
     ]),
     CFG.remoteClient('bff-portal', [
-      'Redirect URI must be exactly the BFF callback: `https://login.example.com/mg-local/portal/bff/callback`.',
-      'Grant `authorization_code` + `refresh_token`.',
+      'Redirect URI must be the RP callback, e.g. `https://login.example.com/mg-local/portal/rp/callback` (illustrative).',
+      'Grant `authorization_code` and, if the session renews, `refresh_token`.',
     ]),
-    CFG.resourceSSO,
+    CFG.webResource,
   ],
   pitfalls: [
-    'The BFF callback is not in the remote client\'s redirect whitelist → `redirect_uri mismatch` and the login never completes.',
+    'The RP callback is not in the remote client\'s redirect whitelist → `redirect_uri mismatch` and the login never completes.',
     'The BFF cookie is set on the wrong domain (login host instead of app host), so the SPA never sends it.',
     '`SameSite=None` without `Secure`, or a cookie the SPA cannot use because the API path is not proxied.',
     'Forgetting the CSRF header on `POST`/`PUT`/`DELETE` and getting a 403 that looks like an auth failure.',
@@ -239,7 +240,7 @@ export const bffThirdParty = {
   steps: [
     {
       from: 'user', to: 'og.bff', badge: 'GET /bff/login',
-      detail: 'Same entry point as a local login. The difference is entirely in configuration: the BFF\'s RP Authentication points at a **partner** remote provider instead of the local one.',
+      detail: 'Same entry point as a local login (the `/bff/login` path is illustrative). The difference is entirely in configuration: the BFF\'s RP Authentication points at a **partner** remote provider instead of the local one.',
       vault: [add('onegate', ITEM.session({ id: 'tx', name: 'Login transaction', meta: 'state · nonce · verifier' }))],
       tags: ['same BFF', 'different RP'],
     },
@@ -253,13 +254,13 @@ export const bffThirdParty = {
     {
       from: 'og.rp', to: 'user', badge: '302 partner /authorize',
       detail:
-        'The browser is sent to the partner IdP with OneGate\'s registered `client_id`, the OneGate callback as `redirect_uri`, and `state`/`nonce`/PKCE. The user\'s password never touches OneGate.',
+        'The browser is sent to the partner IdP with OneGate\'s registered `client_id`, the **RP callback** as `redirect_uri`, and `state`/`nonce`/PKCE. The user\'s password never touches OneGate.\n\nThe exact RP callback path is deployment-specific; the value below is illustrative.',
       http: {
         res: `HTTP/1.1 302 Found
 Location: https://login.partner.com/oauth2/v2.0/authorize?
   client_id=og-federation
   &response_type=code
-  &redirect_uri=https%3A%2F%2Flogin.example.com%2Fmg-local%2Fportal%2Fbff%2Fcallback
+  &redirect_uri=https%3A%2F%2Flogin.example.com%2Fmg-local%2Fportal%2Frp%2Fcallback
   &scope=openid%20profile%20email
   &state=8f2c1d…&nonce=3b91ae…`,
       },
@@ -288,12 +289,12 @@ Location: https://login.partner.com/oauth2/v2.0/authorize?
       tags: ['code'],
     },
     {
-      from: 'user', to: 'og.bff', badge: 'GET /bff/callback',
-      detail: 'OneGate validates `state` and then redeems the code — this time at the **partner\'s** token endpoint.',
+      from: 'user', to: 'og.rp', badge: 'GET RP callback',
+      detail: 'The **RP callback** validates `state` and redeems the code at the **partner\'s** token endpoint. Once the RP has a session, the BFF completes its own login transaction. The path is deployment-specific.',
       tags: ['state check'],
     },
     {
-      from: 'og.bff', to: 'idp', badge: 'POST /token',
+      from: 'og.rp', to: 'idp', badge: 'POST /token',
       detail:
         'Back channel to the partner, authenticated with OneGate\'s client ID and secret (or a stronger method such as a certificate, depending on the partner). The response contains the partner\'s access token, ID token and possibly a refresh token.',
       channel: 'back',
@@ -313,7 +314,7 @@ grant_type=authorization_code&code=…&redirect_uri=…
       tags: ['back channel', 'partner secret'],
     },
     {
-      from: 'idp', to: 'og.bff', badge: 'ID token (partner)', channel: 'back',
+      from: 'idp', to: 'og.rp', badge: 'ID token (partner)', channel: 'back',
       detail:
         'The partner\'s ID token says who the user is **at the partner**: `iss`, `sub` (an object ID), `email`, maybe `groups`. OneGate verifies the signature with the partner\'s JWKS, plus `iss`, `aud`, `exp` and `nonce`.',
       vault: [add('onegate', ITEM.id({ name: 'Partner ID token', meta: 'iss=partner · sub=partner object id' }))],
@@ -372,12 +373,12 @@ grant_type=authorization_code&code=…&redirect_uri=…
   ],
   config: [
     CFG.rp('partner-entra'),
-    cfg('OpenID Connect → Remote Providers → partner-entra', [
+    cfg('Federation → OpenID Connect RP → Remote Providers → partner-entra', [
       '**Use Discovery URL**: `https://login.partner.com/.well-known/openid-configuration` (or manual metadata).',
       'Connect/read timeout, and keep **Skip SSL check** off in production.',
       '`subject_types_supported = public` unless the partner requires pairwise.',
     ]),
-    cfg('OpenID Connect RP → Authentication → Local user handling', [
+    cfg('Federation → OpenID Connect RP → RP Authentication → Local user handling', [
       '**Custom User Id attribute** → `email` (or `upn`).',
       '**Map it to a custom attribute** → `partnerObjectId`, so the next login can match on it directly.',
       '**Handle unknown users** → Reject (default), Allow, or No user db check for JIT.',
@@ -447,33 +448,34 @@ X-CSRFTOKEN: 7d1c…
     {
       from: 'og.bff', to: 'og.bff', badge: 'authorise delegation',
       detail:
-        'Before exchanging anything, OneGate must answer: **is this agent allowed to act for this customer?** That is an authorisation decision, usually backed by an attribute provider or a role/entitlement check. Without it, exchange becomes an impersonation API for anyone with a login.',
+        'Before exchanging anything, OneGate must answer: **is this agent allowed to act for this customer?** That is an authorisation decision, usually backed by an attribute source or a role/entitlement check. Without it, exchange becomes an impersonation API for anyone with a login.',
       channel: 'internal',
       tags: ['entitlement check', 'critical'],
     },
     {
-      from: 'og.bff', to: 'og.token', badge: 'token exchange',
+      from: 'og.bff', to: 'og.token', badge: 'BFF exchange',
       detail:
-        'The BFF performs a **token exchange** (the RFC 8693 style pattern) at the token endpoint: current access token as `subject_token`, the requested subject, the target audience, plus the configured defaults for `ext`, `realm` and audience.\n\nThe new token is strictly narrower: different subject, one audience, short lifetime.',
+        'The BFF performs an exchange using the token it already holds for the logged-in user. The manual describes the request as `requested_subject` with a `subject` and optional `ext`, plus optional `audience` and `realm`; it does not name the internal endpoint or wire format, so the HTTP below is illustrative.\n\nThe new token is strictly narrower: different subject, one audience, short lifetime.',
       channel: 'back',
       http: {
-        req: `POST /mg-local/portal/token HTTP/1.1
+        req: `POST /mg-local/portal/bff/exchange HTTP/1.1
 Host: login.example.com
-Authorization: Basic YsZmZi1wb3J0YWw6…
-Content-Type: application/x-www-form-urlencoded
+Cookie: ONEGATE_BFF=sess_4c1f…
+X-CSRFTOKEN: 7d1c…
 
-grant_type=urn:ietf:params:oauth:grant-type:token-exchange
-&subject_token=<agent access token>
-&subject_token_type=urn:ietf:params:oauth:token-type:access_token
-&requested_subject=customer-4711
-&audience=api.customer
-&scope=customer.read`,
+{
+  "requested_subject": {
+    "subject": "customer-4711",
+    "ext": { "reason": "ticket-88213" }
+  },
+  "audience": "api.customer",
+  "realm": "support"
+}`,
         res: `HTTP/1.1 200 OK
 
-{ "access_token":"…", "issued_token_type":"…:access_token",
-  "token_type":"Bearer", "expires_in":300 }`,
+{ "access_token":"…", "token_type":"Bearer", "expires_in":300 }`,
       },
-      tags: ['exchange grant', 'narrower token'],
+      tags: ['BFF exchange', 'narrower token'],
     },
     {
       from: 'og.token', to: 'og.bff', badge: 'AT with act claim', channel: 'back',
@@ -551,11 +553,11 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
       '**CSRF Token header name**: `X-CSRFTOKEN` — exchange is a state-changing call.',
     ]),
     cfg('Authorisation for exchange', [
-      'Back the "may this agent act for this customer?" decision with an attribute provider or a role check.',
+      'Back the "may this agent act for this customer?" decision with an attribute source or a role check.',
       'Log every exchange: who, for whom, which audience, which reason (`ext`).',
       'Rate-limit exchange. It is a sensitive endpoint.',
     ]),
-    cfg('Local Provider → Access Token JWT', [
+    cfg('Federation → OpenID Connect → Local Providers → Remote Clients → Access Token JWT', [
       'The exchanged token needs the right `aud` for the target API.',
       'Keep the exchange token lifetime shorter than the session token.',
     ]),
@@ -614,7 +616,7 @@ X-CSRFTOKEN: 7d1c…`,
     {
       from: 'og.bff', to: 'og.token', badge: 'revoke refresh token',
       detail:
-        'Deleting your copy of a refresh token is not the same as revoking it. Call the revocation endpoint so a stolen copy cannot be used later. Access tokens usually cannot be revoked (JWT) — they simply expire; that is the argument for short lifetimes.',
+        'Deleting your copy of a refresh token is not the same as revoking it. If the provider supports token revocation (RFC 7009), call it so a stolen copy cannot be used later — the Administration Manual does not document a revocation endpoint, so confirm support in your deployment first.\n\nAccess tokens usually cannot be revoked (JWT) — they simply expire; that is the argument for short lifetimes.',
       channel: 'back',
       http: {
         req: `POST /mg-local/portal/revoke HTTP/1.1
@@ -623,7 +625,7 @@ Authorization: Basic YsZmZi1wb3J0YWw6…
 
 token=rt_9Kd2…&token_type_hint=refresh_token`,
       },
-      tags: ['revocation', 'refresh token'],
+      tags: ['revocation (if supported)', 'refresh token'],
     },
     {
       from: 'og.bff', to: 'user', badge: '302 + clear cookie',
@@ -651,7 +653,7 @@ Location: https://app.example.com/logged-out`,
     {
       from: 'og.op', to: 'frontend', badge: 'back-channel logout',
       detail:
-        'Applications that created their own session from the ID token need to be told. **Back-channel logout** posts a signed `logout_token` (a JWT with `events` and `sid`/`sub`) directly server-to-server to the app\'s logout endpoint — no browser involved.',
+        'Applications that created their own session from the ID token need to be told. **Back-channel logout** posts a signed `logout_token` (a JWT with `events` and `sid`/`sub`) directly server-to-server to the app\'s logout endpoint — no browser involved.\n\nThe Administration Manual does not describe an OIDC back-channel logout endpoint. Treat this as the generic OIDC pattern and verify whether your version supports it.',
       channel: 'back',
       http: {
         req: `POST /backchannel/logout HTTP/1.1
@@ -685,7 +687,7 @@ logout_token=eyJhbGciOiJSUzI1NiIsImtpZCI6…`,
   ],
   notes: [
     'There are three sessions to kill: the app session, the BFF/session cookie, and the SSO session. Miss the SSO session and logout looks broken.',
-    'Always revoke refresh tokens. Access tokens without revocation support simply expire.',
+    'Revoke refresh tokens if your deployment supports it; otherwise delete them server-side and keep lifetimes short. Access tokens without revocation support simply expire.',
     'Back-channel logout is for apps that keep their own session. BFF apps are covered by deleting the BFF session.',
     '`SameSite` and `Secure` belong on the logout response too — do not leave a stale cookie behind.',
   ],
@@ -694,10 +696,10 @@ logout_token=eyJhbGciOiJSUzI1NiIsImtpZCI6…`,
       '**Logout URL**: where to send the browser after logout.',
       'Ensure the resource is protected by the BFF so the SSO session is actually involved.',
     ]),
-    cfg('Local Provider', [
-      'Short access token lifetime is your only "revocation" for JWTs.',
-      'Configure the back-channel logout endpoint per remote client if the app keeps its own session.',
-      'Enable `Issue id token` on refresh if downstream apps need fresh identity claims.',
+    cfg('Federation → OpenID Connect → Local Providers', [
+      'Short access token lifetime is your main "revocation" for JWTs.',
+      'The manual documents **Refresh token**, **Update refresh token**, **Reuse detection** and **Issue id token** — use them to control how logout and renewal behave.',
+      'Back-channel logout is not documented in the manual; verify support before relying on it.',
     ]),
   ],
   pitfalls: [
