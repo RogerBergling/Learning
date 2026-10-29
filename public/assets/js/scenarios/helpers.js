@@ -14,13 +14,14 @@ export const ITEM = {
   id: (o = {}) => ({ id: 'id', kind: 'id', name: 'ID token', meta: 'RS256 · identifies the user', ...o }),
   refresh: (o = {}) => ({ id: 'rt', kind: 'rt', name: 'Refresh token', meta: 'rotating · 8 h', ...o }),
   code: (o = {}) => ({ id: 'code', kind: 'code', name: 'Authorization code', meta: 'one-time · 60 s', ...o }),
-  cookie: (o = {}) => ({ id: 'bff', kind: 'cookie', name: 'BFF cookie', meta: 'HttpOnly · Secure · SameSite=Lax', ...o }),
+  cookie: (o = {}) => ({ id: 'bff', kind: 'cookie', name: 'BFF cookie', meta: 'HttpOnly · Secure · SameSite=Lax', cookieName: 'ONEGATE_BFF', cookiePath: '/mg-local/portal/bff', ...o }),
   session: (o = {}) => ({ id: 'sess', kind: 'session', name: 'Session', meta: 'server-side', ...o }),
   csrf: (o = {}) => ({ id: 'csrf', kind: 'csrf', name: 'CSRF token', meta: 'header X-CSRFTOKEN', ...o }),
   claims: (o = {}) => ({ id: 'claims', kind: 'claims', name: 'Validated claims', meta: 'sub, scope, aud', ...o }),
   jwk: (o = {}) => ({ id: 'jwk', kind: 'jwk', name: 'Signing keys', meta: 'jwks_uri cache', ...o }),
   secret: (o = {}) => ({ id: 'secret', kind: 'secret', name: 'Client secret', meta: 'never leaves the server', ...o }),
   saml: (o = {}) => ({ id: 'saml', kind: 'saml', name: 'SAML assertion', meta: 'signed XML', ...o }),
+  statement: (o = {}) => ({ id: 'stmt', kind: 'statement', name: 'Federation entity statement', meta: 'JWT · typ=entity-statement+jwt', ...o }),
 };
 
 /** Config checklist block. */

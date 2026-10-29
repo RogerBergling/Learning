@@ -26,7 +26,7 @@ export const NODES = {
     rect: { x: 500, y: 58, w: 236, h: 84 },
   },
   attr: {
-    name: 'Attribute source', sub: 'REST attribute source', icon: 'sparkle',
+    name: 'Attribute source', sub: 'LDAP · REST · Graph', icon: 'sparkle',
     rect: { x: 500, y: 552, w: 248, h: 82 },
   },
   onegate: {
@@ -41,8 +41,8 @@ export const SUBNODES = {
   'og.rp':    { name: 'OIDC RP', sub: 'federation · BFF', x: 500, y: 218 },
   'og.bff':   { name: 'BFF', sub: 'cookie + proxy', x: 628, y: 218 },
   'og.proxy': { name: 'Proxy', sub: 'reverse proxy · SSO', x: 372, y: 332 },
-  'og.token': { name: 'Token handler', sub: 'issue · introspect', x: 500, y: 332 },
-  'og.attr':  { name: 'Attribute client', sub: 'REST / Graph', x: 628, y: 332 },
+  'og.token': { name: 'Token handler', sub: 'issue · exchange', x: 500, y: 332 },
+  'og.attr':  { name: 'Attribute client', sub: 'LDAP · REST · Graph', x: 628, y: 332 },
 };
 
 export const SUBNODE_SIZE = { w: 124, h: 62 };

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Interactive, animated explanations of OneGate as reverse proxy, OpenID Provider, Relying Party, BFF, SAML and attribute sources.",
+  "description": "Interactive, animated explanations of OneGate as reverse proxy, OpenID Provider, Relying Party, BFF, OpenID Federation, SAML and attribute sources.",
   "scripts": {
     "start": "node server.mjs"
   },

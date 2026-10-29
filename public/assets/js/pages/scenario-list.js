@@ -42,7 +42,7 @@ export function renderScenarioList(view) {
         </div>
         <label class="search">
           <span class="sr-only">Search simulations</span>
-          <input type="search" placeholder="Search: BFF, SAML, JWT…" data-search autocomplete="off">
+          <input type="search" placeholder="Search: BFF, SAML, federation…" data-search autocomplete="off">
         </label>
       </div>
     </div>

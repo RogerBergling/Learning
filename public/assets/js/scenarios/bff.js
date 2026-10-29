@@ -16,7 +16,7 @@ export const bffLogin = {
     {
       from: 'user', to: 'og.bff', badge: 'GET /bff/login',
       detail:
-        'The SPA sends the user to the BFF login endpoint. The only parameter is where to go afterwards, and it is checked against the **Client Redirect URIs** prefix whitelist.\n\nThe manual documents the `/bff/logout` and `/bff/accessToken` endpoints. The login, RP-callback and exchange paths shown in this lab are illustrative — treat them as examples and read your own deployment.\n\nOneGate creates a login transaction in its server-side session: `state`, `nonce`, `code_verifier`, the return URL. Nothing is issued yet.',
+        'The SPA sends the user to the BFF login endpoint. The example passes only the return URL, which is checked against the **Client Redirect URIs** prefix whitelist.\n\nThe manual documents the `/bff/logout` and `/bff/accessToken` endpoints. The login, RP-callback and exchange paths shown in this lab are illustrative — treat them as examples and read your own deployment.\n\nOneGate creates a login transaction in its server-side session: `state`, `nonce`, `code_verifier`, the return URL. Nothing is issued yet.',
       http: {
         req: `GET /mg-local/portal/bff/login?redirect_uri=https%3A%2F%2Fapp.example.com%2F
 Host: app.example.com`,
@@ -54,7 +54,7 @@ Location: https://login.example.com/mg-local/portal/authorize?
     {
       from: 'user', to: 'og.op', badge: 'GET /authorize',
       detail:
-        'The browser requests the authorize endpoint. OneGate validates the client, the exact `redirect_uri`, the scopes and the PKCE parameters. A request with a foreign `redirect_uri` gets an error page, never a redirect.',
+        'The browser requests the authorize endpoint. OneGate validates the client, matches `redirect_uri` against the configured whitelist, and checks the scopes and PKCE parameters where enabled. A request with a foreign `redirect_uri` gets an error page, never a redirect.',
       tags: ['validation'],
     },
     {
@@ -126,7 +126,7 @@ Cache-Control: no-store
 Set-Cookie: ONEGATE_BFF=sess_4c1f…; HttpOnly; Secure; SameSite=Lax; Path=/mg-local/portal/bff
 Location: https://app.example.com/`,
       },
-      vault: [add('browser', ITEM.cookie({ meta: 'ONEGATE_BFF · HttpOnly · Secure · SameSite=Lax' }))],
+      vault: [add('browser', ITEM.cookie({ meta: 'HttpOnly · Secure · SameSite=Lax' }))],
       tags: ['only a cookie', 'no tokens in browser'],
     },
     {
@@ -321,9 +321,14 @@ grant_type=authorization_code&code=…&redirect_uri=…
       tags: ['verify', 'nonce'],
     },
     {
+      from: 'og.rp', to: 'og.bff', badge: 'authenticated session', channel: 'internal',
+      detail: 'The RP now has a verified federated identity and a local session. The BFF completes its own login transaction and reads the identity/tokens from the RP context. The SPA still has nothing but a cookie.',
+      tags: ['RP → BFF', 'local session'],
+    },
+    {
       from: 'og.bff', to: 'og.bff', badge: 'map to local user',
       detail:
-        'Because **Authenticate users from tokens** is on, the BFF resolves the federated identity to a local user. Three strategies in the RP config:\n\n- **Custom user id attribute** — map by email, UPN or employee ID.\n- **Map it to a custom attribute** — store the partner `sub` on the local user for next time.\n- **Handle unknown users** — reject, allow, or skip the local user database check (just-in-time provisioning).\n\nIf the mapping fails you get a login loop, not an error page. Log the decision.',
+        'OneGate resolves the federated identity to a local user. The RP settings and the BFF **Authenticate users from tokens** flag decide which path is used. Strategies in the RP config:\n\n- **Custom user id attribute** — map by email, UPN or employee ID.\n- **Map it to a custom attribute** — store the partner `sub` on the local user for next time.\n- **Handle unknown users** — reject, allow, or skip the local user database check (just-in-time provisioning).\n\nIf the mapping fails you get a login loop, not an error page. Log the decision.',
       channel: 'internal',
       tags: ['user mapping', 'JIT provisioning'],
     },
@@ -338,7 +343,7 @@ grant_type=authorization_code&code=…&redirect_uri=…
     {
       from: 'og.bff', to: 'user', badge: 'Set-Cookie BFF',
       detail: 'The browser gets only the BFF cookie. The partner tokens stay in the session and are used only if you need to call partner APIs.',
-      vault: [add('browser', ITEM.cookie({ meta: 'ONEGATE_BFF · HttpOnly' })), del('browser', 'code')],
+      vault: [add('browser', ITEM.cookie({ meta: 'HttpOnly' })), del('browser', 'code')],
       tags: ['cookie only'],
     },
     {
@@ -368,7 +373,7 @@ grant_type=authorization_code&code=…&redirect_uri=…
     'Decide early what the identity key is: email changes, object IDs are tenant-specific, employee numbers are stable. Pick one and document it.',
     '**Reject unknown users** is the safe default. Just-in-time provisioning is convenient but means anyone the partner authenticates can create an account.',
     'The local `sub` must stay stable for the user even if the partner re-issues their object ID. Otherwise every mapping change looks like a new person.',
-    'Entra External Authentication Method has extra knobs: the **UserId Claim** from `id_token_hint`, the local parameter to compare it with, plus `acr`/`amr` values to request.',
+    'Entra External Authentication Method is a **Remote Client** setting: the **UserId Claim** from `id_token_hint`, the local parameter to compare it with, plus `acr`/`amr` values. See the Local Provider chapter.',
     'Partner tokens are for partner APIs. Do not forward them to your own APIs — normalise to OneGate tokens and keep one trust anchor.',
   ],
   config: [
@@ -416,7 +421,7 @@ export const bffExchange = {
       { id: 'at', kind: 'jwt', name: 'Access token (agent)', meta: 'sub = agent · aud=api.support' },
       { id: 'id', kind: 'id', name: 'ID token (agent)' },
     ],
-    browser: [{ id: 'bff', kind: 'cookie', name: 'BFF cookie', meta: 'ONEGATE_BFF' }],
+    browser: [{ id: 'bff', kind: 'cookie', name: 'BFF cookie', meta: 'HttpOnly · Secure · SameSite=Lax', cookieName: 'ONEGATE_BFF', cookiePath: '/mg-local/portal/bff' }],
   },
   steps: [
     {
@@ -587,8 +592,8 @@ export const logout = {
       { id: 'rt', kind: 'rt', name: 'Refresh token', meta: 'family #7781' },
     ],
     browser: [
-      { id: 'bff', kind: 'cookie', name: 'BFF cookie', meta: 'ONEGATE_BFF' },
-      { id: 'sso', kind: 'cookie', name: 'OneGate SSO cookie', meta: 'login.example.com' },
+      { id: 'bff', kind: 'cookie', name: 'BFF cookie', meta: 'HttpOnly · Secure · SameSite=Lax', cookieName: 'ONEGATE_BFF', cookiePath: '/mg-local/portal/bff' },
+      { id: 'sso', kind: 'cookie', name: 'OneGate SSO cookie', meta: 'HttpOnly · Secure · SameSite=Lax', cookieName: 'ONEGATE_SSO', cookiePath: '/' },
     ],
     frontend: [{ id: 'app', kind: 'session', name: 'App session', meta: 'created from the ID token' }],
   },
@@ -596,7 +601,7 @@ export const logout = {
     {
       from: 'user', to: 'og.bff', badge: 'POST /bff/logout',
       detail:
-        'Logout must be a `POST` with the CSRF header, not a link. A `GET` logout can be triggered by any image tag on any website — a trivial denial-of-service against your users.',
+        'Logout should be a `POST` with the CSRF header, not a link. A `GET` logout can be triggered by any image tag on any website — a trivial denial-of-service against your users.',
       http: {
         req: `POST /mg-local/portal/bff/logout HTTP/1.1
 Host: app.example.com

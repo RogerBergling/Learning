@@ -1,5 +1,7 @@
 # Federation: RP, SAML IdP and SAML SP
 
+> **Name check.** This chapter is about **OpenID Connect and SAML federation** — OneGate acting as an RP, SAML IdP or SAML SP. **OpenID Federation 1.0** is a different thing: a JWT-based trust framework with entity statements, trust anchors and trust chains. See [OpenID Federation](#/learn/12-openid-federation) for that standard; the OneGate manual does not document its configuration.
+
 OneGate is most useful in the middle of other people’s protocols. This chapter covers the three federation directions:
 
 1. **Inbound OIDC** — OneGate is the Relying Party for a partner OP.
@@ -94,18 +96,21 @@ department = PARM{attr-0.attributes.department}
 
 The exact parameter names depend on your realm and attribute sources; the pattern is what matters.
 
-### Extra knobs for Entra-style flows
+### Entra External Authentication Method
 
-Some partners need a user hint or specific authentication context:
+Microsoft Entra EAM is a **Remote Client** setting, not an RP setting. The manual places these fields under **OpenID Connect → Local Providers → Remote Clients**:
 
-- **UserId Claim**: read a claim from the incoming `id_token_hint` (for example `oid` or `email`).
-- **Local parameter**: the local attribute to compare it with.
-- **`acr` / `amr` values**: request a specific authentication strength (MFA, compliant device). If the partner cannot satisfy it, the login should fail — do not silently downgrade.
+- **UserId Claim** — a claim in the `id_token_hint` from Entra.
+- **UserId Local Parameter** — the local user parameter compared with that claim.
+- **Pre-selected Identity Claim** — an optional claim, such as SSN, requested when using a CC Providers method.
+- **`acr` / `amr`** — values returned after login, with `amr` configurable as a comma-separated list.
+
+See [Remote Clients](#/learn/03-onegate-local-provider) for the full list.
 
 ### Inbound OIDC sequence
 
 1. User hits the app; OneGate has no local session.
-2. The RP builds an authorization request to the partner, with `state`, `nonce` and PKCE.
+2. The RP builds an authorization request to the partner, with `state`, `nonce` and PKCE where supported.
 3. The partner authenticates the user (its own MFA, conditional access, etc.).
 4. The partner redirects back to OneGate with a code.
 5. OneGate exchanges the code at the partner token endpoint using its client credentials.
@@ -150,9 +155,9 @@ Used by [SAML IdP](#/sim/fed-saml-idp). A partner application speaks SAML and wi
 | **NameID format** | Common formats include `persistent`, `transient`, `emailAddress` and `unspecified`; other formats are configurable. Agree with the SP |
 | **Attributes** | Map local claims to the SP’s expected names |
 | **Signing** | Sign the assertion and/or response; publish the certificate |
-| **Assertion lifetime** | Short, e.g. 5 minutes; the SP creates its own session |
+| **Max time authenticated** | Overrides the global timeout for sessions at this SP |
+| **Passive auth timeout** | How long SSO may remain passive before the user must re-authenticate |
 | **Audience restriction** | Choose whether the audience is the SP EntityID or the ACS URL, matching what the SP validates |
-| **Destination** | The ACS URL; must match the actual endpoint |
 
 Specific SPs should sort above wildcard SPs in the list. **Remote SP groups** let one policy cover many SPs, and **Trusted Metadata Providers** can import and refresh remote SPs automatically.
 
@@ -294,8 +299,8 @@ Do not claim “logout” when you only cleared a cookie. A partner SSO session 
 | Unknown user every time | Mapping attribute missing, or the partner changed the subject identifier |
 | Duplicate local accounts | Mapping on email while the partner recycles or changes emails |
 | SAML `Invalid signature` | Wrong certificate, response signed but assertion expected, XML canonicalisation issue |
-| SAML `Audience restriction failed` | SP EntityID mismatch |
-| SAML `Response expired` | Assertion lifetime too short or clocks out of sync |
+| SAML `Audience restriction failed` | SP EntityID / ACS URL mismatch |
+| SAML `Response expired` | Assertion validity window too short or clocks out of sync |
 | SAML replay detected | Assertion reused; check for a proxy caching the POST or a retry loop |
 | Loop between OneGate and partner | The RP is not creating a local session, or cookies are blocked |
 | Attributes missing only for federated users | Attribute profile expects local claims that the partner does not provide |
@@ -306,5 +311,6 @@ Do not claim “logout” when you only cleared a cookie. A partner SSO session 
 - [Federation out — OneGate as SAML IdP](#/sim/fed-saml-idp)
 - [Federation in — OneGate as SAML SP](#/sim/fed-saml-sp)
 - [BFF with a partner IdP](#/sim/bff-thirdparty)
+- [OpenID Federation](#/sim/openid-federation) — the JWT trust framework, not OIDC federation
 
 Next: [Backend for Frontend, end to end](#/learn/05-bff).

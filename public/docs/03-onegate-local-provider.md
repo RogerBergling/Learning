@@ -74,7 +74,7 @@ Use it in clients and RPs instead of hard-coding endpoints. If discovery is unre
 
 | Setting | Options | Effect |
 |---|---|---|
-| **Access Token Type** | `opaque` or `jwt` | Decides whether APIs validate locally or introspect. See [JWT vs opaque](#/sim/token-formats). |
+| **Access Token Type** | `opaque` or `jwt` | JWT lets APIs validate locally; opaque requires introspection where the deployment provides it. See [JWT vs opaque](#/sim/token-formats). |
 | **Access Token Lifetime (min)** | e.g. 5–15 | Shorter limits damage; longer reduces refresh traffic. |
 | **ID Token Lifetime (min)** | e.g. 5–60 | It proves a login; it is not a session. |
 
@@ -195,7 +195,7 @@ The manual does **not** document a `token_endpoint_auth_method = none` public-cl
 |---|---|---|
 | Example | Web app server, BFF, service | SPA, mobile app |
 | Secret | Yes, server-side | No |
-| Token endpoint auth | `client_secret_basic` (or `client_secret_post`) | Not documented as `none` in the manual |
+| Token endpoint auth | `client_secret_basic` (recommended); `client_secret_post` where supported | Not documented as `none` in the manual |
 | Refresh token | Allowed, server-side | Avoid; use a BFF or silent re-auth |
 
 If a “public” client has a secret embedded in its bundle, it is not confidential; it is a leaked secret with extra steps.
@@ -207,6 +207,20 @@ If a “public” client has a secret embedded in its bundle, it is not confiden
 - Client 1 wants `sub` to be the user’s email: add local property `sub = PARM{email}`, then map `sub = PARM{oidcclient.sub}`.
 - Client 2 wants `sub` to be the username: add local property `sub = PARM{mguid}`.
 - A REST attribute source needs the client name as its `audience`: add local property `name`, then set the source’s **Audience** to `PARM{oidcclient.name}`.
+
+### Microsoft Entra External Authentication Method (EAM)
+
+The manual includes a **Microsoft Entra** section on the Remote Client:
+
+| Setting | What it does |
+|---|---|
+| **UserId Claim** | The claim in the `id_token_hint` from Entra used to identify the user |
+| **UserId Local Parameter** | The local user parameter compared with that claim |
+| **Pre-selected Identity Claim** | An optional claim (for example SSN) requested when using a CC Providers method |
+| **acr** | The authentication context class returned after login |
+| **amr** | The authentication methods reference returned after login; can be a comma-separated list |
+
+This is special handling for Entra’s External Authentication Method, not the general RP configuration. See [Federation](#/learn/04-federation-rp-saml) for the RP flow.
 
 ### Access Token JWT audience
 
@@ -250,7 +264,7 @@ The BFF then references `bff-portal-rp` in its **RP Authentication** setting. Th
 
 ## 4. Remote Providers (the other direction)
 
-A Remote Provider describes an **external** OP that OneGate will consume as an RP. It is not used when OneGate issues tokens; it is used when OneGate accepts someone else’s.
+A Remote Provider describes an OP that OneGate consumes as an RP. It is normally an external OP, but it can also point at OneGate’s own Local Provider — that is how the BFF performs its self-federation. It is not the object that issues tokens; it is the trust/endpoint description the RP uses to reach an issuer.
 
 | Setting | Notes |
 |---|---|

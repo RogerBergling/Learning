@@ -17,7 +17,6 @@ export const controlCenterSetup = {
       from: 'user', to: 'onegate', badge: 'open Control Center',
       detail:
         'The administrator opens the web-based Control Center. The first decision is the **Virtual Host Selector** at the top left, which selects which virtual host is being configured. It only appears once one or more virtual hosts exist.',
-      http: { req: 'GET /mgcontrol/ HTTP/1.1\nHost: mgcontrol.example.com' },
       tags: ['Control Center', 'virtual host'],
     },
     {
@@ -115,7 +114,7 @@ Authorization: Bearer <access token from Include Access Token>
         'Now test it end to end: unauthenticated request → OneGate login → ACL check. If the app is a **Web Resource**, OneGate creates a normal session and the next step applies. If it is protected by the **BFF**, the browser gets the BFF cookie instead and the app calls the API through the proxy.',
       vault: [
         add('onegate', ITEM.session({ meta: 'normal OneGate session' })),
-        add('browser', ITEM.cookie({ id: 'sess', name: 'Session cookie', meta: 'normal auth · HttpOnly' })),
+        add('browser', ITEM.cookie({ id: 'sess', name: 'Session cookie', cookieName: 'ONEGATE_SESSION', cookiePath: '/', meta: 'HttpOnly · Secure · SameSite=Lax' })),
       ],
       tags: ['end-to-end test'],
     },

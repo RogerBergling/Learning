@@ -2,7 +2,7 @@
 
 No user, no browser, no cookie. A service authenticates **itself** and receives a token that represents the service. This is the simplest OAuth flow and the easiest one to get subtly wrong.
 
-> **Manual caveat.** The Administration Manual’s Local Provider and Remote Client sections document the authorization-code flow and refresh tokens. They do **not** describe `client_credentials` or a machine-to-machine grant. Treat this chapter as generic OAuth 2.0 background; confirm that your OneGate version and licence expose the grant before designing around it.
+> **Manual caveat.** The Administration Manual’s Local Provider and Remote Client sections document the authorization-code flow and refresh tokens. They do **not** describe `client_credentials` or a machine-to-machine grant. Treat this chapter as generic OAuth 2.0 background; confirm that your OneGate version and licence expose the grant before designing around it. The manual documents `client_id` + `client_secret` authentication; `private_key_jwt` and mTLS are generic alternatives to verify.
 
 ## The flow
 

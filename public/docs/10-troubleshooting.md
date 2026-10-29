@@ -164,6 +164,22 @@ Rules: cache JWKS, refresh on unknown `kid`, publish overlapping keys, and never
 
 The manual’s model is **Authentication type = Normal** plus an **Access Control List**, with optional **Send Custom Headers**. There is no “resource SSO = BFF” mode; the BFF is a separate feature.
 
+## OpenID Federation-specific
+
+| Symptom | Check |
+|---|---|
+| `invalid_trust_anchor` | The selected Trust Anchor is not pinned/allowed, or its key changed without overlap |
+| `invalid_trust_chain` | `typ`, `alg`/`kid`, signature, `iss`/`sub` linkage, SS key binding, `iat`/`exp` or `max_path_length` |
+| `invalid_metadata` | Metadata policy failed, or the resolved `redirect_uris` / client metadata is not acceptable |
+| Fetch returns `not_found` | The wrong `sub` value, the entity is not a subordinate, or the authority’s fetch endpoint moved |
+| Entity statement signature fails | Wrong federation key, key not in the superior’s SS `jwks`, or a key rollover raced the cache |
+| Works, then fails after an hour | The trust chain expired at its earliest `exp` and was cached too long |
+| Redirect URI rejected after trust succeeds | The RP is trusted, but its resolved `redirect_uris` / policy does not allow the requested URI |
+| Trust mark rejected | Untrusted issuer/type, bad signature, expiry, or the Trust Anchor does not recognise the mark |
+| Resolver hangs or is abused | No allow-list for Trust Anchors/entity hosts, no timeouts, no response-size limit, or unbounded `authority_hints` fetching |
+
+**Do not confuse** `.well-known/openid-federation` (signed Entity Configuration JWT) with `.well-known/openid-configuration` (OIDC discovery JSON). A valid federation chain does not replace OIDC discovery; it tells you which metadata you are allowed to use.
+
 ## Configuration did not apply
 
 | Symptom | Check |

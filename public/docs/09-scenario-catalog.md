@@ -1,15 +1,15 @@
 # Scenario catalog & how to read the simulator
 
-Seventeen scenarios, one fixed topology. This chapter explains the stage, the controls and what each scenario is for — so you can pick the right one instead of watching all of them in order.
+Eighteen scenarios, one fixed topology. This chapter explains the stage, the controls and what each scenario is for — so you can pick the right one instead of watching all of them in order.
 
-The first scenario, [Control Center setup](#/sim/control-center-setup), is new in this edition: it is a configuration walkthrough based on the **OneGate Administration Manual** rather than a protocol flow. Start there if the menu names in the other scenarios feel unmotivated.
+Two scenarios are new in this edition: [Control Center setup](#/sim/control-center-setup) is a configuration walkthrough based on the **OneGate Administration Manual**; [OpenID Federation](#/sim/openid-federation) is a standards-based trust-framework deep dive. Start with Control Center setup if the menu names in the other scenarios feel unmotivated, and use OpenID Federation when you need trust at scale.
 
 ## The stage
 
 ```
  Browser ───────────────┐
                         │        ┌────────── OneGate ──────────┐        ┌── Frontend ──┐
- Partner IdP ───────────┼───────▶│ OP · RP · BFF · proxy       │───────▶│ SPA / web app│
+ Partner IdP / TA ──────┼───────▶│ OP · RP · BFF · proxy       │───────▶│ SPA / web app│
                         │        │ token handler · attr client │        ├── Backend API─┤
  Attribute source ──────┘        └─────────────────────────────┘        └── Partner SP ─┘
 ```
@@ -24,13 +24,13 @@ The first scenario, [Control Center setup](#/sim/control-center-setup), is new i
 
 | Tab | What it shows |
 |---|---|
-| **Explain** | The current hop in prose, the actors, the channel and tags, plus the token journey |
+| **Explain** | The current hop in prose, the actors, the channel, a “What to notice” rule for that channel, tags and the token journey |
 | **Wire** | The HTTP request/response shape for the hop — headers, body, status |
-| **Tokens** | The live vault, decoded JWTs, opaque token notes, cookie flags, SAML XML |
-| **Setup** | The OneGate configuration that would produce this behaviour |
-| **Watch out** | Operational pitfalls, mapped to the steps above |
+| **Tokens** | The live vault, decoded JWTs and federation entity statements, opaque token notes, cookie flags, SAML XML |
+| **Setup** | The OneGate configuration that would produce this behaviour, plus design notes |
+| **Watch out** | Troubleshooting for the current hop, common traps and a before-production checklist |
 
-The **live token vault** on the right is the most important part. It is recomputed after every step from the scenario’s initial state plus all vault mutations. Click any chip to inspect that credential. The **token journey** table (inside Explain) summarises issued → stored → removed.
+The right rail starts with a **Scenario guide** (goal, one thing to remember, first trap) and then the **live token vault** and **Steps**. The vault is recomputed after every step from the scenario’s initial state plus all vault mutations. Click any chip to inspect that credential. The **token journey** table (inside Explain) summarises issued → stored → removed.
 
 ## Controls
 
@@ -39,6 +39,7 @@ The **live token vault** on the right is the most important part. It is recomput
 | **Play / Pause** | Auto-advance with a dwell time |
 | **← / →** | Previous / next step |
 | **Restart** | Back to step 1 |
+| **Mode** | Some scenarios have two variants, e.g. **JWT / opaque** or **Trust chain / automatic**. Switching resets the flow. |
 | **Speed** | 0.6× to 2.4× |
 | **Steps list** | Click any step to jump |
 | **Keyboard** | `Space` play/pause, `←` `→` step, `R` restart |
@@ -71,7 +72,7 @@ The simulator respects `prefers-reduced-motion`: packets jump to their destinati
 | Scenario | Level | Steps | Minutes | What it teaches | Start here if… |
 |---|---|---|---|---|---|
 | [Confidential web app](#/sim/webapp-confidential) | Core | 17 | 11 | The web tier holds the secret and tokens; the browser only gets a session cookie | You have a server-rendered app |
-| [Refresh rotation](#/sim/refresh-rotation) | Advanced | 10 | 9 | Rotate on every use; detect reuse; revoke the family | Sessions outlive access tokens |
+| [Refresh rotation](#/sim/refresh-rotation) | Advanced | 10 | 9 | Rotate on every use; detect reuse; invalidate the family | Sessions outlive access tokens |
 | [Multi-audience](#/sim/multi-audience) | Advanced | 12 | 7 | A token for orders must not open billing; audience and resource indicators | You have more than one API |
 
 ### BFF & sessions
@@ -79,9 +80,9 @@ The simulator respects `prefers-reduced-motion`: packets jump to their destinati
 | Scenario | Level | Steps | Minutes | What it teaches | Start here if… |
 |---|---|---|---|---|---|
 | [BFF login](#/sim/bff-login) | Core | 19 | 13 | OneGate as OP and RP; cookie + CSRF; tokens stay server-side | You are designing a SPA + API |
-| [BFF with a partner IdP](#/sim/bff-thirdparty) | Advanced | 17 | 12 | The same BFF, federated; local user mapping; reject vs JIT | Your users come from a partner |
+| [BFF with a partner IdP](#/sim/bff-thirdparty) | Advanced | 18 | 12 | The same BFF, federated; local user mapping; reject vs JIT | Your users come from a partner |
 | [BFF exchange](#/sim/bff-exchange) | Advanced | 13 | 10 | Delegation with `sub` + `act`; never trust `requested_subject` | Support staff act for customers |
-| [Logout](#/sim/logout) | Core | 10 | 8 | Local session, OP session, partner session, token revocation | “Logout” is not clearing a cookie |
+| [Logout](#/sim/logout) | Core | 10 | 8 | Local session, OP session, partner session, token-revocation caveats | “Logout” is not clearing a cookie |
 
 ### Federation & SAML
 
@@ -90,14 +91,15 @@ The simulator respects `prefers-reduced-motion`: packets jump to their destinati
 | [Federation in — RP](#/sim/fed-oidc-inbound) | Advanced | 16 | 12 | Validate a partner ID token, map the user, enrich, create a local session | You consume a partner OIDC IdP |
 | [Federation out — SAML IdP](#/sim/fed-saml-idp) | Advanced | 11 | 11 | OneGate issues a signed assertion to a partner SP | A partner app only speaks SAML |
 | [Federation in — SAML SP](#/sim/fed-saml-sp) | Advanced | 11 | 10 | Validate an inbound assertion, link the user, create a local session | A partner IdP initiates SSO |
+| [OpenID Federation](#/sim/openid-federation) | Advanced | 12–16 | 16 | Entity configurations, subordinate statements, trust anchors, trust chains, metadata policy and automatic registration. **Standards-based — not documented in the OneGate manual.** See [chapter 12](#/learn/12-openid-federation) | You need trust at federation scale, not one more manual client registration |
 
 ### Attributes & proxy
 
 | Scenario | Level | Steps | Minutes | What it teaches | Start here if… |
 |---|---|---|---|---|---|
-| [Attribute source](#/sim/attr-rest) | Core | 14 | 10 | REST attribute lookup at issuance, `realm`/`subject`/`requested_attributes`, caching, claim mapping | Entitlements live outside the user store |
+| [Attribute source](#/sim/attr-rest) | Core | 16 | 10 | REST attribute lookup at issuance, `realm`/`subject`/`requested_attributes`, caching, claim mapping | Entitlements live outside the user store |
 | [Delegated attributes](#/sim/attr-delegation) | Advanced | 14 | 9 | The `actor` object; cache keyed by subject + actor | An agent looks up a customer |
-| [Legacy proxy SSO](#/sim/legacy-proxy-sso) | Core | 14 | 9 | Web Resource + normal authentication + ACL, then a configured `X-USERID` header; change no app code | The app cannot do OIDC |
+| [Legacy proxy SSO](#/sim/legacy-proxy-sso) | Core | 10 | 9 | Web Resource + normal authentication + ACL, then a configured `X-USERID` header; change no app code | The app cannot do OIDC |
 
 ## Suggested routes
 
@@ -111,6 +113,8 @@ The simulator respects `prefers-reduced-motion`: packets jump to their destinati
 
 **Federation project:** RP inbound → SAML IdP → SAML SP → BFF with partner IdP → attribute source.
 
+**Trust-framework deep dive:** OpenID Federation → [chapter 12](#/learn/12-openid-federation) → compare with the ordinary OIDC RP flow.
+
 **Incident prep:** BFF exchange → delegated attributes → logout → troubleshooting chapter.
 
 ## Reading a step
@@ -120,7 +124,7 @@ Each step has:
 - a **badge** (the packet label, often the HTTP call);
 - **from → to** actors, including the OneGate subnode;
 - a **channel** (front, back, cookie, attribute, internal, SAML);
-- **detail** prose with the “why”;
+- **detail** prose with the “why”, plus a channel-specific **What to notice** rule;
 - optional **HTTP** shape;
 - optional **vault** changes;
 - **tags** for scanning.
@@ -132,6 +136,7 @@ When a step says `OneGate · BFF → OneGate · RP`, that is not an error. It is
 - Real cryptography, key rotation or certificate validation.
 - Network latency, retries, load balancers, WAFs.
 - Multi-tenant routing or per-realm virtual hosts beyond labels.
+- Real federation entity resolution, metadata-policy arithmetic or trust-mark issuance. Those are explained conceptually in [chapter 12](#/learn/12-openid-federation).
 - Browser cookie jars, third-party cookie blocking, ITP.
 - The exact HTML of the OneGate admin UI.
 

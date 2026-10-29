@@ -194,7 +194,7 @@ This is the manual’s name for what earlier lab text called “JVAP”. The sou
 
 Key settings: **Description**, **Log out user on fail**, **Type**, **API URL**, request method, connect/read timeout, **Skip SSL Check**, **Realm**, **Subject**, **Actor**, **Ext**, **Include Access Token** (with claim `iss`, `aud`, `sub` and the sign/encrypt **Key**), **Valid time**, and the attribute list (**Attribute Name**, **JsonPath**, **Friendly Name** — GUI-only).
 
-There is no separate “JVAP product”. See [attribute sources](#/learn/06-attribute-providers) for the full walkthrough.
+The manual does not define a separate “JVAP product”. See [attribute sources](#/learn/06-attribute-providers) for the full walkthrough.
 
 ### Account Creation, Method Options, PKI, VPN, RADIUS
 
@@ -377,7 +377,8 @@ Be careful not to turn a generic OIDC expectation into a OneGate feature claim. 
 - a **`token_endpoint_auth_method = none`** public-client option;
 - a **consent** screen or consent configuration;
 - a **“PKCE required”** enforcement switch (PKCE appears as metadata capability);
-- exact login / callback / exchange paths for the BFF beyond logout and accessToken.
+- exact login / callback / exchange paths for the BFF beyond logout and accessToken;
+- **OpenID Federation 1.0** entity statements, trust anchors, trust chains or automatic registration. The only manual mention of “OpenID federation” is a note that its ACL does not support **Max inactive time**. Treat [OpenID Federation](#/learn/12-openid-federation) as a standards topic, not a documented Control Center feature.
 
 Those may exist in your version or licence. Verify before designing around them. Where this lab uses one of them, the chapter says so and treats it as generic OAuth/OIDC background.
 
@@ -388,4 +389,4 @@ Those may exist in your version or licence. Verify before designing around them.
 - [BFF login](#/sim/bff-login) — Local Provider + Remote Client + RP + BFF.
 - [Attribute source](#/sim/attr-rest) — the REST contract behind the settings.
 
-Next: [Glossary](#/glossary).
+Next: [OpenID Federation](#/learn/12-openid-federation).

@@ -1,8 +1,8 @@
 # OneGate Learning Lab
 
-An interactive, offline study aid for **OpenID Connect, OAuth 2.0, SAML, federation, BFF and attribute sources** — built around how OneGate behaves as a reverse proxy, OpenID Provider, Relying Party, Backend-for-Frontend and token handler.
+An interactive, offline study aid for **OpenID Connect, OAuth 2.0, OpenID Federation, SAML, federation, BFF and attribute sources** — built around how OneGate behaves as a reverse proxy, OpenID Provider, Relying Party, Backend-for-Frontend and token handler.
 
-Seventeen animated scenarios. A live token vault. Twelve written chapters. No build step, no dependencies, no network calls.
+Eighteen animated scenarios. A live token vault. Thirteen written chapters. No build step, no dependencies, no network calls.
 
 ```
 Browser → OneGate (proxy · OP · RP · BFF · token handler) → frontend · API · partner IdP
@@ -63,8 +63,8 @@ The Python launcher is the primary path; both serve exactly the same static file
 | Page | What it does |
 |---|---|
 | **Overview** (`#/`) | The topology, the five roles, where tokens may live, the learning path |
-| **Learn** (`#/learn`) | Twelve chapters, rendered from Markdown with a table of contents |
-| **Simulations** (`#/scenarios`) | Filter/search all 17 flows by category, level or keyword |
+| **Learn** (`#/learn`) | Thirteen chapters, rendered from Markdown with a table of contents |
+| **Simulations** (`#/scenarios`) | Filter/search all 18 flows by category, level or keyword |
 | **Simulator** (`#/sim/{id}`) | Animated stage, live token vault, HTTP wire view, config, pitfalls |
 | **Compare** (`#/compare`) | JWT vs opaque, the storage matrix, a decision helper |
 | **Glossary** (`#/glossary`) | Every acronym in plain language |
@@ -72,11 +72,13 @@ The Python launcher is the primary path; both serve exactly the same static file
 
 The simulator has five tabs per scenario:
 
-- **Explain** — the current hop, actors, channel, tags and the full token journey.
+- **Explain** — the current hop, actors, channel, a “What to notice” rule, tags and the full token journey.
 - **Wire** — the HTTP request/response shape.
-- **Tokens** — decode simulated JWTs, inspect cookies/opaque tokens/SAML XML.
-- **Setup** — the OneGate configuration behind the flow.
-- **Watch out** — operational pitfalls mapped to the steps.
+- **Tokens** — decode simulated JWTs/entity statements, inspect cookies/opaque tokens/SAML XML.
+- **Setup** — the OneGate configuration behind the flow, plus design notes.
+- **Watch out** — troubleshooting for the current hop, common traps and a before-production checklist.
+
+The right rail adds a **Scenario guide** (goal, one thing to remember, first trap), the **live token vault** and the **step list**.
 
 Keyboard: `Space` play/pause, `←` `→` step, `R` restart. Click any vault chip to inspect it.
 
@@ -104,7 +106,7 @@ Keyboard: `Space` play/pause, `←` `→` step, `R` restart. Click any vault chi
 | 4 | Public SPA — Authorization Code + PKCE | Core | 13 | A public client logs in safely; the token still reaches JavaScript |
 | 5 | Confidential web app | Core | 17 | Server-side code flow; browser gets only a session cookie |
 | 6 | BFF login | Core | 19 | OneGate as OP **and** RP; cookie + CSRF; tokens stay server-side |
-| 7 | Legacy app behind the proxy | Core | 14 | Web Resource + normal auth + ACL; configured `X-USERID`; no app changes |
+| 7 | Legacy app behind the proxy | Core | 10 | Web Resource + normal auth + ACL; configured `X-USERID`; no app changes |
 
 ### Tokens, sessions and delegation
 
@@ -113,7 +115,7 @@ Keyboard: `Space` play/pause, `←` `→` step, `R` restart. Click any vault chi
 | 8 | Refresh token rotation | Advanced | 10 | Rotate on use; reuse detection; invalidate the set |
 | 9 | Multi-audience | Advanced | 12 | One login, one token per API; `aud` and resource indicators |
 | 10 | Logout | Core | 10 | Local session, OP session, partner session, revocation caveats |
-| 11 | BFF with a partner IdP | Advanced | 17 | The same BFF, federated; local user mapping; reject vs JIT |
+| 11 | BFF with a partner IdP | Advanced | 18 | The same BFF, federated; local user mapping; reject vs JIT |
 | 12 | BFF exchange | Advanced | 13 | Delegation with `sub` + `act`; never trust `requested_subject` |
 
 ### Federation, SAML and attributes
@@ -123,8 +125,9 @@ Keyboard: `Space` play/pause, `←` `→` step, `R` restart. Click any vault chi
 | 13 | Federation in — OneGate as RP | Advanced | 16 | Validate a partner ID token, map the user, enrich, create a local session |
 | 14 | Federation in — OneGate as SAML SP | Advanced | 11 | Validate an inbound assertion; link the identity |
 | 15 | Federation out — OneGate as SAML IdP | Advanced | 11 | Issue a signed assertion to a partner SP |
-| 16 | Attribute source (REST) | Core | 14 | Lookup at issuance, `realm`/`subject`/`requested_attributes`, caching, claims mapping |
+| 16 | Attribute source (REST) | Core | 16 | Lookup at issuance, `realm`/`subject`/`requested_attributes`, caching, claims mapping |
 | 17 | Delegated attributes | Advanced | 14 | The `actor` object; cache keyed by subject + actor |
+| 18 | [OpenID Federation](public/docs/12-openid-federation.md) | Advanced | 12–16 | Entity statements, trust anchors, trust chains, metadata policy and automatic registration. Standards-based; not documented in the OneGate manual |
 
 Every scenario is reachable from the Simulations page and from the written chapters. The catalog with “start here if…” guidance is in [chapter 9](public/docs/09-scenario-catalog.md).
 
@@ -196,6 +199,7 @@ All in [`public/docs/`](public/docs/), rendered by the site and readable on GitH
 | 9 | [Scenario catalog](public/docs/09-scenario-catalog.md) | Every simulation, how to read the stage, suggested routes |
 | 10 | [Troubleshooting](public/docs/10-troubleshooting.md) | Error codes, cookies, CORS, clocks, JWKS, SAML, a triage checklist |
 | 11 | [The Control Center, end to end](public/docs/11-control-center.md) | Virtual Host Selector, Monitoring, Administration, Server/Auth/Federation, Activate Changes, manual caveats |
+| 12 | [OpenID Federation](public/docs/12-openid-federation.md) | Entity statements, trust chains, metadata policy, trust marks, automatic registration — standards-based, not a OneGate manual feature |
 | — | [Glossary](public/docs/glossary.md) | Every acronym in the lab |
 
 The Markdown is the single source of truth: the site fetches and renders the same files you read on GitHub.
@@ -217,9 +221,9 @@ OIDC-OAUTH-BFF/
 │   │       ├── tokens.js         Simulated JWTs, stores, token kinds
 │   │       ├── ui.js             Icons, toast, helpers
 │   │       ├── pages/            Home, learn, list, simulator, compare, selftest
-│   │       ├── scenarios/        Seventeen scenario definitions + helpers
+│   │       ├── scenarios/        Eighteen scenario definitions + helpers
 │   │       └── sim/              Layout geometry + the animation player
-│   └── docs/                     Twelve Markdown chapters
+│   └── docs/                     Thirteen Markdown chapters
 ├── start.py                     Python stdlib server (primary launcher)
 ├── start.sh                     Linux/macOS launcher
 ├── start.bat                    Windows launcher
@@ -249,7 +253,7 @@ To add a scenario, create a file in `public/assets/js/scenarios/`, export the ob
 
 - **Self-check** (`#/selftest`) validates scenario shape, actor IDs, channels, vault operations, token kinds, Markdown rendering and every doc fetch. It should report 100%.
 - **curl** the routes: `/`, `/assets/js/app.js`, `/docs/01-architecture.md` should be 200.
-- Browser check: open `#/`, `#/learn/01-architecture`, `#/sim/bff-login`, `#/compare`, `#/selftest`.
+- Browser check: open `#/`, `#/learn/01-architecture`, `#/learn/12-openid-federation`, `#/sim/bff-login`, `#/sim/openid-federation`, `#/compare`, `#/selftest`.
 
 If a chapter 404s, make sure you are serving `public/` (the launcher does) rather than opening `index.html` from disk.
 
@@ -260,6 +264,7 @@ If a chapter 404s, make sure you are serving `public/` (the launcher does) rathe
 - **Everything is simulated.** Tokens are structurally valid JWTs with fake signatures. No request leaves your browser.
 - **Endpoint paths are illustrative.** Examples use `/mg-local/portal/...`, `/bff/login`, `/rp/callback`, `ONEGATE_BFF` and `X-CSRFTOKEN`. The Administration Manual names only `/mg-local/(realm)/bff/logout` and `/mg-local/(realm)/bff/accessToken`; the rest are examples. Real deployments generate their own paths, cookie names and menu labels; confirm them in your environment.
 - **Menu names follow the OneGate Administration Manual.** The core objects are Local Providers, Realm Settings, Remote Clients, Remote Providers, RP Authentication, Backend For Frontend, Attribute Sources, Remote/Local Service Providers, Remote IDPs, Attribute Profiles, Access Control Lists (ACL), the Virtual Host Selector and Activate Changes. Labels can differ slightly between versions.
+- **OpenID Federation is standards-based.** The OneGate Administration Manual does not document entity statements, trust anchors, trust chains or automatic registration. The new simulation and chapter explain OpenID Federation 1.0 as a standard, not as a claimed OneGate feature. Verify support in your version.
 - **The manual is authoritative; generic OIDC is background.** The manual does not document the client-credentials grant, a token introspection endpoint, token revocation, OIDC back-channel logout, a public-client `none` auth method, a consent screen/policy, or a “PKCE required” switch. Where the lab uses one of these, it is labelled as generic OAuth/OIDC and marked “verify in your deployment”.
 - **Earlier versions of this lab used “JVAP”.** That term does not appear in the manual. The feature is **Attribute Sources**; a REST source calls the **User Attribute API** contract. The lab now uses the manual’s terminology.
 - **Checked against the vendor manual.** This edition was reviewed against the **OneGate Administration Manual**; the PDF is kept locally for reference and is not redistributed in the repository.

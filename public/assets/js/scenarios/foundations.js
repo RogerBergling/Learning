@@ -134,8 +134,8 @@ const jwtCfg = cfg('Federation → OpenID Connect → Local Providers → Provid
 
 const opaqueCfg = cfg('Federation → OpenID Connect → Local Providers → Provider Settings → Access Token Type = opaque', [
   'The access token is an opaque string: no claims are visible to the client or the API.',
-  'The API must call the introspection endpoint, authenticating as a confidential client.',
-  'Revocation is immediate: the introspection answer flips to `active: false`.',
+  'Where the deployment provides introspection, the API calls that endpoint and authenticates as a confidential client.',
+  'Where introspection is available, revocation is immediate: the answer flips to `active: false`.',
   'Cache introspection results for a few seconds/minutes to protect OneGate, but never longer than the token lifetime.',
 ]);
 
@@ -165,6 +165,7 @@ export const tokenFormats = {
   category: 'tokens',
   level: 'core',
   minutes: 8,
+  modeLabel: 'JWT / opaque',
   summary:
     'The same call, two token formats. Switch the toggle above the stage to see what the API has to do for a self-contained JWT and for an opaque token that must be introspected. This is the single most useful thing to understand about token design.',
   nodes: ['user', 'onegate', 'frontend', 'backend'],

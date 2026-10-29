@@ -93,7 +93,7 @@ PKCE (Proof Key for Code Exchange, RFC 7636) prevents a stolen authorization cod
 - It sends the original verifier in the back channel at `/token`.
 - The OP checks that `SHA256(verifier)` matches the challenge it stored with the code.
 
-Public clients **must** use it. Confidential clients **should**. With OneGate, PKCE is configured per remote client; the BFF and SPA simulations both use S256.
+Public clients **must** use it. Confidential clients **should**. OneGate advertises PKCE support in its provider metadata; the BFF and SPA simulations use S256. The Administration Manual does not document a per-client “PKCE required” switch — verify enforcement in your version.
 
 ## `state`, `nonce`, and what they defend
 
@@ -145,7 +145,7 @@ Never send an ID token to an API. Its audience is the client, not the API. An AP
 
 ### Refresh token
 
-A long-lived credential for obtaining new access tokens without a new login. It is normally opaque and must live only on a confidential server. Rotation means every use returns a new refresh token and invalidates the old one; reuse of the old one is a breach signal and should revoke the family.
+A long-lived credential for obtaining new access tokens without a new login. It is normally opaque and must live only on a confidential server. With rotation enabled, every use returns a new refresh token and invalidates the old one; reuse of the old one is a breach signal and should invalidate the family.
 
 ### Authorization code
 
@@ -228,6 +228,8 @@ token=at_9f2c...&token_type_hint=access_token
 | Implicit | Legacy only; avoid | Not used |
 | Password (`ROPC`) | Migration only; avoid | Not used |
 
+> **Manual caveat.** The OneGate manual describes the authorization-code flow and refresh tokens. `client_credentials` and a generic token-exchange grant are **not** described; the BFF’s exchange is a separate OneGate feature (see [BFF](#/learn/05-bff)). Treat those rows as generic OAuth 2.0 background.
+
 If someone proposes implicit or ROPC for a new application, ask what problem PKCE and a BFF do not solve.
 
 ## Client authentication methods
@@ -239,6 +241,8 @@ If someone proposes implicit or ROPC for a new application, ask what problem PKC
 | `private_key_jwt` | No | Client signs an assertion; no shared secret; strong choice |
 | `tls_client_auth` / mTLS | No | Certificate-bound; strong, operationally heavier |
 | `none` | Yes (public client) | Only for public clients, and only with PKCE |
+
+> **Manual caveat.** The OneGate Administration Manual documents `client_id` + `client_secret` for Remote Clients and recommends `client_secret_basic` in metadata. It does **not** document `private_key_jwt`, mTLS or `none` as OneGate Local Provider client-auth options. The table above is generic OAuth 2.0; verify which methods your version supports.
 
 A SPA is a public client. It has no secret, no matter how well you obfuscate the JavaScript.
 

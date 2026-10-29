@@ -24,7 +24,7 @@ Proof that authentication happened, for the **client**. It must not be used as a
 
 ### Refresh token
 
-A long-lived credential whose only job is to obtain new access tokens. It must live on a confidential server, rotate on every use, and — ideally — be revocable. If a refresh token reaches a browser, the design is wrong.
+A long-lived credential whose only job is to obtain new access tokens. It must live on a confidential server, should rotate on every use where rotation is enabled, and — ideally — be revocable. If a refresh token reaches a browser, the design is wrong.
 
 The manual’s Local Provider exposes the levers directly: **Refresh token lifetime**, **Refresh token total lifetime**, **Refresh token max idle**, **Update refresh token**, **Reuse detection**, **Reuse grace period** and **Issue id token**.
 
@@ -136,7 +136,7 @@ Revocation is not one operation:
 | Layer | Action |
 |---|---|
 | Refresh token | Revoke at the OP if supported; delete server-side |
-| Access token (opaque) | Introspection immediately returns `active: false` |
+| Access token (opaque) | Introspection, where available, returns `active: false` |
 | Access token (JWT) | Valid until `exp`; use short lifetimes or a deny-list |
 | Session | Delete server-side; expire the cookie |
 | OP SSO session | End at the OP (`/end_session`) |

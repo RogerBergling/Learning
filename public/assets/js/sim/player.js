@@ -1,4 +1,4 @@
-import { NODES, SUBNODES, pathFor, pctX, pctY, labelOf } from './layout.js';
+import { NODES, SUBNODES, pathFor, pctX, pctY } from './layout.js';
 import { materialize, KINDS, STORES, decodeJwt, relTime, preview } from '../tokens.js';
 import { md } from '../markdown.js';
 import { icon, esc, prefersReducedMotion } from '../ui.js';
@@ -133,6 +133,8 @@ export class SimPlayer {
 
   build() {
     const s = this.scenario;
+    const guideNote = (s.notes || []).find((n) => !/^\*\*Manual caveat/i.test(n)) || (s.notes || [])[0];
+    const guideTrap = (s.pitfalls || [])[0];
     const modeControl = s.variants
       ? `<div class="seg" role="group" aria-label="Token format">
            ${Object.entries(s.variants).map(([k, v]) =>
@@ -177,7 +179,7 @@ export class SimPlayer {
               <span><i class="lg-dot" style="background:var(--warn)"></i>cookie</span>
               <span><i class="lg-dot" style="background:var(--accent-2)"></i>attribute call</span>
               <span><i class="lg-dot" style="background:var(--orange)"></i>SAML</span>
-              <span style="margin-left:auto">tokens never travel in the front channel</span>
+              <span style="margin-left:auto">access &amp; refresh tokens never travel in the front channel</span>
             </div>
           </div>
 
@@ -200,6 +202,20 @@ export class SimPlayer {
         </div>
 
         <div class="sim-rail">
+          <div class="rail-card guide-card">
+            <div class="rail-head"><h3>Scenario guide</h3><span class="rail-hint">start here</span></div>
+            <div class="scenario-guide">
+              <p class="guide-summary">${inlineMd(s.summary)}</p>
+              <div class="guide-meta">
+                <span class="pill ${s.level === 'advanced' ? 'violet' : 'accent'}">${s.level === 'advanced' ? 'Advanced' : 'Core'}</span>
+                <span class="pill">${this.steps.length} hops</span>
+                <span class="pill">${s.minutes} min</span>
+              </div>
+              ${guideNote ? `<details class="guide-note"><summary>One thing to remember</summary><p>${inlineMd(guideNote)}</p></details>` : ''}
+              ${guideTrap ? `<details class="guide-note"><summary>First thing to watch out for</summary><p>${inlineMd(guideTrap)}</p></details>` : ''}
+              <button class="btn btn-sm" type="button" data-act="watch">${icon('alert', 13)} Open Watch out</button>
+            </div>
+          </div>
           <div class="rail-card">
             <div class="rail-head"><h3>Live token vault</h3><span class="rail-hint">where credentials live</span></div>
             <div class="vault" data-vault></div>
@@ -225,11 +241,19 @@ export class SimPlayer {
 
     this.renderStepList();
     this.buildConfig();
-    this.buildRisks();
   }
 
   q(sel) { return this.root.querySelector(sel); }
   qa(sel) { return [...this.root.querySelectorAll(sel)]; }
+
+  storeLabel(store) {
+    return this.scenario.storeLabels?.[store] || STORES[store]?.label || store;
+  }
+
+  actorName(id) {
+    if (SUBNODES[id]) return `OneGate · ${SUBNODES[id].name}`;
+    return this.scenario.nodeLabels?.[id]?.name || NODES[id]?.name || id;
+  }
 
   renderNodes() {
     const node = (id, extraClass = '') => {
@@ -262,7 +286,7 @@ export class SimPlayer {
       ${node('backend')}
       ${node('attr')}
       <div class="og-box" data-node="onegate" style="left:${pctX(og.x)}%;top:${pctY(og.y)}%;width:${og.w / 10}%;height:${og.h / 6}%">
-        <div class="og-title">OneGate <span>proxy · OP · RP · BFF · token handler</span></div>
+        <div class="og-title">${esc(this.scenario.nodeLabels?.onegate?.name || 'OneGate')} <span>${esc(this.scenario.nodeLabels?.onegate?.sub || 'proxy · OP · RP · BFF · token handler')}</span></div>
         ${Object.keys(SUBNODES).map(sub).join('')}
         <div class="og-foot">session store · signing keys · attribute cache</div>
       </div>
@@ -271,10 +295,13 @@ export class SimPlayer {
 
   renderStepList() {
     this.$steplist.innerHTML = this.steps.map((st, i) => {
-      const from = labelOf(st.from), to = labelOf(st.to);
+      const from = this.actorName(st.from), to = this.actorName(st.to);
       return `<button class="step-item" data-step="${i}" title="${esc(from)} → ${esc(to)}">
         <span class="si-num">${String(i + 1).padStart(2, '0')}</span>
-        <span class="si-label">${esc(st.badge || st.detail.slice(0, 40) + '…')}</span>
+        <span class="si-main">
+          <span class="si-label">${esc(st.badge || st.detail.slice(0, 40) + '…')}</span>
+          <span class="si-hop">${esc(from)} → ${esc(to)}</span>
+        </span>
       </button>`;
     }).join('');
   }
@@ -287,19 +314,47 @@ export class SimPlayer {
         <ul>${c.items.map((i) => `<li>${inlineMd(i)}</li>`).join('')}</ul>
       </div>`).join('');
     this.q('[data-panel="setup"]').innerHTML = `
-      <p class="dim" style="font-size:.78rem;margin-top:0">Menu paths follow the OneGate federation menu. Labels can differ slightly between versions.</p>
+      <p class="dim" style="font-size:.78rem;margin-top:0">${esc(s.configNote || 'Menu paths follow the OneGate Administration Manual. Labels can differ slightly between versions.')}</p>
       ${cfgHtml || '<p class="muted">No configuration notes for this scenario.</p>'}
       ${(s.notes || []).length ? `<h4 style="font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:1.2rem 0 .5rem">Design notes</h4>
         <ul class="prose" style="font-size:.82rem;padding-left:1.1rem">${s.notes.map((n) => `<li>${inlineMd(n)}</li>`).join('')}</ul>` : ''}
     `;
 
-    this.q('[data-panel="risks"]').innerHTML = `
-      <div class="callout"><strong>Read this after the animation.</strong> These are the failures you will actually meet in operations — each one maps to a step above.</div>
-      ${(s.pitfalls || []).map((p) => `<div class="callout danger">${inlineMd(p)}</div>`).join('') || '<p class="muted">Nothing specific.</p>'}
-    `;
   }
 
-  buildRisks() { /* built in buildConfig */ }
+  renderRisks(step) {
+    const s = this.scenario;
+    const ch = step.channel || 'front';
+    const checks = s.id === 'openid-federation' && ch === 'back'
+      ? ['Fetch only from an allow-listed entity host over HTTPS; set timeouts and response-size limits.', 'Validate `typ`, `alg`/`kid`, signature, `iss`/`sub` linkage, key binding and `iat`/`exp`.', 'Do not follow arbitrary `authority_hints` from an untrusted request.']
+      : s.id === 'openid-federation' && ch === 'internal'
+        ? ['Validate the complete chain to the pinned Trust Anchor, not just the leaf signature.', 'Apply metadata policy, then check the resolved `redirect_uris` and client authentication method.', 'Cache only until the earliest `exp`; re-resolve after key rollover.']
+        : channelChecks(step);
+    const production = [
+      'Every redirect URI is registered exactly, or inside a deliberately narrow prefix whitelist.',
+      'Issuer, audience and token type are checked by every consumer.',
+      'Secrets and refresh tokens stay server-side; nothing sensitive is logged.',
+      'Where sessions exist, logout ends the local session, the OP/partner session and downstream sessions.',
+      'Failure paths are tested: timeout, bad signature, unknown user, expired token.',
+      ...(s.productionChecks || []),
+    ];
+    this.q('[data-panel="risks"]').innerHTML = `
+      <div class="callout"><strong>Read this after the animation.</strong> Start with the current hop, then check the traps and the production list.</div>
+      <div class="watch-block">
+        <h5>Troubleshooting this hop</h5>
+        <p class="watch-hop">${esc(this.actorName(step.from))} → ${esc(this.actorName(step.to))} <span class="pill">${esc(CHANNELS[ch])}</span></p>
+        <ul class="checklist">${checks.map((c) => `<li>${inlineMd(c)}</li>`).join('')}</ul>
+      </div>
+      <div class="watch-block">
+        <h5>Common traps in this flow</h5>
+        ${(s.pitfalls || []).map((p) => `<div class="callout danger">${inlineMd(p)}</div>`).join('') || '<p class="muted">Nothing specific.</p>'}
+      </div>
+      <div class="watch-block">
+        <h5>Before production</h5>
+        <ul class="checklist">${production.map((c) => `<li>${inlineMd(c)}</li>`).join('')}</ul>
+      </div>
+    `;
+  }
 
   /* --------------------------------------------------------------- controls */
 
@@ -313,6 +368,7 @@ export class SimPlayer {
         if (a === 'prev') { this.playing = false; this.go(this.index - 1, true); }
         if (a === 'reset') { this.playing = false; this.go(0, false, true); }
         if (a === 'replay') { this.playing = true; this.go(0, true); }
+        if (a === 'watch') { this.setTab('risks'); }
         return;
       }
       const step = e.target.closest('[data-step]');
@@ -488,7 +544,7 @@ export class SimPlayer {
           }).join('')
         : '<span class="vault-empty">empty</span>';
       return `<div class="vault-store ${focus.includes(st) ? 'is-focus' : ''} ${list.length ? '' : 'is-empty'}" data-store="${st}">
-        <div class="vs-head">${icon(STORE_ICONS[st] || 'server', 13)}<span>${esc(STORES[st].label)}</span><span class="vs-count">${list.length}</span></div>
+        <div class="vs-head">${icon(STORE_ICONS[st] || 'server', 13)}<span>${esc(this.storeLabel(st))}</span><span class="vs-count">${list.length}</span></div>
         <div class="vault-items">${chips}</div>
       </div>`;
     }).join('');
@@ -603,12 +659,13 @@ export class SimPlayer {
     this.renderExplain(step);
     this.renderWirePanel(step);
     this.renderTokenPanel();
+    this.renderRisks(step);
     this.qa('[data-panel]').forEach((p) => p.classList.toggle('active', p.dataset.panel === this.tab));
     this.qa('[data-tab]').forEach((t) => t.classList.toggle('active', t.dataset.tab === this.tab));
   }
 
   renderExplain(step) {
-    const from = actorName(step.from), to = actorName(step.to);
+    const from = this.actorName(step.from), to = this.actorName(step.to);
     const ch = CHANNELS[step.channel || 'front'];
     const done = this.index === this.steps.length - 1;
     const tags = (step.tags || []).map((t) => `<span class="tag">${esc(t)}</span>`).join('');
@@ -627,6 +684,7 @@ export class SimPlayer {
             <span class="pill">${esc(ch)}</span>
           </div>
           <div class="detail">${md(step.detail || '')}</div>
+          <div class="channel-rule"><span class="cr-label">What to notice</span>${inlineMd(channelRule(step))}</div>
           ${tags ? `<div class="tag-row">${tags}</div>` : ''}
         </div>
       </div>
@@ -643,8 +701,8 @@ export class SimPlayer {
     if (!this.journey.length) return '<p class="dim" style="font-size:.78rem">This scenario has no stateful tokens.</p>';
     const rows = this.journey.map((g) => {
       const k = KINDS[g.kind] || KINDS.opaque;
-      const first = g.first ? (g.first.step < 0 ? 'at start' : `step ${g.first.step + 1} · ${STORES[g.first.store]?.label || g.first.store}`) : '—';
-      const stores = g.stores.map((s) => STORES[s]?.label || s).join(' → ') || '—';
+      const first = g.first ? (g.first.step < 0 ? 'at start' : `step ${g.first.step + 1} · ${this.storeLabel(g.first.store)}`) : '—';
+      const stores = g.stores.map((s) => this.storeLabel(s)).join(' → ') || '—';
       const last = g.last
         ? g.last.removed ? `removed at step ${g.last.step + 1}` : 'still present at the end'
         : '—';
@@ -692,7 +750,7 @@ export class SimPlayer {
       const k = KINDS[it.kind] || KINDS.opaque;
       const active = store === this.selectedToken.store && it.id === this.selectedToken.id;
       return `<button data-inspect="${store}" data-id="${it.id}" class="${active ? 'active' : ''}">
-        <span class="ts-store">${esc(STORES[store]?.label || store)}</span>${esc(it.name)}
+        <span class="ts-store">${esc(this.storeLabel(store))}</span>${esc(it.name)}
       </button>`;
     }).join('');
 
@@ -714,7 +772,7 @@ export class SimPlayer {
         <span class="dim" style="font-size:.72rem">${esc(item.meta || '')}</span>
       </div>`;
 
-    if (item.kind === 'jwt' || item.kind === 'id') {
+    if (item.kind === 'jwt' || item.kind === 'id' || item.kind === 'statement') {
       const d = decodeJwt(item.value);
       const [h, p, s] = item.value.split('.');
       const raw = `<div class="jwt-raw"><b>${esc(h)}</b>.<i>${esc(p)}</i>.<u>${esc(s)}</u></div>`;
@@ -729,7 +787,7 @@ export class SimPlayer {
         <div class="jwt-part"><div class="jp-label"><span>Payload</span><span>${Object.keys(d?.payload || {}).length} claims</span></div>
           <pre class="code-block" style="margin:.2rem 0 0">${esc(JSON.stringify(d?.payload || {}, null, 2))}</pre></div>
         <dl class="kv" style="margin-top:.4rem">${claimRows}</dl>
-        <div class="callout" style="margin-top:.7rem"><strong>Signature is not verified here.</strong> In a real system the API verifies it with the issuer's public key (JWKS). These tokens are simulated for teaching, not valid credentials.</div>`;
+        <div class="callout" style="margin-top:.7rem"><strong>Signature is not verified here.</strong> ${item.kind === 'statement' ? 'A federation statement is trusted only after the complete trust chain, key binding and metadata policy validate.' : 'In a real system the API verifies it with the issuer\'s public key (JWKS).'} These values are simulated for teaching, not valid credentials.</div>`;
     }
 
     if (item.kind === 'saml') {
@@ -744,16 +802,18 @@ export class SimPlayer {
     if (item.kind === 'opaque') {
       return `${head}
         <div class="jwt-raw" style="color:var(--text-soft)">${esc(item.value)}</div>
-        <div class="callout"><strong>Opaque means unreadable.</strong> There are no claims to decode. The API must call the introspection endpoint to learn <code>active</code>, <code>scope</code>, <code>sub</code> and <code>aud</code>. That is why revocation is instant and why every uncached check costs a round trip.</div>`;
+        <div class="callout"><strong>Opaque means unreadable.</strong> There are no claims to decode. If the deployment provides introspection, the API must call that endpoint to learn <code>active</code>, <code>scope</code>, <code>sub</code> and <code>aud</code>. That is why revocation can be instant and why every uncached check costs a round trip.</div>`;
     }
 
     if (item.kind === 'cookie') {
       const [name, ...rest] = String(item.value).split('=');
+      const flags = String(item.meta || 'HttpOnly · Secure · SameSite=Lax').replace(/ · /g, '; ');
+      const path = item.cookiePath || '/';
       return `${head}
         <p class="code-label">Set-Cookie</p>
         <pre class="code-block">${esc(name)}=${esc(preview(rest.join('='), 42))}
-HttpOnly; Secure; SameSite=Lax; Path=/mg-local/portal/bff</pre>
-        <div class="callout"><strong>A cookie is not a token.</strong> It is an opaque pointer to a server-side session. Nothing can be learned from its value, and JavaScript cannot read it.</div>`;
+${esc(flags)}; Path=${esc(path)}</pre>
+        <div class="callout"><strong>A cookie is not a token.</strong> It is an opaque pointer to a server-side session. Nothing can be learned from its value, and JavaScript cannot read it. Cookie names, flags and paths here are illustrative.</div>`;
     }
 
     return `${head}
@@ -764,7 +824,7 @@ HttpOnly; Secure; SameSite=Lax; Path=/mg-local/portal/bff</pre>
 
 function explainKind(kind) {
   const map = {
-    rt: 'A refresh token is a long-lived credential. It is never sent to APIs and must be rotated on every use. It lives only on a server.',
+    rt: 'A refresh token is a long-lived credential. It is never sent to APIs and should be rotated on every use where rotation is enabled. It lives only on a server.',
     code: 'An authorization code is one-time and short-lived. In a code flow the browser carries it for exactly one hop, then the server exchanges it.',
     session: 'A server-side session has no readable value. The client only holds a pointer (a cookie) to it.',
     csrf: 'A CSRF token is not an authentication credential. It proves the request came from your own page, not from another site.',
@@ -778,9 +838,51 @@ function inlineMd(text) {
   return html.replace(/^<p>/, '').replace(/<\/p>$/, '');
 }
 
-function actorName(id) {
-  if (SUBNODES[id]) return `OneGate · ${SUBNODES[id].name}`;
-  return NODES[id]?.name || id;
+function channelRule(step) {
+  const ch = step.channel || 'front';
+  const rules = {
+    front: 'Front-channel data is visible to the browser. Codes, `state`, `nonce` and cookies belong here; access tokens, refresh tokens and secrets do not.',
+    back: 'Back-channel traffic is server-to-server. Client secrets and tokens may travel here, but never through the browser.',
+    cookie: 'The browser sends this automatically. Treat it as a credential: `HttpOnly`, `Secure`, `SameSite`, and the narrowest possible `Path`.',
+    attr: 'This is an attribute lookup, not a login. The response is cached and becomes claims, headers or an authorisation decision.',
+    internal: 'This happens inside the entity shown as the source — no network request leaves it. For OneGate, check configuration, the selected virtual host and logs; for an RP/OP, check local trust-chain, policy and cache state.',
+    saml: 'SAML is signed XML carried through the browser. Validate the signature, `Audience`, `Destination`, time conditions and replay.',
+  };
+  return rules[ch] || rules.front;
+}
+
+function channelChecks(step) {
+  const ch = step.channel || 'front';
+  if (ch === 'back') return [
+    'Client authentication: `client_secret_basic`, `private_key_jwt`, certificate — match what the server expects.',
+    'Issuer, audience, signature and `exp`/`nbf` on the returned token.',
+    'Clock skew, rotated keys and stale JWKS caches.',
+  ];
+  if (ch === 'cookie') return [
+    '`Set-Cookie` flags: `HttpOnly`, `Secure`, `SameSite`, `Domain`, `Path`.',
+    'Was the cookie set on the host the SPA actually calls?',
+    'Is the session still alive server-side, or only the browser cookie?',
+  ];
+  if (ch === 'attr') return [
+    'API URL, request method, timeout, TLS trust and `Skip SSL Check`.',
+    '`realm`, `subject`, `actor`, `requested_attributes` and `ext` match the source contract.',
+    '`Valid time`, cache key, and whether a failed lookup fails open or closed.',
+  ];
+  if (ch === 'internal') return [
+    'Which component is doing the work? Check its own logs and configuration, not only the final error page.',
+    'OneGate: confirm the **Virtual Host Selector**, then **Activate Changes → Reload configuration** (and **Reindex files** for file changes).',
+    'RP/OP: check the local session, trust-chain cache, policy result and clock.',
+  ];
+  if (ch === 'saml') return [
+    'Signature: assertion, response, or both — whichever the SP validates.',
+    '`Audience`, `Destination`, `NotBefore`/`NotOnOrAfter`, `InResponseTo` and clock skew.',
+    'Certificate rollover and replay cache.',
+  ];
+  return [
+    'Is the browser hitting the expected host and path? Check DNS, reverse proxy and the selected virtual host.',
+    'For a login redirect: `redirect_uri` whitelist, `state`, `nonce` and the stored transaction.',
+    'Browser cookies and the `SameSite`/`Secure` rules on the callback.',
+  ];
 }
 
 function highlightHttp(html) {

@@ -6,6 +6,7 @@ import { fedOidcInbound, fedSamlIdp, fedSamlSp } from './federation.js';
 import { attrRest, attrDelegation } from './attributes.js';
 import { legacyProxySso } from './proxy.js';
 import { controlCenterSetup } from './setup.js';
+import { openidFederation } from './openid-federation.js';
 
 const FLOW = {
   'client-credentials': 'Service → token endpoint → API',
@@ -25,6 +26,7 @@ const FLOW = {
   'attr-rest': 'User → profile → REST lookup → claims',
   'attr-delegation': 'Agent → actor lookup → delegated token',
   'control-center-setup': 'Control Center → Local Provider → RP → BFF → Web Resource',
+  'openid-federation': 'RP ⇄ Trust Anchor ⇄ OP → trust chain → automatic client',
 };
 
 const ALL = [
@@ -45,9 +47,10 @@ const ALL = [
   attrRest,
   attrDelegation,
   controlCenterSetup,
+  openidFederation,
 ];
 
-const FEATURED = new Set(['bff-login', 'token-formats', 'webapp-confidential', 'attr-rest']);
+const FEATURED = new Set(['bff-login', 'token-formats', 'webapp-confidential', 'attr-rest', 'openid-federation']);
 
 export const SCENARIOS = ALL.map((s, i) => {
   const stepCount = s.variants

@@ -55,7 +55,7 @@ function heroArt() {
       <text x="196" y="238" class="hs-row">BFF</text><text x="352" y="238" text-anchor="end" class="hs-sub">cookie + CSRF</text>
 
       <rect x="184" y="256" width="182" height="32" rx="8" fill="var(--bg-elev)" stroke="var(--line)"/>
-      <text x="196" y="276" class="hs-row">Token handler</text><text x="352" y="276" text-anchor="end" class="hs-sub">issue · introspect</text>
+      <text x="196" y="276" class="hs-row">Token handler</text><text x="352" y="276" text-anchor="end" class="hs-sub">issue · exchange</text>
     </g>
     <text x="275" y="310" text-anchor="middle" class="hs-sub">session store · keys · attribute cache</text>
 

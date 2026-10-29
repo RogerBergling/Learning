@@ -70,6 +70,7 @@ export const KINDS = {
   saml:   { label: 'SAML assertion',          chip: 'SAML',     cls: 'k-saml' },
   claims: { label: 'Claims / identity',       chip: 'claims',   cls: 'k-claims' },
   jwk:    { label: 'Public key (JWKS)',       chip: 'JWK',      cls: 'k-jwk' },
+  statement: { label: 'Federation entity statement', chip: 'entity', cls: 'k-statement' },
   secret: { label: 'Client secret',           chip: 'secret',   cls: 'k-rt' },
 };
 
@@ -78,7 +79,7 @@ export const STORES = {
   onegate:  { label: 'OneGate session store', hint: 'server-side: sessions, codes, tokens, attribute cache' },
   frontend: { label: 'Frontend / web server', hint: 'server-side session of the web tier' },
   backend:  { label: 'Backend / API',        hint: 'validated claims only — usually no raw token is kept' },
-  idp:      { label: 'Partner IdP',          hint: 'the external identity provider' },
+  idp:      { label: 'Partner IdP / trust anchor', hint: 'external OP, SAML IdP, or OpenID Federation trust anchor' },
   sp:       { label: 'Partner SP / app',     hint: 'the external service provider' },
   attr:     { label: 'Attribute source',     hint: 'the user attribute / entitlement service' },
 };
@@ -136,11 +137,11 @@ export function materialize(item, ctx = {}) {
     case 'code':
       out.value = 'ac_' + pseudo(seed, 32);
       break;
-    case 'cookie':
-      out.value = out.claims?.name
-        ? `${out.claims.name}=${pseudo(seed, 64)}`
-        : 'ONEGATE_BFF=' + pseudo(seed, 64);
+    case 'cookie': {
+      const cookieName = out.cookieName || out.claims?.name || 'ONEGATE_BFF';
+      out.value = `${cookieName}=${pseudo(seed, 64)}`;
       break;
+    }
     case 'session':
       out.value = 'sess_' + pseudo(seed, 40);
       break;
@@ -160,6 +161,16 @@ export function materialize(item, ctx = {}) {
           },
         ],
       }, null, 2);
+      break;
+    case 'statement':
+      out.value = mockJwt({
+        iss: ctx.iss || 'https://op.example.com',
+        sub: ctx.iss || 'https://op.example.com',
+        iat: t,
+        exp: t + (item.ttl ?? 3600),
+        jwks: { keys: [{ kty: 'RSA', use: 'sig', kid: 'fed-key-1', alg: 'RS256', n: pseudo(seed + 'fedn', 96) + '...', e: 'AQAB' }] },
+        ...(item.claims || {}),
+      }, { alg: 'RS256', typ: 'entity-statement+jwt', kid: out.headerKid || 'fed-key-1' }, seed);
       break;
     case 'claims':
       out.value = JSON.stringify(item.claims || { sub, name: 'Roger Lind', scope }, null, 2);

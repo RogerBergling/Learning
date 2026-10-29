@@ -261,7 +261,7 @@ Location: https://login.example.com/mg-local/portal/saml/sso?
     },
     {
       from: 'user', to: 'og.op', badge: 'SAML SSO endpoint',
-      detail: 'OneGate looks up the SP by entity ID in **SAML IDP → Remote SPs** (or a remote SP group) and validates the ACS URL against the registered metadata. An unknown SP is refused — otherwise you are an open redirect with assertions.',
+      detail: 'OneGate looks up the SP by **EntityID** in **SAML IDP → Remote Service Providers** (or a remote SP group) and matches the ACS URL against that SP\'s **Assertion Consumer URL**. An unknown SP is refused — otherwise you are an open redirect with assertions.',
       tags: ['SP lookup', 'ACS validation'],
     },
     {
@@ -471,7 +471,7 @@ SAMLResponse=PHNhbWxwOlJlc3BvbnNl…&RelayState=%2Freports`,
     {
       from: 'og.rp', to: 'user', badge: 'Set-Cookie + 302',
       detail: 'The local session exists. OneGate sets its session cookie and redirects to the requested resource (or a default page for IdP-initiated logins with no target).',
-      vault: [add('browser', ITEM.cookie({ id: 'sso', name: 'OneGate session cookie', meta: 'HttpOnly · Secure' }))],
+      vault: [add('browser', ITEM.cookie({ id: 'sso', name: 'OneGate session cookie', cookieName: 'ONEGATE_SSO', cookiePath: '/', meta: 'HttpOnly · Secure · SameSite=Lax' }))],
       tags: ['local session'],
     },
     {

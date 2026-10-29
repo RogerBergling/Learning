@@ -96,6 +96,7 @@ async function runTests() {
     csrf: { id: 'csrf', kind: 'csrf' },
     secret: { id: 'secret', kind: 'secret' },
     jwk: { id: 'jwk', kind: 'jwk' },
+    statement: { id: 'stmt', kind: 'statement' },
   })) {
     const m = materialize(def, { scenarioId: 'selftest' });
     add(`materialize ${kind}`, Boolean(m.value) && m.kind === kind, m.value ? `${String(m.value).length} chars` : 'no value');

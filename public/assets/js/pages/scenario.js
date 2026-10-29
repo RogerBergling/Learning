@@ -9,7 +9,7 @@ const DOCS_FOR = {
   bff: ['05-bff', '07-tokens-and-lifecycle'],
   server: ['02-oidc-basics', '07-tokens-and-lifecycle'],
   tokens: ['07-tokens-and-lifecycle', '08-server-to-server'],
-  federation: ['04-federation-rp-saml'],
+  federation: ['12-openid-federation', '04-federation-rp-saml'],
   saml: ['04-federation-rp-saml'],
   attributes: ['06-attribute-providers'],
   proxy: ['01-architecture', '05-bff'],
@@ -24,6 +24,7 @@ const DOC_TITLES = {
   '07-tokens-and-lifecycle': 'Tokens, storage & lifetimes',
   '08-server-to-server': 'Server-to-server',
   '04-federation-rp-saml': 'Federation & SAML',
+  '12-openid-federation': 'OpenID Federation',
   '11-control-center': 'The Control Center, end to end',
 };
 
@@ -59,7 +60,7 @@ export async function renderScenarioPage(view, id) {
           <span class="pill">${esc(cat.label)}</span>
           <span class="pill">${s.stepLabel || `${s.stepCount} steps`}</span>
           <span class="pill">${s.minutes} min</span>
-          ${s.modes ? '<span class="pill ok">JWT / opaque variants</span>' : ''}
+          ${s.modes ? `<span class="pill ok">${esc(s.modeLabel || 'Two modes')}</span>` : ''}
         </div>
         <h1>${esc(s.title)}</h1>
         <p>${esc(s.summary)}</p>
@@ -72,7 +73,7 @@ export async function renderScenarioPage(view, id) {
 
     <div class="sim-note">
       <span>${icon('play', 13)} Press <kbd>Space</kbd> to play, <kbd>←</kbd> <kbd>→</kbd> to step, <kbd>R</kbd> to restart.</span>
-      <span class="dim">Click any credential chip in the vault to inspect it.</span>
+      <span class="dim">Click any credential chip in the vault to inspect it. The right-hand guide explains the goal and the first trap.</span>
     </div>
 
     <div id="sim-root"></div>

@@ -53,7 +53,7 @@ The diagram is also the answer to “where does the token live?”. Tokens are c
 | **OpenID Provider (OP)** | OneGate authenticates the user and issues codes, access tokens, ID tokens and refresh tokens. | Local Providers, Realm Settings, Remote Clients | `invalid_client`, `redirect_uri mismatch`, wrong claims, `invalid_token` at the API |
 | **Relying Party (RP)** | OneGate consumes someone else’s identity — a partner OP, a SAML IdP, or its own Local Provider. | RP Authentication, Remote Providers, local user handling | `invalid ID token`, unknown user, duplicate accounts, clock skew |
 | **Backend for Frontend (BFF)** | OneGate keeps the browser token-free: HttpOnly cookie in, server-side tokens out. | BFF realm settings, RP Authentication, Local Provider, Remote Client | Cookie not sent, CSRF 403, callback mismatch, login loop |
-| **Token handler** | Issues, introspects, validates, exchanges and revokes tokens for clients and APIs. The Administration Manual documents issuing, refresh, exchange and key settings; it does not document introspection, revocation or back-channel logout, so verify those. | Local Provider token settings, scopes, audiences, signing keys | API accepts the wrong audience, revocation is delayed, JWKS fetch fails |
+| **Token handler** | Issues, validates and exchanges tokens for clients and APIs. Introspection and revocation exist only where the deployment provides them: the Administration Manual documents issuing, refresh, exchange and key settings, but not an introspection or revocation endpoint. | Local Provider token settings, scopes, audiences, signing keys | API accepts the wrong audience, revocation is delayed, JWKS fetch fails |
 
 A single scenario can use all five. The flagship [BFF login](#/sim/bff-login) does: proxy for the SPA, BFF for the session, OP to issue, RP to consume, token handler for the API.
 
@@ -83,7 +83,7 @@ This is why the simulator draws wires between `OneGate · BFF`, `OneGate · RP` 
 | OneGate → frontend | Identity headers, a proxied request, a bearer token if the frontend is the resource | Raw partner tokens with a foreign issuer, debug dumps |
 | OneGate → backend API | A bearer token with the right `aud`, or validated claims if it is a trusted proxy | A token minted for a different audience, a user-controlled `Authorization` header |
 | OneGate ↔ partner IdP | Authorization requests/responses, assertions, metadata, JWKS | Local session cookies, local refresh tokens |
-| OneGate ↔ attribute source | A REST attribute request (`realm`, `subject`, `actor`, `requested_attributes`, `ext`) and, with **Include Access Token**, a JWT with the configured `iss`/`aud`/`sub` | The user’s refresh token, the client secret of an unrelated app |
+| OneGate ↔ attribute source | For a REST source: a request with `realm`, `subject`, `actor`, `requested_attributes`, `ext`; with **Include Access Token**, a JWT with the configured `iss`/`aud`/`sub`. LDAP/Graph sources use their own protocols. | The user’s refresh token, the client secret of an unrelated app |
 
 Write these down for your own deployment. Most “mysterious” 401s are a credential that crossed a boundary it was never supposed to cross.
 
@@ -96,7 +96,7 @@ The roles combine into a few common architectures:
 3. **Confidential web app.** The app server itself is the client; OneGate is the OP. See [confidential web app](#/sim/webapp-confidential).
 4. **Federation hub.** OneGate is RP towards partners and OP towards your apps. See [inbound federation](#/sim/fed-oidc-inbound).
 5. **SAML bridge.** OIDC on one side, signed XML on the other. See [SAML IdP](#/sim/fed-saml-idp) and [SAML SP](#/sim/fed-saml-sp).
-6. **Attribute enrichment layer.** Tokens carry entitlements resolved at issuance from a REST attribute source. See [attribute sources](#/sim/attr-rest).
+6. **Attribute enrichment layer.** Tokens carry entitlements resolved at issuance from a REST, LDAP or Graph attribute source. See [attribute sources](#/sim/attr-rest).
 
 Real deployments mix these. A single OneGate installation can proxy three legacy apps, serve BFF login for two SPAs, federate with a partner, and act as a SAML IdP for a SaaS product — with separate realms and clients for each.
 
@@ -113,4 +113,6 @@ It is not a real protocol implementation. Tokens are structurally valid JWTs wit
 - [Control Center setup](#/sim/control-center-setup) — the manual’s map of where every object is configured, and Activate Changes.
 - [OIDC & OAuth 2.0, the parts you need](#/learn/02-oidc-basics) — the protocol vocabulary.
 - [Configuring the OneGate OpenID Provider](#/learn/03-onegate-local-provider) — the settings behind the roles.
+- [Federation: RP, SAML IdP and SAML SP](#/learn/04-federation-rp-saml) — OIDC/SAML federation.
+- [OpenID Federation](#/learn/12-openid-federation) — the JWT trust framework, distinct from OIDC federation.
 - [Scenario catalog](#/learn/09-scenario-catalog) — every simulation in one table.

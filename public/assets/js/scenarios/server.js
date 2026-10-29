@@ -42,7 +42,7 @@ Location: https://login.example.com/mg-local/portal/authorize?
     {
       from: 'user', to: 'og.op', badge: 'GET /authorize',
       detail:
-        'The browser follows the redirect. OneGate validates the client, the exact `redirect_uri`, the requested scopes and the PKCE parameters before showing anything.',
+        'The browser follows the redirect. OneGate validates the client, matches `redirect_uri` against the whitelist, and checks the requested scopes and PKCE parameters before showing anything.',
       tags: ['front channel', 'no tokens'],
     },
     {
@@ -128,7 +128,7 @@ Cache-Control: no-store
 Set-Cookie: APP_SESSION=sess_4c1f…; HttpOnly; Secure; SameSite=Lax; Path=/
 Location: /dashboard`,
       },
-      vault: [add('browser', ITEM.cookie({ id: 'app', name: 'APP_SESSION', meta: 'HttpOnly · Secure · SameSite=Lax' }))],
+      vault: [add('browser', ITEM.cookie({ id: 'app', name: 'APP_SESSION', cookieName: 'APP_SESSION', cookiePath: '/', meta: 'HttpOnly · Secure · SameSite=Lax' }))],
       tags: ['opaque session id', 'HttpOnly'],
     },
     {
@@ -175,7 +175,7 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6…`,
   config: [
     cfg('Federation → OpenID Connect → Local Providers → Remote Clients → portal-web (confidential)', [
       '`client_id = portal-web`, `client_secret = …` (long, random, stored in a secret manager).',
-      'The client authenticates with `client_id` + `client_secret`; `client_secret_basic` matches the Basic header above and is the manual’s recommended metadata method. `client_secret_post` also exists; pick one and stay consistent.',
+      'The client authenticates with `client_id` + `client_secret`; `client_secret_basic` matches the Basic header above and is the manual’s recommended metadata method. `client_secret_post` is a common alternative where supported; pick one and stay consistent.',
       'Exact `redirect_uris = https://app.example.com/callback`.',
       '`grant_types = authorization_code` plus `refresh_token` if you use it.',
       '`scope = openid profile orders.read email`.',

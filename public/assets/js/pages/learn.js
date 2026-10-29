@@ -9,7 +9,7 @@ const RELATED = {
   '01-architecture': ['bff-login', 'legacy-proxy-sso', 'fed-oidc-inbound'],
   '02-oidc-basics': ['bff-login', 'spa-pkce', 'webapp-confidential'],
   '03-onegate-local-provider': ['bff-login', 'client-credentials', 'multi-audience'],
-  '04-federation-rp-saml': ['fed-oidc-inbound', 'fed-saml-idp', 'fed-saml-sp'],
+  '04-federation-rp-saml': ['fed-oidc-inbound', 'fed-saml-idp', 'fed-saml-sp', 'openid-federation'],
   '05-bff': ['bff-login', 'bff-thirdparty', 'bff-exchange', 'logout'],
   '06-attribute-providers': ['attr-rest', 'attr-delegation'],
   '07-tokens-and-lifecycle': ['token-formats', 'refresh-rotation', 'logout'],
@@ -17,6 +17,7 @@ const RELATED = {
   '09-scenario-catalog': ['bff-login', 'token-formats', 'attr-rest'],
   '10-troubleshooting': ['refresh-rotation', 'logout', 'bff-exchange'],
   '11-control-center': ['control-center-setup', 'legacy-proxy-sso', 'bff-login', 'attr-rest'],
+  '12-openid-federation': ['openid-federation', 'fed-oidc-inbound'],
   glossary: [],
 };
 

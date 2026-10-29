@@ -20,6 +20,8 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 
 **Assertion** — a signed SAML statement about a subject, containing authentication and attribute statements. The SAML analogue of an ID token.
 
+**Automatic registration** — an OpenID Federation mode where the RP’s `client_id` is its Entity Identifier and the OP resolves the RP’s trust chain and metadata itself. No manual client registration or client secret; the RP authenticates with `private_key_jwt` or another asymmetric method. [OpenID Federation](#/learn/12-openid-federation).
+
 **Attribute profile** — the mapping that turns `PARM{...}` values into claims for the access token, ID token or UserInfo. A claim that is not mapped returns nothing. See [Realm Settings](#/learn/03-onegate-local-provider).
 
 **Attribute source** — the manual’s name for an LDAP, REST or Graph API service that OneGate calls to enrich an authenticated subject. Configured under **Authentication → Attribute Sources**; a REST source receives `realm`, `subject`, `actor`, `requested_attributes` and optional `ext`. [Attribute sources](#/learn/06-attribute-providers).
@@ -56,9 +58,19 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 
 **Discovery** — the `.well-known/openid-configuration` document listing endpoints, algorithms, scopes and claims. Prefer it over hard-coded URLs.
 
+**Entity Configuration (EC)** — a self-issued OpenID Federation Entity Statement at `/.well-known/openid-federation`, with `iss = sub`, federation keys, `authority_hints` and typed metadata.
+
+**Entity Identifier** — the globally unique `https` URL that identifies an OpenID Federation entity. It has no query or fragment and becomes the `client_id` in automatic registration.
+
+**Entity Statement** — a signed JWT used by OpenID Federation: either an Entity Configuration (about itself) or a Subordinate Statement (about a subordinate).
+
 **EntityID** — the unique identifier of a SAML IdP or SP. Usually a URI; it does not have to resolve.
 
-**Federation** — trusting an external identity provider or service provider. OneGate can be RP, SAML IdP or SAML SP. [Federation chapter](#/learn/04-federation-rp-saml).
+**Explicit registration** — an OpenID Federation fallback: the RP POSTs its Entity Configuration or trust chain to the OP’s `federation_registration_endpoint` and receives a normal client registration. [OpenID Federation](#/learn/12-openid-federation).
+
+**Federation** — trusting an external identity provider or service provider. OneGate can be RP, SAML IdP or SAML SP. [Federation chapter](#/learn/04-federation-rp-saml). **OpenID Federation** is a separate JWT-based trust framework: see [chapter 12](#/learn/12-openid-federation).
+
+**Federation Entity Key** — the key that signs OpenID Federation Entity Statements and trust marks. It is deliberately separate from the protocol keys that sign OIDC messages.
 
 **Grant type** — the OAuth flow used at the token endpoint: `authorization_code`, `refresh_token`, `client_credentials`, or token exchange. The manual documents the code flow and refresh; the others are generic OAuth patterns to confirm in your deployment.
 
@@ -80,7 +92,9 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 
 **`kid` (Key ID)** — identifies which key signed a JWT. Used to select from JWKS.
 
-**Metadata** — SAML’s XML description of an IdP/SP: endpoints, certificates, bindings, NameID formats.
+**Metadata** — SAML’s XML description of an IdP/SP: endpoints, certificates, bindings, NameID formats. In OpenID Federation, metadata is typed JSON inside an Entity Statement.
+
+**Metadata policy** — OpenID Federation rules (`value`, `add`, `default`, `one_of`, `subset_of`, `superset_of`, `essential`) applied to metadata along the trust chain.
 
 **mTLS (mutual TLS)** — client certificate authentication. Strong client authentication without a shared secret.
 
@@ -91,6 +105,8 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 **OAuth 2.0** — the delegation framework. Answers “may this client call this API for this user?”.
 
 **OIDC (OpenID Connect)** — identity layer on OAuth 2.0. Adds the ID token, `openid` scope, UserInfo and discovery.
+
+**OpenID Federation 1.0** — a JWT-based trust framework for entity statements, trust anchors and trust chains. It is not the same as OIDC/SAML federation. [Chapter 12](#/learn/12-openid-federation).
 
 **Opaque token** — a random string with no readable claims. The API introspects it. Revocation is immediate; validation costs a round trip.
 
@@ -116,6 +132,8 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 
 **SAML 2.0** — XML-based federation for authentication and attributes. Uses assertions, metadata, bindings and XMLDSig.
 
+**Subordinate Statement (SS)** — an OpenID Federation statement issued by a Trust Anchor or Intermediate about an immediate subordinate: `iss`, `sub`, subject federation keys, optional metadata/policy/constraints. [OpenID Federation](#/learn/12-openid-federation).
+
 **Scope** — a permission string requested by the client and enforced by the API, e.g. `orders.read`.
 
 **SLO (Single Logout)** — SAML logout that ends the session at the IdP and SPs. Often partial in practice.
@@ -131,6 +149,12 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 ## T–Z
 
 **Token exchange** — trading a token for another with a different audience, subject or actor. Used for delegation and audience narrowing.
+
+**Trust Anchor (TA)** — the root of an OpenID Federation trust chain. Its federation key is pinned out-of-band; it issues Subordinate Statements and publishes a fetch endpoint. [OpenID Federation](#/learn/12-openid-federation).
+
+**Trust Chain** — the sequence of OpenID Federation statements from a leaf Entity Configuration through Subordinate Statements to a Trust Anchor’s Entity Configuration. It expires at the earliest `exp`.
+
+**Trust Mark** — a signed JWT issued by a Trust Mark Issuer to assert an accreditation or conformance; separate from the trust chain.
 
 **UserInfo** — the OIDC endpoint returning claims about the authenticated user, called with an access token.
 

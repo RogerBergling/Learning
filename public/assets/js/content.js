@@ -24,7 +24,7 @@ export const DOCS = [
     slug: '04-federation-rp-saml',
     title: 'Federation: RP, SAML IdP and SAML SP',
     blurb: 'OneGate as the hub between OIDC and SAML. Remote providers, local user mapping, NameID, AuthnContext and metadata.',
-    chapter: 'OneGate configuration',
+    chapter: 'Federation & trust',
     minutes: 20,
   },
   {
@@ -77,6 +77,13 @@ export const DOCS = [
     minutes: 14,
   },
   {
+    slug: '12-openid-federation',
+    title: 'OpenID Federation — trust chains & automatic registration',
+    blurb: 'Entity statements, trust anchors, trust chains, metadata policy, trust marks and automatic client registration. Standards-based; the OneGate manual does not document these settings.',
+    chapter: 'Federation & trust',
+    minutes: 16,
+  },
+  {
     slug: 'glossary',
     title: 'Glossary',
     blurb: 'Every acronym in this lab, in one place, in plain language.',
@@ -85,7 +92,7 @@ export const DOCS = [
   },
 ];
 
-export const CHAPTERS = ['Foundations', 'OneGate configuration', 'Deep dives', 'Reference'];
+export const CHAPTERS = ['Foundations', 'OneGate configuration', 'Federation & trust', 'Deep dives', 'Reference'];
 
 export const docBySlug = (slug) => DOCS.find((d) => d.slug === slug);
 
@@ -95,9 +102,9 @@ export const CATEGORIES = {
   bff: { label: 'BFF & sessions', blurb: 'Token-free browsers, cookies, exchange and logout.' },
   server: { label: 'Confidential apps', blurb: 'Server-side flows, secrets and refresh tokens.' },
   tokens: { label: 'Token design', blurb: 'Formats, audiences and validation.' },
-  federation: { label: 'Federation', blurb: 'OneGate as RP for someone else\'s IdP.' },
+  federation: { label: 'Federation', blurb: 'OIDC/SAML federation and the OpenID Federation trust framework.' },
   saml: { label: 'SAML', blurb: 'The same identity, in a signed XML envelope.' },
-  attributes: { label: 'Attributes', blurb: 'REST / Graph attribute sources, caching and delegation.' },
+  attributes: { label: 'Attributes', blurb: 'LDAP, REST and Graph attribute sources, caching and delegation.' },
   proxy: { label: 'Proxy & SSO', blurb: 'Protecting apps that know nothing about OIDC.' },
   setup: { label: 'Setup walkthrough', blurb: 'Where each setting lives in the Control Center.' },
 };
@@ -111,6 +118,7 @@ export const LEARNING_PATH = [
   '05-bff',
   '06-attribute-providers',
   '04-federation-rp-saml',
+  '12-openid-federation',
   '08-server-to-server',
   '09-scenario-catalog',
   '10-troubleshooting',

@@ -95,24 +95,40 @@ Content-Type: application/json
       vault: [add('browser', ITEM.code())],
     },
     {
-      from: 'user', to: 'og.token', badge: 'POST /token',
+      from: 'user', to: 'frontend', badge: 'GET /callback?code',
+      detail: 'The browser returns the authorization code to the **web app server**. The browser never receives the access token or refresh token; it only carried the one-time code.',
+      tags: ['code to the server'],
+    },
+    {
+      from: 'frontend', to: 'og.token', badge: 'POST /token (Basic)',
       detail: 'The web app exchanges the code over the back channel with its client credentials. OneGate now builds the ID token and access token from the resolved attributes.',
       channel: 'back',
-      tags: ['back channel'],
+      http: {
+        req: `POST /mg-local/portal/token HTTP/1.1
+Host: login.example.com
+Authorization: Basic cG9ydGFsLXdlYjpzM2NyM3QtdjRsdWU=
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&code=ac_7Kd2…
+&redirect_uri=https%3A%2F%2Fapp.example.com%2Fcallback`,
+      },
+      tags: ['back channel', 'confidential client'],
     },
     {
-      from: 'og.token', to: 'user', badge: 'tokens with claims', channel: 'back',
+      from: 'og.token', to: 'frontend', badge: 'tokens with claims', channel: 'back',
       detail:
-        'The ID token (and, if configured, the JWT access token) contains the enriched claims. The `department` is no longer something the app has to fetch — it is part of the identity it received.',
+        'The ID token and, if configured, the JWT access token contain the enriched claims. They stay on the web app server; the browser only has a session cookie. The `department` is no longer something the app has to fetch — it is part of the identity it received.',
       vault: [
-        add('browser', ITEM.id({ claims: { department: 'Finance', roles: ['report-reader', 'cost-centre-42'], costCentre: 'CC-4711' } })),
+        add('frontend', ITEM.id({ claims: { department: 'Finance', roles: ['report-reader', 'cost-centre-42'], costCentre: 'CC-4711' } })),
+        add('frontend', ITEM.access({ claims: { department: 'Finance', roles: ['report-reader', 'cost-centre-42'], costCentre: 'CC-4711' } })),
         del('browser', 'code'),
       ],
-      tags: ['claims in token'],
+      tags: ['claims in token', 'tokens server-side'],
     },
     {
-      from: 'user', to: 'backend', badge: 'GET /api/reports Bearer',
-      detail: 'The app calls the API with the enriched access token.',
+      from: 'frontend', to: 'backend', badge: 'GET /api/reports Bearer',
+      detail: 'The web app calls the API with the enriched access token. The browser is not involved in this call.',
+      channel: 'back',
       tags: ['bearer'],
     },
     {
@@ -123,8 +139,14 @@ Content-Type: application/json
       tags: ['no extra dependency'],
     },
     {
-      from: 'backend', to: 'user', badge: '200 filtered report', channel: 'back',
+      from: 'backend', to: 'frontend', badge: '200 filtered report', channel: 'back',
       detail: 'The report is filtered by cost centre — authorisation data that never existed in the local user store.',
+      tags: ['done'],
+    },
+    {
+      from: 'frontend', to: 'user', badge: '200 report page',
+      detail: 'The browser gets the rendered page, still holding only the app session cookie.',
+      vault: [add('browser', ITEM.cookie({ id: 'app', name: 'APP_SESSION', cookieName: 'APP_SESSION', cookiePath: '/', meta: 'HttpOnly · Secure · SameSite=Lax' }))],
       tags: ['done'],
     },
     {
@@ -183,9 +205,10 @@ export const attrDelegation = {
   },
   initial: {
     onegate: [
-      { id: 'at', kind: 'jwt', name: 'Agent access token', meta: 'sub = agent-2231' },
-      { id: 'bff', kind: 'cookie', name: 'Session', meta: 'agent logged in' },
+      ITEM.access({ name: 'Agent access token', meta: 'sub = agent-2231' }),
+      ITEM.session({ id: 'bffsess', name: 'BFF session', meta: 'agent logged in' }),
     ],
+    browser: [ITEM.cookie({ meta: 'HttpOnly · Secure · SameSite=Lax' })],
   },
   steps: [
     {
