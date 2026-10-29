@@ -182,6 +182,30 @@ The [Compare page](#/compare) has the full matrix and a JWT-vs-opaque decision h
 
 ---
 
+## Client ID vs client secret
+
+`client_id` identifies the application and is not secret. `client_secret` authenticates a **confidential** client at the token endpoint. If the component cannot keep a secret, it must not have one.
+
+| Scenario | Client ID | Client secret | Why |
+|---|---|---|---|
+| SPA | Yes | **No** | JavaScript is public; use PKCE or a BFF |
+| Mobile app | Yes | **No** | The binary is inspectable; use the system browser + PKCE |
+| Native desktop app | Yes | **No** | Same rule; never ship a secret |
+| BFF | Yes | Yes | Server-side secret and tokens; browser gets a cookie |
+| Reverse proxy / token handler | Yes (if OAuth client) | Yes (if OAuth client) | Only if it actually acts as an OAuth client |
+| Traditional web app | Yes | Yes | Server-side code flow |
+| Client credentials flow | Yes | Yes (or stronger) | A service authenticates itself |
+
+> **OneGate Web Resource note.** A plain **Web Resource** proxy is not an OAuth client: it uses normal authentication + ACL + configured custom headers. If a proxy also acts as a BFF/token handler, it is a confidential client.
+>
+> **Manual caveat.** The OneGate Administration Manual does not document the client-credentials grant. Treat that row as generic OAuth 2.0 background and verify support in your version.
+
+**Ask yourself: can this component safely store a secret?** Browser → no. Mobile app → no. Desktop app → no. Server-side web app/BFF/token handler → yes. If no, use PKCE or a BFF. “No shared secret” does not mean “no client authentication”: a client can use `private_key_jwt` or mTLS instead.
+
+Full definitions of SPA, traditional web app, BFF, mobile, native desktop, reverse proxy/token handler and service clients are in [chapter 2](public/docs/02-oidc-basics.md).
+
+---
+
 ## Written chapters
 
 All in [`public/docs/`](public/docs/), rendered by the site and readable on GitHub:
@@ -189,7 +213,7 @@ All in [`public/docs/`](public/docs/), rendered by the site and readable on GitH
 | # | Chapter | What it covers |
 |---|---|---|
 | 1 | [The big picture](public/docs/01-architecture.md) | Topology, five roles, trust boundaries, OneGate talking to itself |
-| 2 | [OIDC & OAuth 2.0](public/docs/02-oidc-basics.md) | Roles, endpoints, code flow, PKCE, state/nonce, JWT anatomy, errors |
+| 2 | [OIDC & OAuth 2.0](public/docs/02-oidc-basics.md) | Roles, SPA/mobile/native/BFF/web/service clients, client_id vs client_secret, code flow, PKCE, JWT anatomy |
 | 3 | [Configuring the OpenID Provider](public/docs/03-onegate-local-provider.md) | Local Providers, Realm Settings, Remote Clients, keys, a worked registration |
 | 4 | [Federation: RP, SAML IdP, SAML SP](public/docs/04-federation-rp-saml.md) | Inbound OIDC, user mapping, assertions, NameID, validation |
 | 5 | [Backend for Frontend](public/docs/05-bff.md) | Cookie/CSRF model, self-OP/RP, exchange, logout, the debug trap |

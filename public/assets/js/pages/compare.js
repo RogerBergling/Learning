@@ -177,6 +177,12 @@ export function renderCompare(view) {
       <div class="verdict" data-verdict aria-live="polite"></div>
     </div>
 
+    <div class="callout">
+      <strong>Client types and secrets.</strong> This helper covers SPA, traditional web app, service, BFF and legacy proxy.
+      For mobile apps, native desktop apps, reverse proxy/token handlers and the full <code>client_id</code> vs <code>client_secret</code>
+      decision table, see <a href="#/learn/02-oidc-basics">OIDC &amp; OAuth 2.0 → Client types</a>.
+    </div>
+
     <section class="section-head"><div><h2>Lifetime starting points</h2>
       <p>Short enough to limit damage, long enough to avoid a request storm. Adjust to your risk model.</p></div></section>
 

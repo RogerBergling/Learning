@@ -244,7 +244,76 @@ If someone proposes implicit or ROPC for a new application, ask what problem PKC
 
 > **Manual caveat.** The OneGate Administration Manual documents `client_id` + `client_secret` for Remote Clients and recommends `client_secret_basic` in metadata. It does **not** document `private_key_jwt`, mTLS or `none` as OneGate Local Provider client-auth options. The table above is generic OAuth 2.0; verify which methods your version supports.
 
-A SPA is a public client. It has no secret, no matter how well you obfuscate the JavaScript.
+## Client types: where `client_id` and `client_secret` belong
+
+Two different things are often both called “the client password”:
+
+| Item | What it is | Secret? | Where it is sent |
+|---|---|---|---|
+| **`client_id`** | Public identifier of the application | **No** | Authorization request and token request |
+| **`client_secret`** | Shared password used to authenticate a confidential client | **Yes** | Only the token endpoint (and introspection/revocation if supported) |
+
+`client_id` is not a credential. It tells the OP which registered application is asking. `client_secret` proves that the application really is that client when it calls the **back channel**. It is never sent in the browser redirect and never belongs in JavaScript. “Client password” is informal; the OAuth term is **client secret**.
+
+A **public client** cannot keep a secret: its code and configuration are readable by the user. A **confidential client** runs on a server the user does not control and can keep a secret (or a private key).
+
+| Scenario | `client_id` | `client_secret` | Why |
+|---|---|---|---|
+| **SPA** (Single-Page Application) | Yes | **No** | HTML/JavaScript is public; use PKCE, or put a BFF in front |
+| **Mobile app** (iOS/Android) | Yes | **No** | The binary can be unpacked; use the system browser + PKCE |
+| **Native desktop app** | Yes | **No** | Same problem as mobile; never ship a secret in the installer |
+| **BFF** (Backend for Frontend) | Yes | **Yes** | The secret and tokens stay on the BFF server; the browser gets a cookie |
+| **Reverse proxy / token handler** | Yes (if OAuth client) | **Yes** (if OAuth client) | Server-side component; secret allowed only when it authenticates as a client |
+| **Traditional web app** | Yes | **Yes** | Server-side code flow; browser gets only a session cookie |
+| **Client credentials flow** | Yes | **Yes** (or stronger) | A service authenticates itself; no user and no browser |
+
+> **OneGate Web Resource note.** A **Web Resource** used as a reverse proxy is **not itself an OAuth client**. It uses **Authentication type = Normal**, an **ACL** and configured custom headers. If a proxy component also acts as a token handler/BFF and authenticates at a token endpoint, then it is a confidential OAuth client and needs a secret or private key.
+
+### What each type actually is
+
+- **SPA (Single-Page Application)** — a browser application built with JavaScript that loads once and updates the page in place. The SPA host is just static files; all code, endpoints and configuration are visible to the user. It is a **public client**, so it cannot hold a client secret or refresh token safely. Use Authorization Code + PKCE, keep the access token short-lived and preferably in memory, and consider a BFF so tokens never reach JavaScript.
+- **Traditional web app** — a server-rendered application (Node, .NET, Java, PHP, etc.). The server runs the code flow, holds the client secret, exchanges the code on the back channel and keeps tokens in a server-side session. The browser only gets a session cookie.
+- **BFF (Backend for Frontend)** — a server-side tier built specifically for a SPA. The BFF is the OAuth client: it holds the secret, runs the code flow, keeps access/refresh tokens and calls APIs on the SPA’s behalf. The browser gets an HttpOnly cookie, not a token. In OneGate, the BFF uses **RP Authentication**, **Local Provider**, **Remote Client** and its own **BFF cookie**.
+- **Mobile app** — a native app on iOS/Android. It is a public client; the app package can be reverse-engineered. Use the system browser (not an embedded credential form) with Authorization Code + PKCE. Do not embed a client secret; if a backend is needed, use a BFF or a server-side API.
+- **Native desktop app** — the same public-client rules as mobile. Use the system browser and a loopback/claimed HTTPS redirect; never ship a shared secret in the installer or config file.
+- **Reverse proxy / token handler** — a server-side component that sits in front of an application and may terminate sessions, hold tokens or call APIs. If it authenticates as an OAuth client, it is confidential and can use a secret. A plain OneGate Web Resource is different: it is a proxy object protected by normal auth + ACL, not a Remote Client.
+- **Client credentials / service client** — a machine-to-machine client with no user. It authenticates as itself, usually with a secret (or `private_key_jwt`/mTLS where supported), and receives an access token whose subject is the service. No browser, no refresh token, no ID token. The OneGate manual does not document this grant; verify support in your version.
+
+### When is a client secret NOT needed?
+
+A client secret is **not needed** when the component cannot keep it:
+
+- **Browser / SPA** — no secret. Use PKCE or, better for tokens, a BFF.
+- **Mobile app** — no secret. Use the system browser + PKCE.
+- **Native desktop app** — no secret. Same rule.
+- **Public client** — by definition, no secret; the OP uses `token_endpoint_auth_method = none` (verify support in your OneGate version).
+- **OpenID Federation automatic registration** — no client secret is issued; the RP authenticates with `private_key_jwt` or another asymmetric method, and `client_id` is its Entity Identifier. This is standards-based; the OneGate manual does not document it.
+
+“No shared secret” does **not** mean “no client authentication”. A public client still uses PKCE; a confidential client may use `private_key_jwt` or mTLS instead of a shared secret. The question is **which authentication method the client can actually protect**, not whether the word “secret” appears.
+
+### Ask yourself: can this component safely store a secret?
+
+```
+Browser / SPA                         → No  → PKCE or BFF
+Mobile app                            → No  → system browser + PKCE
+Native desktop app                    → No  → system browser + PKCE
+Server-side web app                   → Yes → client secret / private key
+OneGate BFF                           → Yes → client secret / private key
+Token handler / service               → Yes → client secret / private key
+```
+
+If the answer is **No**, do not put a secret there. A secret in a SPA, mobile app or desktop app is not a secret; it is a published credential.
+
+### The OneGate mental model
+
+- **SPA** → use a **BFF** (recommended) or a public-client PKCE flow if your version supports it. The OneGate manual does not document `token_endpoint_auth_method = none`, so verify public-client support first.
+- **Traditional web app** → create a **Remote Client** with a confidential secret; the server does the code exchange.
+- **BFF** → create the **Remote Client**, **RP Authentication** and **BFF** config; the secret stays server-side.
+- **Service** → a confidential Remote Client with `client_credentials` only if your version/licence supports it; otherwise use a server-side delegated flow.
+- **OneGate Web Resource / reverse proxy** → it is **not** an OAuth client. Protect it with normal authentication + ACL + configured custom headers; do not invent a `client_id`/`client_secret` for the legacy app.
+- **OpenID Federation RP** → `client_id` can be the RP’s Entity Identifier; automatic registration uses `private_key_jwt` and no client secret. Standards-based, not a documented OneGate Control Center feature.
+
+The short version: **`client_id` identifies; `client_secret` authenticates. Put the secret only where a server can keep it. If the user can read the code, the component is public.**
 
 ## Errors: the ones you will meet
 

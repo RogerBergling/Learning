@@ -9,9 +9,9 @@ export const DOCS = [
   {
     slug: '02-oidc-basics',
     title: 'OIDC & OAuth 2.0, the parts you need',
-    blurb: 'Roles, endpoints, scopes, claims, PKCE, state, nonce, token anatomy and the exact order of a code flow. No hand-waving.',
+    blurb: 'Roles, client types and where client_id/client_secret belong, endpoints, scopes, PKCE, state, nonce and token anatomy. No hand-waving.',
     chapter: 'Foundations',
-    minutes: 18,
+    minutes: 22,
   },
   {
     slug: '03-onegate-local-provider',

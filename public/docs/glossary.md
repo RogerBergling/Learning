@@ -44,7 +44,12 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 
 **Client credentials** — an OAuth grant where a service authenticates as itself, with no user. [Client credentials](#/sim/client-credentials).
 
-**Client secret** — a shared credential for a confidential client. Never in a browser, never in git. Rotate with overlap.
+**Client ID** — the public identifier of an application at the OP. It is sent in authorization and token requests; it is not a secret. [Client types](#/learn/02-oidc-basics).
+
+**Client secret** — a shared credential used by a confidential client to authenticate at the token endpoint. Never in a browser, never in git. Rotate with overlap. “Client password” is an informal name for it.
+
+**Confidential client** — a client that runs on a server and can keep a secret or private key (web app, BFF, service). It authenticates at the token endpoint.
+
 
 **Code challenge / verifier** — the PKCE pair. The challenge (hash) goes in the authorization request; the verifier goes in the token request.
 
@@ -92,6 +97,10 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 
 **`kid` (Key ID)** — identifies which key signed a JWT. Used to select from JWKS.
 
+**Mobile app** — a native app on iOS/Android. A public client: the binary can be inspected, so it cannot keep a client secret. Use the system browser + PKCE.
+
+**Native desktop app** — a desktop binary. Also a public client; use the system browser + PKCE and never embed a shared secret.
+
 **Metadata** — SAML’s XML description of an IdP/SP: endpoints, certificates, bindings, NameID formats. In OpenID Federation, metadata is typed JSON inside an Entity Statement.
 
 **Metadata policy** — OpenID Federation rules (`value`, `add`, `default`, `one_of`, `subset_of`, `superset_of`, `essential`) applied to metadata along the trust chain.
@@ -130,6 +139,8 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 
 **RP (Relying Party)** — the OIDC client that consumes an ID token. OneGate can be an RP towards a partner or towards itself.
 
+**SPA (Single-Page Application)** — a browser app built from static HTML/JavaScript that updates in place. It is a public client: no client secret, PKCE, and ideally a BFF so tokens never enter JavaScript. [Client types](#/learn/02-oidc-basics).
+
 **SAML 2.0** — XML-based federation for authentication and attributes. Uses assertions, metadata, bindings and XMLDSig.
 
 **Subordinate Statement (SS)** — an OpenID Federation statement issued by a Trust Anchor or Intermediate about an immediate subordinate: `iss`, `sub`, subject federation keys, optional metadata/policy/constraints. [OpenID Federation](#/learn/12-openid-federation).
@@ -147,6 +158,10 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 **Subject (`sub`)** — the identifier of the entity a token is about. Stable per issuer; not necessarily an email.
 
 ## T–Z
+
+**Traditional web app** — a server-rendered application whose server runs the code flow, holds the client secret and keeps tokens in a server-side session; the browser only gets a session cookie.
+
+**Token handler** — a server-side component that obtains, validates, refreshes or exchanges tokens. If it authenticates as an OAuth client, it is confidential and can hold a secret/private key. A plain OneGate Web Resource proxy is not an OAuth client.
 
 **Token exchange** — trading a token for another with a different audience, subject or actor. Used for delegation and audience narrowing.
 

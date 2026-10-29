@@ -198,7 +198,7 @@ The manual does **not** document a `token_endpoint_auth_method = none` public-cl
 | Token endpoint auth | `client_secret_basic` (recommended); `client_secret_post` where supported | Not documented as `none` in the manual |
 | Refresh token | Allowed, server-side | Avoid; use a BFF or silent re-auth |
 
-If a “public” client has a secret embedded in its bundle, it is not confidential; it is a leaked secret with extra steps.
+If a “public” client has a secret embedded in its bundle, it is not confidential; it is a leaked secret with extra steps. See [Client types: SPA, mobile, native, BFF, web app, service](#/learn/02-oidc-basics) for the full decision table.
 
 ### Local properties and per-client claims
 
