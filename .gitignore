@@ -23,3 +23,18 @@ build/
 
 # Vendor documentation kept locally for reference (not redistributed)
 OneGate Administration Manual.pdf
+
+# git-create: secret and safety patterns
+*.p12
+*.pfx
+*.jks
+id_rsa
+id_dsa
+id_ecdsa
+*.kdbx
+.netrc
+.npmrc
+.pypirc
+credentials.json
+terraform.tfstate
+terraform.tfstate.*
