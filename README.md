@@ -56,6 +56,56 @@ The Python launcher is the primary path; both serve exactly the same static file
 
 > Open the site through the server, not as a `file://` URL. ES modules and the Markdown chapters are fetched over HTTP.
 
+### Docker
+
+The image contains only the static site and the Python stdlib launcher:
+
+```bash
+docker build -t onegate-learning-lab .
+docker run --rm -p 8080:8080 onegate-learning-lab
+```
+
+Open <http://localhost:8080>. The container runs as an unprivileged user and listens on port 8080.
+
+### Automatic publishing to GitHub Container Registry
+
+[`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml) runs on every push, and manually from **Actions → Publish Docker image → Run workflow**. It builds `linux/amd64` and `linux/arm64` images and pushes them to GHCR:
+
+```text
+ghcr.io/rogerbergling/oidc-oauth-bff
+```
+
+No repository secrets are required: the workflow authenticates with the built-in `GITHUB_TOKEN`.
+
+| Trigger | Image tags |
+|---|---|
+| Push to `main` | `latest`, `main`, `sha-<short>` |
+| Push to another branch | `<branch>`, `sha-<short>` |
+| Push a tag such as `v1.2.0` | `v1.2.0`, `sha-<short>` |
+| Manual run | Tags for the selected ref |
+
+Pull and run the published image:
+
+```bash
+docker pull ghcr.io/rogerbergling/oidc-oauth-bff:latest
+docker run --rm -p 8080:8080 ghcr.io/rogerbergling/oidc-oauth-bff:latest
+```
+
+**First-time checklist**
+
+1. Commit and push these files. The first workflow run creates the package automatically.
+2. Make sure Actions is enabled (**Settings → Actions → General**). If your organization restricts package creation, allow GitHub Actions to publish packages.
+3. A new GHCR package is private by default. To allow anonymous pulls, open the package → **Package settings** → **Change visibility** → **Public**.
+4. To pull a private image locally, authenticate with a token that has `read:packages`:
+
+   ```bash
+   echo "$CR_PAT" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+   ```
+
+   `GITHUB_TOKEN` only works inside Actions; locally, use a personal access token with package read permission.
+
+If you meant Docker Hub rather than GHCR, the same workflow can also push there after adding `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` secrets and a Docker Hub login step.
+
 ---
 
 ## What is in the lab
@@ -234,6 +284,8 @@ The Markdown is the single source of truth: the site fetches and renders the sam
 
 ```
 OIDC-OAUTH-BFF/
+├── .github/workflows/
+│   └── docker-publish.yml       Build + push the image to GHCR on every push
 ├── public/
 │   ├── index.html               App shell and navigation
 │   ├── assets/
@@ -248,6 +300,8 @@ OIDC-OAUTH-BFF/
 │   │       ├── scenarios/        Eighteen scenario definitions + helpers
 │   │       └── sim/              Layout geometry + the animation player
 │   └── docs/                     Thirteen Markdown chapters
+├── Dockerfile                    Container image (Python static server)
+├── .dockerignore                 Keeps the build context small
 ├── start.py                     Python stdlib server (primary launcher)
 ├── start.sh                     Linux/macOS launcher
 ├── start.bat                    Windows launcher
