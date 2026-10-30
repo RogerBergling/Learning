@@ -80,6 +80,14 @@ Open <http://localhost:8080>. Stop it with `docker compose down`.
 
 The GHCR package must be public for anonymous pulls, or the user must run `docker login ghcr.io` first.
 
+To keep the running container updated automatically, opt in to the Watchtower profile:
+
+```bash
+docker compose --profile auto-update up -d
+```
+
+That starts a pinned, maintained Watchtower fork that checks hourly and updates only this container. It mounts the Docker socket, which gives Watchtower control over the Docker host, so it is deliberately **not** started by default. If the GHCR package is private, uncomment the `config.json` volume in `compose.yaml` after logging in.
+
 ### Automatic publishing to GitHub Container Registry
 
 [`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml) runs on every push, and manually from **Actions → Publish Docker image → Run workflow**. It builds `linux/amd64` and `linux/arm64` images and pushes them to GHCR:
@@ -315,7 +323,7 @@ OIDC-OAUTH-BFF/
 │   └── docs/                     Thirteen Markdown chapters
 ├── Dockerfile                    Container image (Python static server)
 ├── .dockerignore                 Keeps the build context small
-├── compose.yaml                  Single-file runner for users
+├── compose.yaml                  Compose stack with optional auto-update profile
 ├── start.py                     Python stdlib server (primary launcher)
 ├── start.sh                     Linux/macOS launcher
 ├── start.bat                    Windows launcher

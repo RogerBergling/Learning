@@ -4,7 +4,24 @@ services:
   onegate-learning-lab:
     image: ghcr.io/rogerbergling/oidc-oauth-bff:latest
     container_name: onegate-learning-lab
+    mem_limit: 100m
+    mem_reservation: 32m
+    memswap_limit: 100m      # same as mem_limit = no swap
     ports:
       - "8080:8080"
     restart: unless-stopped
     pull_policy: always
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "com.centurylinklabs.watchtower.scope=onegate"
+
+  watchtower:
+    image: nickfedor/watchtower:1.23.2
+    container_name: watchtower
+    profiles: ["auto-update"]
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Uncomment only for a private GHCR image, after `docker login ghcr.io`:
+      # - ${HOME}/.docker/config.json:/config.json:ro
+    command: --interval 3600 --label-enable --scope onegate --cleanup
