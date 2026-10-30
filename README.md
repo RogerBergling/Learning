@@ -67,6 +67,19 @@ docker run --rm -p 8080:8080 onegate-learning-lab
 
 Open <http://localhost:8080>. The container runs as an unprivileged user and listens on port 8080.
 
+### Docker Compose for users
+
+Users only need [`compose.yaml`](compose.yaml). Download it and start the lab:
+
+```bash
+curl -O https://raw.githubusercontent.com/RogerBergling/OIDC-OAUTH-BFF/main/compose.yaml
+docker compose up -d
+```
+
+Open <http://localhost:8080>. Stop it with `docker compose down`.
+
+The GHCR package must be public for anonymous pulls, or the user must run `docker login ghcr.io` first.
+
 ### Automatic publishing to GitHub Container Registry
 
 [`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml) runs on every push, and manually from **Actions → Publish Docker image → Run workflow**. It builds `linux/amd64` and `linux/arm64` images and pushes them to GHCR:
@@ -302,6 +315,7 @@ OIDC-OAUTH-BFF/
 │   └── docs/                     Thirteen Markdown chapters
 ├── Dockerfile                    Container image (Python static server)
 ├── .dockerignore                 Keeps the build context small
+├── compose.yaml                  Single-file runner for users
 ├── start.py                     Python stdlib server (primary launcher)
 ├── start.sh                     Linux/macOS launcher
 ├── start.bat                    Windows launcher

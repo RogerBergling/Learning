@@ -1,0 +1,10 @@
+name: onegate-learning-lab
+
+services:
+  onegate-learning-lab:
+    image: ghcr.io/rogerbergling/oidc-oauth-bff:latest
+    container_name: onegate-learning-lab
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    pull_policy: always
