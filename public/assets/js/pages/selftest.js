@@ -4,12 +4,15 @@ import { CATEGORIES, DOCS, LEARNING_PATH, docBySlug } from '../content.js';
 import { KINDS, STORES, materialize, decodeJwt, mockJwt } from '../tokens.js';
 import { render } from '../markdown.js';
 import { loadDoc } from '../app.js';
+import { QUIZ } from '../quiz-data.js';
+import { searchChapters } from '../search.js';
+import { getProgress, progressSummary } from '../progress.js';
 import { esc, icon } from '../ui.js';
 
 const CHANNELS = new Set(['front', 'back', 'cookie', 'attr', 'internal', 'saml']);
 const ACTORS = new Set([...Object.keys(NODES), ...Object.keys(SUBNODES)]);
 
-export async function renderSelftest(view) {
+export async function renderSelftest(view, isCurrent = () => true) {
   view.innerHTML = `
     <header class="page-head">
       <p class="eyebrow">Quality check</p>
@@ -19,12 +22,13 @@ export async function renderSelftest(view) {
         It is meant for developing the lab itself — if a simulation looks wrong, start here.
       </p>
     </header>
-    <div class="loading" data-running><span class="spinner"></span> Running checks…</div>
+    <div class="loading" data-running role="status"><span class="spinner"></span> Running checks…</div>
     <div data-results hidden></div>
   `;
 
   const results = await runTests();
-  paint(view, results);
+  if (!isCurrent()) return;
+  paint(view, results, isCurrent);
 }
 
 async function runTests() {
@@ -47,9 +51,17 @@ async function runTests() {
       !s.id ? 'missing id' : !s.title ? 'missing title' : !s.summary ? 'missing summary' : '');
     add(`${prefix}: known category`, catKeys.has(s.category), s.category || 'missing');
     add(`${prefix}: flow line`, Boolean(s.flow), s.flow || 'missing');
+    add(`${prefix}: search tags`, Array.isArray(s.tags) && s.tags.length >= 3 && s.tags.every((t) => typeof t === 'string' && t.trim()),
+      Array.isArray(s.tags) ? `${s.tags.length} tags` : 'missing');
 
     const initialOk = checkVault(s.initial || {}, `${prefix}: initial vault`);
     for (const msg of initialOk.errors) add(`${prefix}: initial vault`, false, msg);
+
+    const nodeList = s.nodes || [];
+    add(`${prefix}: nodes array`, Array.isArray(nodeList) && nodeList.every((n) => ACTORS.has(n)),
+      nodeList.filter((n) => !ACTORS.has(n)).join(', '));
+    add(`${prefix}: default mode exists`, !s.variants || !s.defaultMode || Boolean(s.variants[s.defaultMode]),
+      s.defaultMode || 'default');
 
     if (s.variants) {
       const modes = Object.keys(s.variants);
@@ -79,6 +91,33 @@ async function runTests() {
     add(`learning path: ${slug}`, slugs.has(slug) && Boolean(docBySlug(slug)), slugs.has(slug) ? '' : 'not in DOCS');
   }
   add('learning path has no duplicates', new Set(LEARNING_PATH).size === LEARNING_PATH.length);
+
+  /* ------------------------------------------------------------------- quiz */
+  const quizIds = new Set();
+  add('quiz has questions', QUIZ.length >= 10, `${QUIZ.length} questions`);
+  for (const q of QUIZ) {
+    const at = `quiz: ${q.id || '(missing id)'}`;
+    add(`${at}: unique id`, Boolean(q.id) && !quizIds.has(q.id), q.id || 'missing');
+    quizIds.add(q.id);
+    add(`${at}: question`, typeof q.question === 'string' && q.question.length > 15);
+    add(`${at}: options`, Array.isArray(q.options) && q.options.length >= 2 && q.options.every((o) => typeof o === 'string' && o));
+    add(`${at}: answer index`, Number.isInteger(q.answer) && q.answer >= 0 && q.answer < (q.options?.length || 0), String(q.answer));
+    add(`${at}: explanation`, typeof q.explanation === 'string' && q.explanation.length > 20);
+    const link = q.link || {};
+    const target = String(link.href || '').replace(/^#\//, '');
+    const validLink = target.startsWith('learn/')
+      ? slugs.has(target.slice('learn/'.length))
+      : target.startsWith('sim/')
+        ? new Set(SCENARIOS.map((s) => s.id)).has(target.slice('sim/'.length))
+        : false;
+    add(`${at}: explanation link`, validLink, link.href || 'missing');
+  }
+
+  /* --------------------------------------------------------------- progress */
+  const storedProgress = getProgress();
+  add('progress store has chapters', Boolean(storedProgress.chapters && typeof storedProgress.chapters === 'object'));
+  add('progress store has quiz state', Boolean(storedProgress.quiz && Number.isInteger(storedProgress.quiz.attempts)));
+  add('progress summary uses the chapter total', progressSummary(DOCS.length).total === DOCS.length);
 
   /* ---------------------------------------------------------------- tokens */
   const jwt = mockJwt({ sub: 'selftest', aud: 'api.test', exp: 2000000000 });
@@ -111,18 +150,21 @@ async function runTests() {
   add('markdown TOC extraction', mdOut.toc.length === 1 && mdOut.toc[0].id === 'section');
   add('markdown escapes HTML', render('<script>alert(1)</script>').html.includes('&lt;script&gt;'));
   add('markdown tables', render('| a | b |\n| --- | --- |\n| 1 | 2 |').html.includes('<table>'));
+  const unsafeMd = render('[bad](javascript:alert(1)) ![bad](data:text/html,evil)');
+  add('markdown blocks unsafe URLs', !/javascript:|data:text/i.test(unsafeMd.html), unsafeMd.html);
 
   /* ------------------------------------------------------------------ docs */
   if (DOCS.length === 0) add('docs list', false, 'no documents declared');
   const docResults = await Promise.all(DOCS.map(async (d) => {
     try {
-      const src = await loadDoc(d.slug);
+      const src = await loadDoc(d.slug, { fresh: true });
       const r = render(src);
       return {
         slug: d.slug,
         ok: src.trim().length > 200 && r.html.length > 200,
         detail: `${src.length} chars · ${r.toc.length} sections`,
         toc: r.toc.length,
+        src,
       };
     } catch (err) {
       return { slug: d.slug, ok: false, detail: String(err.message || err) };
@@ -131,6 +173,21 @@ async function runTests() {
   for (const r of docResults) add(`doc: ${r.slug}`, r.ok, r.detail);
   const missingToc = docResults.filter((r) => r.ok && r.toc === 0);
   add('every chapter has sections', missingToc.length === 0, missingToc.map((r) => r.slug).join(', '));
+
+  const simIds = new Set(SCENARIOS.map((s) => s.id));
+  const docSlugs = new Set(DOCS.map((d) => d.slug));
+  for (const r of docResults) {
+    if (!r.src) continue;
+    for (const match of r.src.matchAll(/#\/(sim|learn)\/([A-Za-z0-9._-]+)/g)) {
+      const [, kind, target] = match;
+      const valid = kind === 'sim' ? simIds.has(target) : docSlugs.has(target);
+      add(`${r.slug}: ${kind} link ${target}`, valid, valid ? '' : 'target does not exist');
+    }
+  }
+
+  const pkceResults = await searchChapters('PKCE');
+  add('chapter search finds PKCE', pkceResults.some((r) => r.slug === '02-oidc-basics' || r.slug === '07-tokens-and-lifecycle'),
+    `${pkceResults.length} matching sections`);
 
   return rows;
 }

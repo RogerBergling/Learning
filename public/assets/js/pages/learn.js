@@ -3,7 +3,9 @@ import { scenarioById } from '../scenarios/index.js';
 import { docCard } from './cards.js';
 import { loadDoc } from '../app.js';
 import { render } from '../markdown.js';
-import { esc, icon, readingTime } from '../ui.js';
+import { esc, icon, readingTime, debounce } from '../ui.js';
+import { completedChapters, progressSummary, chapterIsComplete, toggleChapterComplete } from '../progress.js';
+import { searchChapters } from '../search.js';
 
 const RELATED = {
   '01-architecture': ['bff-login', 'legacy-proxy-sso', 'fed-oidc-inbound'],
@@ -22,6 +24,10 @@ const RELATED = {
 };
 
 export function renderLearnIndex(view) {
+  const completed = completedChapters();
+  const summary = progressSummary(DOCS.length);
+  const quiz = summary.quiz;
+
   view.innerHTML = `
     <header class="page-head">
       <p class="eyebrow">Written track</p>
@@ -37,7 +43,29 @@ export function renderLearnIndex(view) {
       </div>
     </header>
 
-    <section class="doc-index">
+    <section class="learn-search" aria-label="Chapter search">
+      <label class="search search-wide">
+        <span class="sr-only">Search all chapters</span>
+        <input type="search" placeholder="Search all ${DOCS.length} chapters…" data-chapter-search autocomplete="off">
+      </label>
+      <p class="list-count dim" data-search-count aria-live="polite"></p>
+    </section>
+
+    <section class="learn-progress">
+      <div class="learn-progress-copy">
+        <p class="eyebrow">Your progress</p>
+        <strong>${summary.completed} of ${summary.total} chapters complete</strong>
+        <span class="dim">${quiz.attempts ? `Quiz best: ${quiz.bestPercent}% across ${quiz.attempts} attempt${quiz.attempts === 1 ? '' : 's'}.` : 'No quiz attempts yet.'}</span>
+      </div>
+      <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${summary.percent}" aria-label="Chapter completion">
+        <span style="width:${summary.percent}%"></span>
+      </div>
+      <a class="btn btn-sm" href="#/quiz">${icon('check', 14)} Take the quiz</a>
+    </section>
+
+    <section class="search-results" data-search-results hidden></section>
+
+    <section class="doc-index" data-doc-index>
       ${CHAPTERS.map((chapter) => {
         const docs = DOCS.filter((d) => d.chapter === chapter);
         return `<section class="chapter-block">
@@ -45,7 +73,7 @@ export function renderLearnIndex(view) {
             <h2>${esc(chapter)}</h2>
             <span class="pill">${docs.length} chapter${docs.length === 1 ? '' : 's'}</span>
           </div>
-          <div class="cards">${docs.map(docCard).join('')}</div>
+          <div class="cards">${docs.map((d) => docCard(d, completed.has(d.slug))).join('')}</div>
         </section>`;
       }).join('')}
     </section>
@@ -56,9 +84,70 @@ export function renderLearnIndex(view) {
       <a href="#/sim/bff-login">BFF login</a> with the Tokens tab open.
     </div>
   `;
+
+  const input = view.querySelector('[data-chapter-search]');
+  const results = view.querySelector('[data-search-results]');
+  const index = view.querySelector('[data-doc-index]');
+  const count = view.querySelector('[data-search-count]');
+  let sequence = 0;
+
+  const renderResults = (query, items) => {
+    results.hidden = false;
+    index.hidden = true;
+    if (!items.length) {
+      count.textContent = `No chapters match “${query}”.`;
+      results.innerHTML = `<div class="empty-state"><strong>No chapter matches that.</strong>
+        <p class="muted">Try a protocol name, a claim such as <code>aud</code>, or a term such as “PKCE”.</p>
+        <button class="btn btn-sm" type="button" data-clear-search>Clear search</button></div>`;
+      return;
+    }
+    count.textContent = `${items.length} matching section${items.length === 1 ? '' : 's'}${items.length >= 30 ? ' (first 30)' : ''} — showing the best matches first.`;
+    results.innerHTML = `<div class="cards">${items.map((item) => `<a class="card search-result" href="#/learn/${esc(item.slug)}">
+      <div class="card-meta"><span class="pill">${esc(item.docTitle)}</span>${item.chapter ? '' : `<span class="pill">${esc(item.heading)}</span>`}</div>
+      <h3>${esc(item.chapter ? item.docTitle : item.heading)}</h3>
+      <p>${item.snippetHtml}</p>
+    </a>`).join('')}</div>`;
+  };
+
+  const runSearch = debounce(async () => {
+    const query = input.value.trim();
+    const seq = sequence;
+    if (!query) {
+      results.hidden = true;
+      index.hidden = false;
+      count.textContent = '';
+      return;
+    }
+    if (query.length < 2) {
+      results.hidden = true;
+      index.hidden = false;
+      count.textContent = 'Type at least two characters.';
+      return;
+    }
+
+    results.hidden = false;
+    index.hidden = true;
+    count.textContent = 'Searching every chapter…';
+    results.innerHTML = '<div class="loading" role="status"><span class="spinner"></span> Searching…</div>';
+    const items = await searchChapters(query);
+    if (seq !== sequence || !document.body.contains(results)) return;
+    renderResults(query, items);
+  }, 180);
+
+  input.addEventListener('input', () => {
+    sequence += 1;
+    runSearch();
+  });
+  results.addEventListener('click', (event) => {
+    if (!event.target.closest('[data-clear-search]')) return;
+    input.value = '';
+    input.focus();
+    sequence += 1;
+    runSearch();
+  });
 }
 
-export async function renderLearnDoc(view, slug) {
+export async function renderLearnDoc(view, slug, isCurrent = () => true) {
   const meta = docBySlug(slug);
   if (!meta) {
     view.innerHTML = notFound(slug);
@@ -69,6 +158,7 @@ export async function renderLearnDoc(view, slug) {
   try {
     source = await loadDoc(slug);
   } catch (err) {
+    if (!isCurrent()) return;
     view.innerHTML = `<div class="page-head"><p class="eyebrow">Chapter</p><h1>${esc(meta.title)}</h1></div>
       <div class="card" style="border-color:var(--danger)">
         <h2 style="margin-top:0">The chapter file could not be loaded</h2>
@@ -78,6 +168,7 @@ export async function renderLearnDoc(view, slug) {
       </div>`;
     return;
   }
+  if (!isCurrent()) return;
 
   const { html, toc } = render(source);
   const pos = DOCS.findIndex((d) => d.slug === slug);
@@ -85,6 +176,7 @@ export async function renderLearnDoc(view, slug) {
   const next = pos < DOCS.length - 1 ? DOCS[pos + 1] : null;
   const related = (RELATED[slug] || []).map(scenarioById).filter(Boolean);
   const minutes = readingTime(source);
+  const complete = chapterIsComplete(slug);
 
   document.title = `${meta.title} · OneGate Learning Lab`;
 
@@ -101,9 +193,20 @@ export async function renderLearnDoc(view, slug) {
         <div class="doc-meta">
           <span class="pill">${minutes} min read</span>
           <span class="pill">Chapter ${pos + 1} of ${DOCS.length}</span>
+          <button class="btn btn-sm ${complete ? 'btn-primary' : 'btn-ghost'}" type="button" data-progress-toggle aria-pressed="${complete}">
+            ${icon(complete ? 'check' : 'book', 13)} <span data-progress-label>${complete ? 'Completed' : 'Mark complete'}</span>
+          </button>
           <button class="btn btn-sm btn-ghost" type="button" data-copy-link>${icon('link', 13)} Copy link</button>
         </div>
       </header>
+
+      ${slug === 'glossary' ? `<div class="glossary-tools">
+        <label class="search search-wide">
+          <span class="sr-only">Filter glossary terms</span>
+          <input type="search" placeholder="Filter glossary terms…" data-glossary-filter aria-controls="doc-body" autocomplete="off">
+        </label>
+        <span class="dim" data-glossary-count aria-live="polite"></span>
+      </div>` : ''}
 
       <div class="doc-layout">
         <aside class="doc-toc" aria-label="On this page">
@@ -115,8 +218,10 @@ export async function renderLearnDoc(view, slug) {
             ${related.map((s) => `<a href="#/sim/${esc(s.id)}">${esc(s.title)}</a>`).join('')}` : ''}
         </aside>
 
-        <article class="prose" data-doc-body>${html}</article>
+        <article class="prose" id="doc-body" data-doc-body>${html}</article>
       </div>
+
+      ${slug === 'glossary' ? '<p class="glossary-empty dim" data-glossary-empty hidden>No glossary terms match that filter.</p>' : ''}
 
       ${related.length ? `<section class="doc-try">
         <div class="section-head"><div><h2>Put it in motion</h2><p>The same ideas, animated with a live token vault.</p></div></div>
@@ -146,6 +251,56 @@ export async function renderLearnDoc(view, slug) {
     });
   }
 
+  const progressToggle = view.querySelector('[data-progress-toggle]');
+  if (progressToggle) {
+    progressToggle.addEventListener('click', () => {
+      const next = toggleChapterComplete(slug);
+      progressToggle.classList.toggle('btn-primary', next);
+      progressToggle.classList.toggle('btn-ghost', !next);
+      progressToggle.setAttribute('aria-pressed', String(next));
+      progressToggle.innerHTML = `${icon(next ? 'check' : 'book', 13)} <span data-progress-label>${next ? 'Completed' : 'Mark complete'}</span>`;
+    });
+  }
+
+  let glossaryHandler = null;
+  const glossaryFilter = view.querySelector('[data-glossary-filter]');
+  if (glossaryFilter) {
+    const body = view.querySelector('[data-doc-body]');
+    const terms = [...body.querySelectorAll('p')].filter((p) => p.querySelector('strong'));
+    const termSet = new Set(terms);
+    const headings = [...body.querySelectorAll('h2')];
+    const countEl = view.querySelector('[data-glossary-count]');
+    const emptyEl = view.querySelector('[data-glossary-empty]');
+
+    const applyGlossaryFilter = () => {
+      const query = glossaryFilter.value.trim().toLowerCase();
+      let visible = 0;
+      for (const p of body.querySelectorAll('p')) {
+        const match = termSet.has(p) && p.textContent.toLowerCase().includes(query);
+        p.hidden = Boolean(query) && !match;
+        if (match) visible += 1;
+      }
+      for (const heading of headings) {
+        if (!query) { heading.hidden = false; continue; }
+        let sibling = heading.nextElementSibling;
+        let group = 0;
+        while (sibling && sibling.tagName !== 'H2') {
+          if (sibling.tagName === 'P' && !sibling.hidden && termSet.has(sibling)) group += 1;
+          sibling = sibling.nextElementSibling;
+        }
+        heading.hidden = group === 0;
+      }
+      countEl.textContent = query
+        ? `${visible} matching term${visible === 1 ? '' : 's'}`
+        : `${terms.length} terms`;
+      emptyEl.hidden = !query || visible > 0;
+    };
+
+    glossaryHandler = debounce(applyGlossaryFilter, 100);
+    glossaryFilter.addEventListener('input', glossaryHandler);
+    applyGlossaryFilter();
+  }
+
   // TOC links must not change the hash route, so scroll manually.
   const links = [...view.querySelectorAll('[data-toc]')];
   for (const a of links) {
@@ -162,9 +317,10 @@ export async function renderLearnDoc(view, slug) {
   }
 
   // Highlight the TOC entry for the section currently on screen.
+  let observer = null;
   if (links.length && 'IntersectionObserver' in window) {
     const byId = new Map(links.map((a) => [a.dataset.toc, a]));
-    const observer = new IntersectionObserver((entries) => {
+    observer = new IntersectionObserver((entries) => {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         links.forEach((a) => a.classList.remove('current'));
@@ -176,6 +332,11 @@ export async function renderLearnDoc(view, slug) {
       if (el) observer.observe(el);
     }
   }
+
+  return () => {
+    observer?.disconnect();
+    if (glossaryHandler) glossaryFilter?.removeEventListener('input', glossaryHandler);
+  };
 }
 
 function notFound(slug) {

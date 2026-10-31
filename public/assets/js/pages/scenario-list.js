@@ -32,13 +32,13 @@ export function renderScenarioList(view) {
 
     <div class="list-toolbar">
       <div class="filters" data-filters>
-        <button class="filter active" data-cat="all" type="button">All <span class="fc">${SCENARIOS.length}</span></button>
+        <button class="filter active" data-cat="all" type="button" aria-pressed="true">All <span class="fc">${SCENARIOS.length}</span></button>
         ${Object.entries(CATEGORIES).filter(([id]) => counts[id]).map(([id, c]) =>
-          `<button class="filter" data-cat="${esc(id)}" type="button">${esc(c.label)} <span class="fc">${counts[id]}</span></button>`).join('')}
+          `<button class="filter" data-cat="${esc(id)}" type="button" aria-pressed="false">${esc(c.label)} <span class="fc">${counts[id]}</span></button>`).join('')}
       </div>
       <div class="list-tools">
         <div class="seg" role="group" aria-label="Level">
-          ${LEVELS.map((l) => `<button type="button" data-level="${l.id}" class="${l.id === 'all' ? 'active' : ''}">${l.label}</button>`).join('')}
+          ${LEVELS.map((l) => `<button type="button" data-level="${l.id}" class="${l.id === 'all' ? 'active' : ''}" aria-pressed="${l.id === 'all' ? 'true' : 'false'}">${l.label}</button>`).join('')}
         </div>
         <label class="search">
           <span class="sr-only">Search simulations</span>
@@ -47,7 +47,7 @@ export function renderScenarioList(view) {
       </div>
     </div>
 
-    <p class="list-count dim" data-count></p>
+    <p class="list-count dim" data-count aria-live="polite"></p>
     <div class="scenario-grid" data-grid></div>
 
     <div class="callout" style="margin-top:2rem">
@@ -90,13 +90,21 @@ export function renderScenarioList(view) {
 
   catButtons.forEach((b) => b.addEventListener('click', () => {
     cat = b.dataset.cat;
-    catButtons.forEach((x) => x.classList.toggle('active', x === b));
+    catButtons.forEach((x) => {
+      const active = x === b;
+      x.classList.toggle('active', active);
+      x.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
     paint();
   }));
 
   levelButtonsReal.forEach((b) => b.addEventListener('click', () => {
     level = b.dataset.level;
-    levelButtonsReal.forEach((x) => x.classList.toggle('active', x === b));
+    levelButtonsReal.forEach((x) => {
+      const active = x === b;
+      x.classList.toggle('active', active);
+      x.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
     paint();
   }));
 
@@ -108,8 +116,16 @@ export function renderScenarioList(view) {
     level = 'all';
     query = '';
     search.value = '';
-    catButtons.forEach((x) => x.classList.toggle('active', x.dataset.cat === 'all'));
-    levelButtonsReal.forEach((x) => x.classList.toggle('active', x.dataset.level === 'all'));
+    catButtons.forEach((x) => {
+      const active = x.dataset.cat === 'all';
+      x.classList.toggle('active', active);
+      x.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    levelButtonsReal.forEach((x) => {
+      const active = x.dataset.level === 'all';
+      x.classList.toggle('active', active);
+      x.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
     paint();
   });
 

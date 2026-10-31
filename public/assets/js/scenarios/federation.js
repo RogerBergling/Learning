@@ -1,4 +1,4 @@
-import { add, del, ITEM, CFG, cfg } from './helpers.js';
+import { add, ITEM, CFG, cfg } from './helpers.js';
 
 export const fedOidcInbound = {
   id: 'fed-oidc-inbound',
@@ -6,6 +6,7 @@ export const fedOidcInbound = {
   category: 'federation',
   level: 'advanced',
   minutes: 12,
+  tags: ['federation', 'OIDC', 'RP', 'attribute source', 'user mapping', 'headers'],
   summary:
     'A partner authenticates their own people. OneGate acts as the Relying Party, validates the partner token, maps the identity to a local user, enriches it from an attribute source, and lets a legacy app behind the proxy see a trusted identity.',
   nodes: ['user', 'onegate', 'frontend', 'backend', 'idp', 'attr'],
@@ -237,6 +238,7 @@ export const fedSamlIdp = {
   category: 'saml',
   level: 'advanced',
   minutes: 11,
+  tags: ['SAML', 'IdP', 'assertion', 'metadata', 'NameID', 'signature'],
   summary:
     'A partner application speaks SAML, not OIDC. OneGate authenticates the user — locally or through any configured federation — and issues a signed SAML assertion to the partner SP. Same identity, different envelope.',
   nodes: ['user', 'onegate', 'sp'],
@@ -411,6 +413,7 @@ export const fedSamlSp = {
   category: 'saml',
   level: 'advanced',
   minutes: 10,
+  tags: ['SAML', 'SP', 'assertion', 'replay', 'NameID', 'IdP-initiated'],
   summary:
     'The partner IdP initiates SSO and posts a signed assertion to OneGate. OneGate validates it, links the identity to a local user, and creates the local session that the proxied apps rely on.',
   nodes: ['user', 'onegate', 'frontend', 'idp'],

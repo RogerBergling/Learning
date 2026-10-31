@@ -6,6 +6,7 @@ export const bffLogin = {
   category: 'bff',
   level: 'core',
   minutes: 13,
+  tags: ['BFF', 'cookie', 'CSRF', 'PKCE', 'OneGate as OP and RP', 'no tokens in browser'],
   summary:
     'The flagship flow. The SPA has no tokens and no secret. OneGate\'s BFF drives an ordinary Authorization Code flow against its own local OpenID Provider, keeps every token server-side, and hands the browser nothing but an HttpOnly cookie.',
   nodes: ['user', 'onegate', 'frontend', 'backend'],
@@ -230,6 +231,7 @@ export const bffThirdParty = {
   category: 'bff',
   level: 'advanced',
   minutes: 12,
+  tags: ['BFF', 'federation', 'partner IdP', 'JIT', 'user mapping', 'token normalisation'],
   summary:
     'A partner\'s employees log in with their own identity provider. OneGate acts as RP towards the partner and as OP towards your SPA — and the SPA still only ever sees a cookie.',
   nodes: ['user', 'onegate', 'frontend', 'backend', 'idp'],
@@ -410,6 +412,7 @@ export const bffExchange = {
   category: 'bff',
   level: 'advanced',
   minutes: 10,
+  tags: ['exchange', 'delegation', 'actor claim', 'impersonation', 'BFF', 'audit'],
   summary:
     'A support agent needs to see a customer\'s data. Instead of handing out a customer token, the BFF exchanges its session for a narrower token that carries both identities: the customer as subject, the agent as actor.',
   nodes: ['user', 'onegate', 'frontend', 'backend'],
@@ -582,6 +585,7 @@ export const logout = {
   category: 'bff',
   level: 'core',
   minutes: 8,
+  tags: ['logout', 'revocation', 'back-channel logout', 'SSO', 'session'],
   summary:
     'Login is the easy part. Logout has to clear the BFF session, the OneGate SSO session, and any downstream app session — otherwise the next "login" is silent and the user is back in instantly.',
   nodes: ['user', 'onegate', 'frontend'],

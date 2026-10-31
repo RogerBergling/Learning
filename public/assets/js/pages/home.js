@@ -1,5 +1,6 @@
 import { DOCS, LEARNING_PATH, docBySlug } from '../content.js';
 import { SCENARIOS, featuredScenarios, categoryCounts } from '../scenarios/index.js';
+import { STORES } from '../tokens.js';
 import { scenarioCard, docCard } from './cards.js';
 import { icon, esc } from '../ui.js';
 
@@ -178,7 +179,7 @@ export function renderHome(view) {
           <div class="hero-stat"><strong>${SCENARIOS.length}</strong><span>scenarios</span></div>
           <div class="hero-stat"><strong>${chapters}</strong><span>chapters</span></div>
           <div class="hero-stat"><strong>${categories}</strong><span>topic areas</span></div>
-          <div class="hero-stat"><strong>7</strong><span>trust stores</span></div>
+          <div class="hero-stat"><strong>${Object.keys(STORES).length}</strong><span>trust stores</span></div>
         </div>
       </div>
       <div class="hero-art">${heroArt()}</div>

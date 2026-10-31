@@ -1,8 +1,10 @@
 # OneGate Learning Lab
 
+[![CI](https://github.com/RogerBergling/Learning/actions/workflows/ci.yml/badge.svg)](https://github.com/RogerBergling/Learning/actions/workflows/ci.yml)
+
 An interactive, offline study aid for **OpenID Connect, OAuth 2.0, OpenID Federation, SAML, federation, BFF and attribute sources** — built around how OneGate behaves as a reverse proxy, OpenID Provider, Relying Party, Backend-for-Frontend and token handler.
 
-Eighteen animated scenarios. A live token vault. Thirteen written chapters. No build step, no dependencies, no network calls.
+Eighteen animated scenarios. A live token vault. Thirteen written chapters. A twelve-question self-assessment. No build step, no dependencies, no network calls.
 
 ```
 Browser → OneGate (proxy · OP · RP · BFF · token handler) → frontend · API · partner IdP
@@ -72,7 +74,7 @@ Open <http://localhost:8080>. The container runs as an unprivileged user and lis
 Users only need [`compose.yaml`](compose.yaml). Download it and start the lab:
 
 ```bash
-curl -O https://raw.githubusercontent.com/RogerBergling/OIDC-OAUTH-BFF/main/compose.yaml
+curl -O https://raw.githubusercontent.com/RogerBergling/Learning/main/compose.yaml
 docker compose up -d
 ```
 
@@ -93,7 +95,7 @@ That starts a pinned, maintained Watchtower fork that checks hourly and updates 
 [`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml) runs on every push, and manually from **Actions → Publish Docker image → Run workflow**. It builds `linux/amd64` and `linux/arm64` images and pushes them to GHCR:
 
 ```text
-ghcr.io/rogerbergling/oidc-oauth-bff
+ghcr.io/rogerbergling/learning
 ```
 
 No repository secrets are required: the workflow authenticates with the built-in `GITHUB_TOKEN`.
@@ -108,8 +110,8 @@ No repository secrets are required: the workflow authenticates with the built-in
 Pull and run the published image:
 
 ```bash
-docker pull ghcr.io/rogerbergling/oidc-oauth-bff:latest
-docker run --rm -p 8080:8080 ghcr.io/rogerbergling/oidc-oauth-bff:latest
+docker pull ghcr.io/rogerbergling/learning:latest
+docker run --rm -p 8080:8080 ghcr.io/rogerbergling/learning:latest
 ```
 
 **First-time checklist**
@@ -134,11 +136,12 @@ If you meant Docker Hub rather than GHCR, the same workflow can also push there 
 | Page | What it does |
 |---|---|
 | **Overview** (`#/`) | The topology, the five roles, where tokens may live, the learning path |
-| **Learn** (`#/learn`) | Thirteen chapters, rendered from Markdown with a table of contents |
-| **Simulations** (`#/scenarios`) | Filter/search all 18 flows by category, level or keyword |
+| **Learn** (`#/learn`) | Thirteen chapters, full-text search, a table of contents, and chapter-completion tracking |
+| **Simulations** (`#/scenarios`) | Filter/search all 18 flows by category, level, tag or keyword |
 | **Simulator** (`#/sim/{id}`) | Animated stage, live token vault, HTTP wire view, config, pitfalls |
 | **Compare** (`#/compare`) | JWT vs opaque, the storage matrix, a decision helper |
-| **Glossary** (`#/glossary`) | Every acronym in plain language |
+| **Glossary** (`#/glossary`) | Every acronym in plain language, with an in-page term filter |
+| **Quiz** (`#/quiz`) | A twelve-question knowledge check with explanations, links and saved progress |
 | **Self-check** (`#/selftest`) | Runtime validation of scenarios, tokens and all docs |
 
 The simulator has five tabs per scenario:
@@ -304,9 +307,11 @@ The Markdown is the single source of truth: the site fetches and renders the sam
 ## Project structure
 
 ```
-OIDC-OAUTH-BFF/
+Learning/
 ├── .github/workflows/
+│   ├── ci.yml                   Static checks, HTTP smoke test + JS syntax
 │   └── docker-publish.yml       Build + push the image to GHCR on every push
+├── .github/dependabot.yml       Monthly updates for actions + base image
 ├── public/
 │   ├── index.html               App shell and navigation
 │   ├── assets/
@@ -315,12 +320,18 @@ OIDC-OAUTH-BFF/
 │   │       ├── app.js            Hash router, theme, doc loader
 │   │       ├── content.js        Chapter + category metadata
 │   │       ├── markdown.js       Dependency-free Markdown renderer + TOC
+│   │       ├── progress.js       Local-only chapter/quiz progress
+│   │       ├── quiz-data.js      Quiz questions, answers and explanations
+│   │       ├── search.js         Full-text chapter index and snippets
 │   │       ├── tokens.js         Simulated JWTs, stores, token kinds
 │   │       ├── ui.js             Icons, toast, helpers
-│   │       ├── pages/            Home, learn, list, simulator, compare, selftest
+│   │       ├── pages/            Home, learn, list, simulator, quiz, compare, selftest
 │   │       ├── scenarios/        Eighteen scenario definitions + helpers
 │   │       └── sim/              Layout geometry + the animation player
 │   └── docs/                     Thirteen Markdown chapters
+├── scripts/
+│   ├── verify.py                 Dependency-free static registry/link checks
+│   └── smoke.py                  Starts start.py and checks real HTTP responses
 ├── Dockerfile                    Container image (Python static server)
 ├── .dockerignore                 Keeps the build context small
 ├── compose.yaml                  Compose stack with optional auto-update profile
@@ -329,6 +340,8 @@ OIDC-OAUTH-BFF/
 ├── start.bat                    Windows launcher
 ├── server.mjs                   Optional Node launcher
 ├── package.json                 `npm start` (type: module, no dependencies)
+├── CONTRIBUTING.md              Scenario, chapter and launcher conventions
+├── LICENSE                       MIT license
 └── README.md
 ```
 
@@ -345,15 +358,19 @@ No bundler, no framework, no runtime dependency. The browser loads ES modules di
 - JWT values are built with a fake signature but real base64url header/payload, so the inspector can decode them.
 - The **token journey** table is generated from the same vault operations.
 
-To add a scenario, create a file in `public/assets/js/scenarios/`, export the object, and register it in `scenarios/index.js`. Add a flow line and, if you like, a chapter link. Run [Self-check](#/selftest) to validate the data.
+To add a scenario, create a file in `public/assets/js/scenarios/`, export the object, and register it in `scenarios/index.js`. Add a flow line, a top-level `tags` array (used by the Simulations search) and, if you like, a chapter link. Run [Self-check](#/selftest) to validate the data.
 
 ---
 
 ## Verification
 
-- **Self-check** (`#/selftest`) validates scenario shape, actor IDs, channels, vault operations, token kinds, Markdown rendering and every doc fetch. It should report 100%.
+- **Static checks** (`python3 scripts/verify.py`) validate the document and scenario registries, quiz data, internal links, actors, token stores, assets, packaging metadata and server headers without a browser.
+- **Smoke test** (`python3 scripts/smoke.py`) starts the real `start.py` launcher on a free port and checks the app shell, ES modules, Markdown, SPA fallback, 404 handling, `HEAD` and security headers.
+- **Self-check** (`#/selftest`) validates scenario shape, actor IDs, channels, vault operations, token kinds, Markdown rendering and every doc fetch at runtime. It should report 100%.
 - **curl** the routes: `/`, `/assets/js/app.js`, `/docs/01-architecture.md` should be 200.
-- Browser check: open `#/`, `#/learn/01-architecture`, `#/learn/12-openid-federation`, `#/sim/bff-login`, `#/sim/openid-federation`, `#/compare`, `#/selftest`.
+- Browser check: open `#/`, `#/learn/01-architecture`, `#/learn/12-openid-federation`, `#/sim/bff-login`, `#/sim/openid-federation`, `#/compare`, `#/quiz`, `#/glossary`, `#/selftest`.
+
+Both checks use only the Python standard library and run in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) on every push and pull request. The optional Node launcher is syntax-checked and smoke-tested separately.
 
 If a chapter 404s, make sure you are serving `public/` (the launcher does) rather than opening `index.html` from disk.
 
@@ -369,10 +386,12 @@ If a chapter 404s, make sure you are serving `public/` (the launcher does) rathe
 - **Earlier versions of this lab used “JVAP”.** That term does not appear in the manual. The feature is **Attribute Sources**; a REST source calls the **User Attribute API** contract. The lab now uses the manual’s terminology.
 - **Checked against the vendor manual.** This edition was reviewed against the **OneGate Administration Manual**; the PDF is kept locally for reference and is not redistributed in the repository.
 - The lab is an unofficial study aid, not affiliated with the vendor. It is not a substitute for the product documentation or a security review.
-- No analytics, no external fonts, no CDN, no cookies.
+- No analytics, no external fonts, no CDN, no cookies. Chapter and quiz progress is stored in this browser's `localStorage` and never leaves the machine.
 
 ---
 
 ## License / use
+
+Released under the [MIT License](LICENSE).
 
 Use it for training, onboarding and design reviews. If you adapt it, keep the “simulated, not real credentials” warning visible — the whole point is to learn where tokens go without putting real ones anywhere.

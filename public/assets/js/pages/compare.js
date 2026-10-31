@@ -168,11 +168,11 @@ export function renderCompare(view) {
     <div class="decision" data-decision>
       <div class="q">1. What kind of client are you building?</div>
       <div class="choice-row" data-apps>
-        ${APP_TYPES.map((a) => `<button class="choice${a.id === 'spa' ? ' sel' : ''}" type="button" data-app="${a.id}">${esc(a.label)}</button>`).join('')}
+        ${APP_TYPES.map((a) => `<button class="choice${a.id === 'spa' ? ' sel' : ''}" type="button" data-app="${a.id}" aria-pressed="${a.id === 'spa' ? 'true' : 'false'}">${esc(a.label)}</button>`).join('')}
       </div>
       <div class="q" style="margin-top:1rem">2. How should the API validate the access token?</div>
       <div class="choice-row" data-modes>
-        ${API_MODES.map((m) => `<button class="choice${m.id === 'jwt' ? ' sel' : ''}" type="button" data-mode="${m.id}">${esc(m.label)}</button>`).join('')}
+        ${API_MODES.map((m) => `<button class="choice${m.id === 'jwt' ? ' sel' : ''}" type="button" data-mode="${m.id}" aria-pressed="${m.id === 'jwt' ? 'true' : 'false'}">${esc(m.label)}</button>`).join('')}
       </div>
       <div class="verdict" data-verdict aria-live="polite"></div>
     </div>
@@ -221,11 +221,19 @@ export function renderCompare(view) {
     const modeBtn = e.target.closest('[data-mode]');
     if (appBtn) {
       app = appBtn.dataset.app;
-      box.querySelectorAll('[data-app]').forEach((b) => b.classList.toggle('sel', b === appBtn));
+      box.querySelectorAll('[data-app]').forEach((b) => {
+        const active = b === appBtn;
+        b.classList.toggle('sel', active);
+        b.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
     }
     if (modeBtn) {
       mode = modeBtn.dataset.mode;
-      box.querySelectorAll('[data-mode]').forEach((b) => b.classList.toggle('sel', b === modeBtn));
+      box.querySelectorAll('[data-mode]').forEach((b) => {
+        const active = b === modeBtn;
+        b.classList.toggle('sel', active);
+        b.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
     }
     if (appBtn || modeBtn) paint();
   });

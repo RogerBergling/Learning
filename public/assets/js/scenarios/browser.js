@@ -1,4 +1,4 @@
-import { add, del, ITEM, CFG, cfg } from './helpers.js';
+import { add, ITEM, CFG, cfg } from './helpers.js';
 
 export const spaPkce = {
   id: 'spa-pkce',
@@ -6,6 +6,7 @@ export const spaPkce = {
   category: 'browser',
   level: 'core',
   minutes: 9,
+  tags: ['SPA', 'PKCE', 'public client', 'code flow', 'CORS', 'XSS', 'no secret'],
   summary:
     'A single-page app has no backend and cannot keep a secret. PKCE makes the code flow safe for it — but the access token still ends up in the browser, which is exactly the problem the BFF pattern solves.',
   nodes: ['user', 'onegate', 'frontend', 'backend'],

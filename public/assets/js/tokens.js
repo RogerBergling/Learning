@@ -86,7 +86,7 @@ export const STORES = {
 
 /** Turn a scenario token definition into a concrete, displayable token. */
 export function materialize(item, ctx = {}) {
-  const t = now();
+  const t = ctx.now ?? now();
   const iss = ctx.iss || 'https://login.example.com/mg-local/portal';
   const aud = ctx.aud || 'api.orders';
   const sub = ctx.sub || 'a1b2c3d4-7f31-4a1e-9d2c-55e0f1a2b3c4';

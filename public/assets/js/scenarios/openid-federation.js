@@ -384,11 +384,13 @@ export const openidFederation = {
   category: 'federation',
   level: 'advanced',
   minutes: 16,
+  tags: ['OpenID Federation', 'trust anchor', 'entity statement', 'automatic registration', 'metadata policy', 'SSRF'],
   modeLabel: 'Trust chain / automatic',
   defaultMode: 'trust-chain',
   summary:
     'OpenID Federation 1.0 is a JWT-based trust layer, not another login protocol. An RP and an OP prove they belong to the same federation through a Trust Anchor, resolve each other’s metadata, and can register a client automatically — with no manual client_secret. This scenario has two modes: the trust chain itself, and the full automatic-registration login.',
   configNote: 'This scenario is standards-based. The OneGate Administration Manual does not document OpenID Federation entity statements, trust anchors or automatic registration; its only passing mention is an ACL note that “OpenID federation” does not support Max inactive time. Treat these as OpenID Federation 1.0 entities, not Control Center menus. Verify support in your OneGate version.',
+  nodes: ['user', 'onegate', 'frontend', 'idp'],
   nodeLabels: {
     onegate: { name: 'OneGate OP', sub: 'federated OpenID Provider' },
     frontend: { name: 'Federated RP', sub: 'client_id = entity ID' },

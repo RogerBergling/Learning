@@ -6,6 +6,7 @@ export const attrRest = {
   category: 'attributes',
   level: 'core',
   minutes: 10,
+  tags: ['attribute source', 'REST', 'PARM', 'JsonPath', 'claims', 'cache'],
   summary:
     'The user store knows who someone is; the attribute source knows what they may do. During token issuance OneGate calls the configured REST attribute source, caches the answer, and maps it into claims through the attribute profile.',
   nodes: ['user', 'onegate', 'frontend', 'backend', 'attr'],
@@ -196,6 +197,7 @@ export const attrDelegation = {
   category: 'attributes',
   level: 'advanced',
   minutes: 9,
+  tags: ['attribute source', 'actor', 'delegation', 'cache key', 'privacy', 'service desk'],
   summary:
     'A service-desk agent looks up a customer. OneGate asks the attribute service for the customer\'s entitlements, but tells it who is asking. The attribute API can then apply a delegation policy — and the cache must be keyed by both identities.',
   nodes: ['user', 'onegate', 'frontend', 'backend', 'attr'],

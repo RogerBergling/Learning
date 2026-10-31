@@ -1,6 +1,6 @@
 import { NODES, SUBNODES, pathFor, pctX, pctY } from './layout.js';
 import { materialize, KINDS, STORES, decodeJwt, relTime, preview } from '../tokens.js';
-import { md } from '../markdown.js';
+import { md, inlineMd } from '../markdown.js';
 import { icon, esc, prefersReducedMotion } from '../ui.js';
 
 const CHANNELS = {
@@ -36,6 +36,7 @@ export class SimPlayer {
     this.vault = new Map();
     this.ctx = {
       scenarioId: scenario.id,
+      now: Math.floor(Date.now() / 1000),
       iss: 'https://login.example.com/mg-local/portal',
       sub: 'a1b2c3d4-7f31-4a1e-9d2c-55e0f1a2b3c4',
       aud: 'api.orders',
@@ -138,7 +139,7 @@ export class SimPlayer {
     const modeControl = s.variants
       ? `<div class="seg" role="group" aria-label="Token format">
            ${Object.entries(s.variants).map(([k, v]) =>
-             `<button type="button" data-mode="${k}" class="${k === this.mode ? 'active' : ''}">${esc(v.label || k)}</button>`).join('')}
+             `<button type="button" data-mode="${k}" aria-pressed="${k === this.mode ? 'true' : 'false'}" class="${k === this.mode ? 'active' : ''}">${esc(v.label || k)}</button>`).join('')}
          </div>`
       : '';
 
@@ -148,15 +149,13 @@ export class SimPlayer {
         <button class="btn btn-icon" data-act="prev" title="Previous step (←)" aria-label="Previous step">${icon('prev', 15)}</button>
         <button class="btn btn-primary" data-act="play" title="Play / pause (Space)">${icon('play', 15)}<span data-play-label>Play</span></button>
         <button class="btn btn-icon" data-act="next" title="Next step (→)" aria-label="Next step">${icon('next', 15)}</button>
-        <span class="counter" data-counter>1 / ${this.steps.length}</span>
+        <span class="counter" data-counter aria-live="polite">1 / ${this.steps.length}</span>
         <span class="spacer"></span>
         ${modeControl}
         <label>Speed
           <select class="control-select" data-speed>
-            <option value="0.6">0.6×</option>
-            <option value="1" selected>1×</option>
-            <option value="1.6">1.6×</option>
-            <option value="2.4">2.4×</option>
+            ${[['0.6', '0.6×'], ['1', '1×'], ['1.6', '1.6×'], ['2.4', '2.4×']].map(([value, label]) =>
+              `<option value="${value}"${Number(value) === this.speed ? ' selected' : ''}>${label}</option>`).join('')}
           </select>
         </label>
       </div>
@@ -184,19 +183,19 @@ export class SimPlayer {
           </div>
 
           <div class="panel">
-            <div class="tabs" role="tablist">
-              <button class="tab active" data-tab="explain" role="tab">Explain</button>
-              <button class="tab" data-tab="wire" role="tab">Wire</button>
-              <button class="tab" data-tab="tokens" role="tab">Tokens <span class="tab-dot"></span></button>
-              <button class="tab" data-tab="setup" role="tab">Setup</button>
-              <button class="tab" data-tab="risks" role="tab">Watch out</button>
+            <div class="tabs" role="tablist" aria-label="Scenario panels">
+              <button class="tab active" id="tab-explain" data-tab="explain" role="tab" aria-selected="true" aria-controls="panel-explain" tabindex="0">Explain</button>
+              <button class="tab" id="tab-wire" data-tab="wire" role="tab" aria-selected="false" aria-controls="panel-wire" tabindex="-1">Wire</button>
+              <button class="tab" id="tab-tokens" data-tab="tokens" role="tab" aria-selected="false" aria-controls="panel-tokens" tabindex="-1">Tokens <span class="tab-dot"></span></button>
+              <button class="tab" id="tab-setup" data-tab="setup" role="tab" aria-selected="false" aria-controls="panel-setup" tabindex="-1">Setup</button>
+              <button class="tab" id="tab-risks" data-tab="risks" role="tab" aria-selected="false" aria-controls="panel-risks" tabindex="-1">Watch out</button>
             </div>
             <div class="tab-body">
-              <div class="tab-panel active" data-panel="explain"></div>
-              <div class="tab-panel" data-panel="wire"></div>
-              <div class="tab-panel" data-panel="tokens"></div>
-              <div class="tab-panel" data-panel="setup"></div>
-              <div class="tab-panel" data-panel="risks"></div>
+              <div class="tab-panel active" id="panel-explain" data-panel="explain" role="tabpanel" aria-labelledby="tab-explain"></div>
+              <div class="tab-panel" id="panel-wire" data-panel="wire" role="tabpanel" aria-labelledby="tab-wire"></div>
+              <div class="tab-panel" id="panel-tokens" data-panel="tokens" role="tabpanel" aria-labelledby="tab-tokens"></div>
+              <div class="tab-panel" id="panel-setup" data-panel="setup" role="tabpanel" aria-labelledby="tab-setup"></div>
+              <div class="tab-panel" id="panel-risks" data-panel="risks" role="tabpanel" aria-labelledby="tab-risks"></div>
             </div>
           </div>
         </div>
@@ -386,6 +385,8 @@ export class SimPlayer {
         this.steps = this.pickSteps();
         this.usedActors = this.computeUsedActors();
         this.journey = this.computeJourney();
+        this.vault = new Map();
+        this.selectedToken = null;
         this.playing = false;
         // Root listeners stay attached; build() only replaces the inner markup.
         this.build();
@@ -405,14 +406,48 @@ export class SimPlayer {
       if (e.target.matches('[data-speed]')) this.speed = Number(e.target.value);
     });
 
+    // Standard roving-tabindex keyboard behaviour for the tab strip.
+    this.root.addEventListener('keydown', (e) => {
+      const tab = e.target.closest('[data-tab]');
+      if (!tab) return;
+      const tabs = this.qa('[data-tab]');
+      const index = tabs.indexOf(tab);
+      if (index < 0) return;
+      let next = null;
+      if (e.key === 'ArrowRight') next = tabs[(index + 1) % tabs.length];
+      else if (e.key === 'ArrowLeft') next = tabs[(index - 1 + tabs.length) % tabs.length];
+      else if (e.key === 'Home') next = tabs[0];
+      else if (e.key === 'End') next = tabs[tabs.length - 1];
+      if (!next) return;
+      e.preventDefault();
+      e.stopPropagation();
+      next.focus();
+      this.setTab(next.dataset.tab);
+    });
+
     this.onKey = (e) => {
       if (!document.body.contains(this.root)) return;
       const t = e.target;
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA')) return;
-      if (e.key === ' ') { e.preventDefault(); this.togglePlay(); }
-      else if (e.key === 'ArrowRight') { e.preventDefault(); this.playing = false; this.go(this.index + 1, true); }
-      else if (e.key === 'ArrowLeft') { e.preventDefault(); this.playing = false; this.go(this.index - 1, true); }
-      else if (e.key.toLowerCase() === 'r') { this.playing = false; this.go(0, false, true); }
+      const closest = (sel) => (t && typeof t.closest === 'function' ? t.closest(sel) : null);
+      // Never take over text editing or native form controls.
+      if (closest('input, select, textarea, [contenteditable="true"]')) return;
+      if (e.key === ' ') {
+        // Let a focused button, link, summary or details handle Space itself.
+        if (closest('button, a, summary, details')) return;
+        e.preventDefault();
+        this.togglePlay();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        this.playing = false;
+        this.go(this.index + 1, true);
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        this.playing = false;
+        this.go(this.index - 1, true);
+      } else if (e.key.toLowerCase() === 'r') {
+        this.playing = false;
+        this.go(0, false, true);
+      }
     };
     document.addEventListener('keydown', this.onKey);
   }
@@ -434,6 +469,7 @@ export class SimPlayer {
   updatePlayButton() {
     if (!this.$playBtn) return;
     this.$playBtn.innerHTML = this.playing ? `${icon('pause', 14)}<span data-play-label>Pause</span>` : `${icon('play', 14)}<span data-play-label>Play</span>`;
+    this.$playBtn.setAttribute('aria-label', this.playing ? 'Pause simulation' : 'Play simulation');
     this.$playLabel = this.q('[data-play-label]');
   }
 
@@ -442,6 +478,10 @@ export class SimPlayer {
     if (this.timer) clearTimeout(this.timer);
     this.raf = null;
     this.timer = null;
+    this.animating = false;
+    // A packet animation that is interrupted would otherwise leave its DOM
+    // element frozen on the stage forever.
+    this.$packets?.querySelectorAll('.packet').forEach((el) => el.remove());
   }
 
   destroy() {
@@ -491,8 +531,11 @@ export class SimPlayer {
   updateStepList() {
     this.qa('[data-step]').forEach((el) => {
       const i = Number(el.dataset.step);
-      el.classList.toggle('active', i === this.index);
+      const active = i === this.index;
+      el.classList.toggle('active', active);
       el.classList.toggle('done', i < this.index);
+      if (active) el.setAttribute('aria-current', 'step');
+      else el.removeAttribute('aria-current');
     });
     const active = this.$steplist.querySelector('.step-item.active');
     if (active) active.scrollIntoView({ block: 'nearest' });
@@ -539,6 +582,7 @@ export class SimPlayer {
             const k = KINDS[it.kind] || KINDS.opaque;
             const isNew = newKeys.has(`${st}:${it.id}`);
             return `<button class="vchip ${k.cls}" data-token-store="${st}" data-token-id="${it.id}"
+              aria-label="${esc(this.storeLabel(st))}: ${esc(it.name)}"
               title="${esc(it.name)} — ${esc(it.meta || '')}" style="${isNew ? '' : 'animation:none'}">
               <span class="vc-dot"></span>${esc(k.chip)}${it.secret ? ' 🔒' : ''}</button>`;
           }).join('')
@@ -551,8 +595,12 @@ export class SimPlayer {
   }
 
   renderWire(step, animate) {
+    const channelClasses = ['front', 'back', 'cookie', 'attr', 'internal', 'saml'].map((c) => `ch-${c}`);
     // fade everything, then bring the current hop to the front
-    for (const p of this.wireEls.values()) p.classList.remove('is-active');
+    for (const p of this.wireEls.values()) {
+      p.classList.remove('is-active', ...channelClasses);
+      p.classList.add('is-done');
+    }
     const key = `${step.from}->${step.to}`;
     let path = this.wireEls.get(key);
     if (!path) {
@@ -564,10 +612,8 @@ export class SimPlayer {
       this.$wires.appendChild(path);
       this.wireEls.set(key, path);
     }
-    for (const p of this.wireEls.values()) if (p !== path) p.classList.add('is-done');
     path.classList.remove('is-done');
-    path.classList.add('is-active');
-    if (step.channel) path.classList.add(`ch-${step.channel}`);
+    path.classList.add('is-active', `ch-${step.channel || 'front'}`);
     // move to top of the SVG paint order
     this.$wires.appendChild(path);
 
@@ -644,7 +690,12 @@ export class SimPlayer {
 
   setTab(name) {
     this.tab = name;
-    this.qa('[data-tab]').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
+    this.qa('[data-tab]').forEach((t) => {
+      const active = t.dataset.tab === name;
+      t.classList.toggle('active', active);
+      t.setAttribute('aria-selected', active ? 'true' : 'false');
+      t.tabIndex = active ? 0 : -1;
+    });
     this.qa('[data-panel]').forEach((p) => p.classList.toggle('active', p.dataset.panel === name));
     if (name === 'tokens') this.renderTokenPanel();
   }
@@ -661,7 +712,12 @@ export class SimPlayer {
     this.renderTokenPanel();
     this.renderRisks(step);
     this.qa('[data-panel]').forEach((p) => p.classList.toggle('active', p.dataset.panel === this.tab));
-    this.qa('[data-tab]').forEach((t) => t.classList.toggle('active', t.dataset.tab === this.tab));
+    this.qa('[data-tab]').forEach((t) => {
+      const active = t.dataset.tab === this.tab;
+      t.classList.toggle('active', active);
+      t.setAttribute('aria-selected', active ? 'true' : 'false');
+      t.tabIndex = active ? 0 : -1;
+    });
   }
 
   renderExplain(step) {
@@ -831,11 +887,6 @@ function explainKind(kind) {
     secret: 'A client secret authenticates an application to the token endpoint. It must never reach a browser, a log or a repository.',
   };
   return map[kind] || 'Simulated credential.';
-}
-
-function inlineMd(text) {
-  const html = md(text);
-  return html.replace(/^<p>/, '').replace(/<\/p>$/, '');
 }
 
 function channelRule(step) {

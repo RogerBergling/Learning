@@ -6,6 +6,7 @@ export const webappConfidential = {
   category: 'server',
   level: 'core',
   minutes: 11,
+  tags: ['confidential client', 'code flow', 'client secret', 'session cookie', 'PKCE'],
   summary:
     'The classic, still-best pattern for a web application: the browser only ever holds a session cookie, while the server holds the tokens and talks to OneGate with its client ID and secret. This is where you see exactly what a back-channel token request looks like.',
   nodes: ['user', 'onegate', 'frontend', 'backend'],
@@ -202,6 +203,7 @@ export const refreshRotation = {
   category: 'server',
   level: 'advanced',
   minutes: 9,
+  tags: ['refresh token', 'rotation', 'reuse detection', 'token family', 'session'],
   summary:
     'Long sessions need refresh tokens. Rotating them on every use — and detecting reuse of an old one — turns a stolen refresh token from a permanent backdoor into a one-shot alarm.',
   nodes: ['user', 'onegate', 'frontend'],
@@ -341,6 +343,7 @@ export const multiAudience = {
   category: 'tokens',
   level: 'advanced',
   minutes: 7,
+  tags: ['audience', 'resource indicator', 'RFC 8707', 'least privilege', 'one token per API'],
   summary:
     'A token issued for the orders API must not open the billing API. Audience is what enforces that boundary — and `resource` / scope-to-audience mapping is how you ask for the right one.',
   nodes: ['user', 'onegate', 'backend', 'sp'],

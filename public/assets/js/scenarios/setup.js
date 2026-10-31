@@ -1,4 +1,4 @@
-import { add, del, ITEM, CFG, cfg } from './helpers.js';
+import { add, ITEM, CFG, cfg } from './helpers.js';
 
 export const controlCenterSetup = {
   id: 'control-center-setup',
@@ -6,6 +6,7 @@ export const controlCenterSetup = {
   category: 'setup',
   level: 'core',
   minutes: 14,
+  tags: ['Control Center', 'Local Provider', 'Remote Client', 'BFF', 'Web Resource', 'Activate Changes'],
   summary:
     'A guided walk through the Administration Manual’s Control Center: pick the virtual host, create the Local Provider and Remote Client, configure the RP and BFF, protect a Web Resource with an ACL and custom header, then press Activate Changes. This is the configuration map the other scenarios assume.',
   nodes: ['user', 'onegate', 'frontend', 'backend'],

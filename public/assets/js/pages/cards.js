@@ -17,9 +17,9 @@ export function scenarioCard(s) {
   </a>`;
 }
 
-export function docCard(d) {
+export function docCard(d, completed = false) {
   return `<a class="card" href="#/learn/${esc(d.slug)}">
-    <div class="card-meta"><span class="pill">${esc(d.chapter)}</span><span class="pill">${d.minutes} min</span></div>
+    <div class="card-meta"><span class="pill">${esc(d.chapter)}</span><span class="pill">${d.minutes} min</span>${completed ? '<span class="pill ok">Read</span>' : ''}</div>
     <h3>${esc(d.title)}</h3>
     <p>${esc(d.blurb)}</p>
   </a>`;

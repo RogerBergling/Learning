@@ -15,6 +15,16 @@ const slug = (s) =>
     .replace(/\s+/g, '-')
     .slice(0, 60) || 'section';
 
+/** Allow only links that cannot execute script. The text is escaped first, so
+ *  escaping quotes/attribute characters is already handled by esc(). */
+function safeUrl(url) {
+  const target = String(url ?? '').trim();
+  if (!target) return '#';
+  if (/^(?:https?:|mailto:)/i.test(target)) return target;
+  if (/^(?:#|\/(?!\/)|\.{1,2}\/|\?)/.test(target)) return target;
+  return '#';
+}
+
 function inline(text) {
   let t = esc(text);
   // inline code first so its content is not processed further
@@ -23,8 +33,8 @@ function inline(text) {
     codes.push(c);
     return `\u0000${codes.length - 1}\u0000`;
   });
-  t = t.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, '<img alt="$1" src="$2">');
-  t = t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2">$1</a>');
+  t = t.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_, alt, url) => `<img alt="${alt}" src="${safeUrl(url)}">`);
+  t = t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, url) => `<a href="${safeUrl(url)}">${label}</a>`);
   t = t.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
   t = t.replace(/(^|[\s(])\*([^*\n]+)\*/g, '$1<em>$2</em>');
   t = t.replace(/(^|[\s(])_([^_\n]+)_/g, '$1<em>$2</em>');
@@ -183,3 +193,6 @@ export function render(src) {
 export function tocOf(src) {
   return render(src).toc;
 }
+
+/** Render inline Markdown (bold, code, links) with no paragraph wrapper. */
+export const inlineMd = (src) => inline(src);

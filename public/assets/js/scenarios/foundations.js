@@ -1,4 +1,4 @@
-import { add, del, ITEM, CFG, cfg } from './helpers.js';
+import { add, ITEM, CFG, cfg } from './helpers.js';
 
 export const clientCredentials = {
   id: 'client-credentials',
@@ -6,6 +6,7 @@ export const clientCredentials = {
   category: 'foundation',
   level: 'core',
   minutes: 6,
+  tags: ['client credentials', 'machine to machine', 'service', 'client secret', 'no user'],
   summary:
     'A background service needs data from an API. There is no user and no browser: the service authenticates itself with a client ID and a secret, and receives an access token that represents the service — not a person.',
   nodes: ['onegate', 'frontend', 'backend'],
@@ -165,6 +166,7 @@ export const tokenFormats = {
   category: 'tokens',
   level: 'core',
   minutes: 8,
+  tags: ['JWT', 'opaque', 'introspection', 'JWKS', 'revocation', 'latency'],
   modeLabel: 'JWT / opaque',
   summary:
     'The same call, two token formats. Switch the toggle above the stage to see what the API has to do for a self-contained JWT and for an opaque token that must be introspected. This is the single most useful thing to understand about token design.',

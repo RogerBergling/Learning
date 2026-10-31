@@ -1,4 +1,4 @@
-import { add, del, ITEM, CFG, cfg } from './helpers.js';
+import { add, ITEM, CFG, cfg } from './helpers.js';
 
 export const legacyProxySso = {
   id: 'legacy-proxy-sso',
@@ -6,6 +6,7 @@ export const legacyProxySso = {
   category: 'proxy',
   level: 'core',
   minutes: 9,
+  tags: ['proxy', 'Web Resource', 'ACL', 'X-USERID', 'SSO', 'header injection'],
   summary:
     'The app cannot do OIDC and never will. Publish it as a OneGate Web Resource, protect it with normal OneGate authentication and an Access Control List, and send a configured custom header such as X-USERID. Zero code changes — and one new trust boundary to get right.',
   nodes: ['user', 'onegate', 'frontend', 'backend'],

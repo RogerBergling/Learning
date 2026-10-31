@@ -1,0 +1,17 @@
+version: 2
+
+updates:
+  # Keep third-party workflow actions current (checkout, setup-*, buildx, ...).
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # Keep the Python base image current. The site itself has no dependencies.
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: monthly

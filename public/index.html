@@ -6,6 +6,11 @@
 <title>OneGate Learning Lab — OIDC, OAuth 2.0, BFF &amp; Federation</title>
 <meta name="description" content="Interactive, animated explanations of how OneGate works as reverse proxy, OpenID Provider, Relying Party, Backend-for-Frontend and token handler. Includes OpenID Federation, SAML, OIDC federation and attribute sources.">
 <meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f7fc" media="(prefers-color-scheme: light)">
+<meta property="og:title" content="OneGate Learning Lab — OIDC, OAuth 2.0, BFF &amp; Federation">
+<meta property="og:description" content="An interactive, offline study aid for OIDC, OAuth 2.0, OpenID Federation, SAML, BFF and attribute sources.">
+<meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b1220'/%3E%3Cpath d='M9 22V10h10a5 5 0 0 1 0 10h-4v2' stroke='%2338bdf8' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='22' cy='22' r='2.4' fill='%23a78bfa'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="/assets/css/app.css">
 </head>
@@ -33,6 +38,7 @@
     <a href="#/scenarios" data-nav="scenarios">Simulations</a>
     <a href="#/compare" data-nav="compare">Compare</a>
     <a href="#/glossary" data-nav="glossary">Glossary</a>
+    <a href="#/quiz" data-nav="quiz">Quiz</a>
   </nav>
 
   <div class="topbar-tools">
@@ -46,10 +52,14 @@
 
 <main id="view" class="view" tabindex="-1"></main>
 
+<noscript>
+  <div class="noscript"><strong>JavaScript is required.</strong> This lab uses ES modules, the hash router and an in-browser simulator. Enable JavaScript, then open the site through <code>start.py</code> or <code>server.mjs</code> rather than as a <code>file://</code> URL.</div>
+</noscript>
+
 <footer class="footer">
   <p><strong>OneGate Learning Lab</strong> — an unofficial, interactive study aid for OpenID Connect, OAuth 2.0, SAML and the OneGate federation features.</p>
   <p class="footer-dim">All tokens, keys and users on this site are simulated in your browser. Nothing leaves your machine. Endpoint paths are illustrative — always confirm them in your own OneGate deployment.</p>
-  <p class="footer-dim"><a href="#/selftest">Self-check</a> · <a href="#/glossary">Glossary</a> · <a href="#/learn/10-troubleshooting">Troubleshooting</a></p>
+  <p class="footer-dim"><a href="#/selftest">Self-check</a> · <a href="#/quiz">Quiz</a> · <a href="#/glossary">Glossary</a> · <a href="#/learn/10-troubleshooting">Troubleshooting</a></p>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>

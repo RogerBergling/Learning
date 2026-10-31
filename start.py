@@ -18,7 +18,6 @@ import argparse
 import contextlib
 import functools
 import http.server
-import os
 import socket
 import sys
 import threading
@@ -27,9 +26,32 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 WEB_ROOT = ROOT / "public"
+WEB_ROOT_REAL = WEB_ROOT.resolve()
 PORT_RANGE = range(8080, 8100)
 
 NO_CACHE = "no-store, no-cache, must-revalidate, max-age=0"
+
+# The site has no inline scripts and no forms. Inline *styles* are used by the
+# static markup and by the simulator, so style-src needs 'unsafe-inline'.
+SECURITY_HEADERS = {
+    "Content-Security-Policy": (
+        "default-src 'self'; "
+        "script-src 'self'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data:; "
+        "font-src 'self'; "
+        "connect-src 'self'; "
+        "object-src 'none'; "
+        "base-uri 'none'; "
+        "frame-ancestors 'none'; "
+        "form-action 'none'"
+    ),
+    "Referrer-Policy": "no-referrer",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+    "X-Frame-Options": "DENY",
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Resource-Policy": "same-origin",
+}
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -44,24 +66,48 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         ".html": "text/html; charset=utf-8",
         ".json": "application/json; charset=utf-8",
         ".svg": "image/svg+xml",
+        ".xml": "application/xml; charset=utf-8",
+        ".txt": "text/plain; charset=utf-8",
         ".webmanifest": "application/manifest+json",
     }
 
     def end_headers(self) -> None:
         self.send_header("Cache-Control", NO_CACHE)
         self.send_header("X-Content-Type-Options", "nosniff")
+        for name, value in SECURITY_HEADERS.items():
+            self.send_header(name, value)
         with contextlib.suppress(Exception):
             super().end_headers()
 
-    def do_GET(self) -> None:  # noqa: N802 (stdlib naming)
+    def list_directory(self, path):  # noqa: N802 (stdlib naming)
+        """Do not expose directory indexes; the lab only needs known files."""
+        self.send_error(404, "Not found")
+        return None
+
+    def translate_path(self, path: str) -> str:  # noqa: N802 (stdlib naming)
+        """Keep symlinks inside public/ instead of following them elsewhere."""
+        translated = super().translate_path(path)
+        resolved = Path(translated).resolve()
+        if resolved != WEB_ROOT_REAL and WEB_ROOT_REAL not in resolved.parents:
+            return str(WEB_ROOT_REAL / "__not_found__")
+        return translated
+
+    def _resolve_route(self) -> None:
         # Hash routing means every app route is "/"; for convenience, send
         # unknown extension-less paths to the app shell instead of a 404.
         path = self.path.split("?", 1)[0].split("#", 1)[0]
         if path not in ("/", "") and not Path(path).suffix:
             candidate = (WEB_ROOT / path.lstrip("/")).resolve()
-            if not candidate.exists() and WEB_ROOT in candidate.parents:
+            if not candidate.exists() and (candidate == WEB_ROOT_REAL or WEB_ROOT_REAL in candidate.parents):
                 self.path = "/"
+
+    def do_GET(self) -> None:  # noqa: N802 (stdlib naming)
+        self._resolve_route()
         super().do_GET()
+
+    def do_HEAD(self) -> None:  # noqa: N802 (stdlib naming)
+        self._resolve_route()
+        super().do_HEAD()
 
     def log_message(self, fmt: str, *args) -> None:
         sys.stderr.write("  %s\n" % (fmt % args))
@@ -119,7 +165,9 @@ def main() -> int:
     print()
 
     if not args.no_browser:
-        threading.Timer(0.7, lambda: webbrowser.open(url)).start()
+        timer = threading.Timer(0.7, lambda: webbrowser.open(url))
+        timer.daemon = True
+        timer.start()
 
     try:
         server.serve_forever()
