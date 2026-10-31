@@ -22,3 +22,7 @@ LICENSE
 start.sh
 start.bat
 OneGate Administration Manual.pdf
+
+# git-create: Docker context safety patterns
+*.pem
+*.key
