@@ -213,7 +213,7 @@ export class SimPlayer {
             <div class="tabs" role="tablist" aria-label="Scenario panels">
               <button class="tab active" id="tab-explain" data-tab="explain" role="tab" aria-selected="true" aria-controls="panel-explain" tabindex="0">Explain</button>
               <button class="tab" id="tab-wire" data-tab="wire" role="tab" aria-selected="false" aria-controls="panel-wire" tabindex="-1">Wire</button>
-              <button class="tab" id="tab-tokens" data-tab="tokens" role="tab" aria-selected="false" aria-controls="panel-tokens" tabindex="-1">Tokens <span class="tab-dot"></span></button>
+              <button class="tab" id="tab-tokens" data-tab="tokens" role="tab" aria-selected="false" aria-controls="panel-tokens" tabindex="-1">${this.scenario.topic === 'onegate' ? 'Tokens' : 'Artifacts'} <span class="tab-dot"></span></button>
               <button class="tab" id="tab-setup" data-tab="setup" role="tab" aria-selected="false" aria-controls="panel-setup" tabindex="-1">Setup</button>
               <button class="tab" id="tab-risks" data-tab="risks" role="tab" aria-selected="false" aria-controls="panel-risks" tabindex="-1">Watch out</button>
             </div>
@@ -243,7 +243,7 @@ export class SimPlayer {
             </div>
           </div>
           <div class="rail-card">
-            <div class="rail-head"><h3>Live token vault</h3><span class="rail-hint">where credentials live</span></div>
+            <div class="rail-head"><h3>Live artifact vault</h3><span class="rail-hint">where state lives</span></div>
             <div class="vault" data-vault></div>
           </div>
           <div class="rail-card">
@@ -844,7 +844,7 @@ export class SimPlayer {
     const all = [];
     for (const [store, items] of this.vault) for (const it of items.values()) all.push({ store, it });
     if (!all.length) {
-      this.q('[data-panel="tokens"]').innerHTML = '<p class="muted">No credentials exist at this point in the flow — which is often exactly the point.</p>';
+      this.q('[data-panel="tokens"]').innerHTML = '<p class="muted">No credentials or artifacts exist at this point in the flow — which is often exactly the point.</p>';
       return;
     }
     if (!this.selectedToken || !all.some((x) => x.store === this.selectedToken.store && x.it.id === this.selectedToken.id)) {

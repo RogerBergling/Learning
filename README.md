@@ -10,9 +10,52 @@ An interactive, offline learning platform for **OneGate federation, Docker on Li
 Topics → chapters → simulations → live artifact vault → quiz
 ```
 
+## Screenshots
+
+| Topic hub | Docker track |
+|---|---|
+| ![Learning Lab topic hub](docs/screenshots/home.png) | ![Docker on Linux track](docs/screenshots/docker-topic.png) |
+
+| Docker simulator | Git & GHCR simulator |
+|---|---|
+| ![Docker run simulation](docs/screenshots/docker-simulator.png) | ![Git release to GHCR simulation](docs/screenshots/git-simulator.png) |
+
+More screenshots: [Git & GHCR track](docs/screenshots/git-topic.png) · [Docker quiz](docs/screenshots/docker-quiz.png).
+
+All screenshots are captured from the running site with simulated data.
+
 ---
 
 ## Quick start
+
+### Docker — the fastest path if you already run Docker
+
+The repository includes a ready-to-use [`compose.yaml`](compose.yaml). It pulls the published multi-arch image, publishes the lab on port **8003**, keeps the version stamp visible, and makes Watchtower opt-in.
+
+```bash
+curl -O https://raw.githubusercontent.com/RogerBergling/Learning/main/compose.yaml
+docker compose up -d
+```
+
+Open **<http://localhost:8003>**. No Python, Node or clone is required.
+
+Update to the newest published image:
+
+```bash
+docker compose pull
+docker compose up -d --force-recreate
+curl -s http://localhost:8003/version.json | python3 -m json.tool
+```
+
+If the version, commit or build date does not change, the host is still running the old container or the image was not pulled.
+
+To include the optional automatic updater:
+
+```bash
+docker compose --profile auto-update up -d
+```
+
+Watchtower mounts the Docker socket, which is host-level privilege. It is deliberately not started by default; use it only on a host you trust.
 
 ### Linux / macOS
 
@@ -58,7 +101,7 @@ The Python launcher is the primary path; both serve exactly the same static file
 
 > Open the site through the server, not as a `file://` URL. ES modules and the Markdown chapters are fetched over HTTP.
 
-### Docker
+### Build the image from source
 
 The image contains only the static site and the Python stdlib launcher:
 
@@ -69,18 +112,13 @@ docker run --rm -p 8080:8080 learning-lab
 
 Open <http://localhost:8080>. The container runs as an unprivileged user and listens on port 8080.
 
-### Docker Compose for users
+### Docker Compose details
 
-Users only need [`compose.yaml`](compose.yaml). Download it and start the lab:
+Users only need [`compose.yaml`](compose.yaml); the quick start above downloads and starts it. The file defines the published image, port `8003:8080`, read-only/capability hardening, resource limits, restart policy and the optional Watchtower profile.
 
-```bash
-curl -O https://raw.githubusercontent.com/RogerBergling/Learning/main/compose.yaml
-docker compose up -d
-```
+Stop it with `docker compose down`.
 
-Open <http://localhost:8003>. Stop it with `docker compose down`.
-
-The GHCR package must be public for anonymous pulls, or the user must run `docker login ghcr.io` first.
+The GHCR package must be public for anonymous pulls, or the user must run `docker login ghcr.io` first. The publish workflow attempts to make the package public on `main`; if your organization blocks that, open the package → **Package settings** → **Change visibility** → **Public** (or grant `read:packages` to the server).
 
 To keep the running container updated automatically, opt in to the Watchtower profile:
 
@@ -440,6 +478,7 @@ Learning/
 ├── scripts/
 │   ├── verify.py                 Dependency-free static registry/link checks
 │   └── smoke.py                  Starts start.py and checks real HTTP responses
+├── docs/screenshots/             README screenshots from the running site
 ├── Dockerfile                    Container image (Python static server)
 ├── .dockerignore                 Keeps the build context small
 ├── compose.yaml                  Compose stack with optional auto-update profile

@@ -338,6 +338,11 @@ for slug in re.findall(r"^\s*'([^']+)':", doc_titles_block, re.M):
 html = read(PUBLIC / "index.html")
 for asset in re.findall(r'(?:src|href)="(/[^"]+)"', html):
     check((PUBLIC / asset.lstrip("/")).exists(), f"HTML asset exists: {asset}")
+
+for image in re.findall(r'!\[[^\]]*\]\(([^)]+)\)', read(ROOT / "README.md")):
+    if image.startswith(("http://", "https://", "#", "data:")):
+        continue
+    check((ROOT / image).exists(), f"README image exists: {image}", image)
 check("#/quiz" in html, "navigation exposes the quiz")
 
 app_text = read(JS / "app.js")

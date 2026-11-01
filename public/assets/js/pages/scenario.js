@@ -98,7 +98,7 @@ export async function renderScenarioPage(view, id) {
 
     <div class="sim-note">
       <span>${icon('play', 13)} Press <kbd>Space</kbd> to play, <kbd>←</kbd> <kbd>→</kbd> to step, <kbd>R</kbd> to restart.</span>
-      <span class="dim">Click any credential chip in the vault to inspect it. The right-hand guide explains the goal and the first trap.</span>
+      <span class="dim">Click any credential or artifact chip in the vault to inspect it. The right-hand guide explains the goal and the first trap.</span>
     </div>
 
     <div id="sim-root"></div>
