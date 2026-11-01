@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dependency-free static checks for the OneGate Learning Lab.
+"""Dependency-free static checks for the Learning Lab.
 
 This complements the in-browser Self-check page. It verifies the things that
 can be checked without a browser: document/scenario registries, internal links,
@@ -78,6 +78,7 @@ REQUIRED = [
     "public/assets/js/tokens.js",
     "public/assets/js/version.js",
     "public/assets/js/pages/quiz.js",
+    "public/assets/js/pages/topic.js",
     "public/version.json",
     ".github/workflows/docker-publish.yml",
     ".github/workflows/ci.yml",
@@ -100,7 +101,7 @@ doc_files = {p.stem for p in DOCS.glob("*.md")}
 check(len(doc_slugs) == len(set(doc_slugs)), "documentation slugs are unique")
 check(set(doc_slugs) == doc_files, "DOCS and public/docs/*.md agree",
       f"DOCS-only={sorted(set(doc_slugs) - doc_files)} files-only={sorted(doc_files - set(doc_slugs))}")
-check(len(doc_slugs) == 13, "documentation chapter count", f"{len(doc_slugs)} chapters")
+check(len(doc_slugs) == 30, "documentation chapter count", f"{len(doc_slugs)} chapters")
 
 for slug in doc_slugs:
     path = DOCS / f"{slug}.md"
@@ -153,8 +154,16 @@ for chapter in chapters:
     check(chapter in doc_chapters, f"chapter has at least one document: {chapter}")
 
 categories_block = section(content, "export const CATEGORIES = {", "\n};")
-categories = set(re.findall(r"^  (\w+): \{", categories_block, re.M))
+categories = set(re.findall(r"^  '?([\w-]+)'?: \{", categories_block, re.M))
 check(bool(categories), "CATEGORIES are declared")
+
+topics_block = section(content, "export const TOPICS = {", "\n};")
+topic_ids = set(re.findall(r"^  (\w+): \{", topics_block, re.M))
+topic_order = quoted(section(content, "export const TOPIC_ORDER = [", "];"))
+check({"onegate", "docker", "git"} <= topic_ids, "core topics are declared", ", ".join(sorted(topic_ids)))
+check(set(topic_order) == topic_ids, "TOPIC_ORDER covers TOPICS", f"order={topic_order}")
+check(sum(1 for slug in doc_slugs if slug.startswith("docker-")) >= 7, "Docker track has chapters")
+check(sum(1 for slug in doc_slugs if slug.startswith("git-")) >= 8, "Git track has chapters")
 
 # ------------------------------------------------------------------- scenarios
 
@@ -179,13 +188,19 @@ for path in scenario_files:
 
 check(len(scenario_ids) == len(set(scenario_ids)), "scenario ids are unique",
       f"duplicates={sorted({x for x in scenario_ids if scenario_ids.count(x) > 1})}")
-check(len(scenario_ids) == 18, "scenario count", f"{len(scenario_ids)} scenarios")
+check(len(scenario_ids) == 31, "scenario count", f"{len(scenario_ids)} scenarios")
 
 for sid, block in scenario_blocks.items():
     tag_match = re.search(r"\n  tags: \[([^\]]*)\]", block)
     check(tag_match is not None, f"scenario has search tags: {sid}")
     if tag_match:
         check(len(quoted(tag_match.group(1))) >= 3, f"scenario has enough search tags: {sid}")
+    topic_match = re.search(r"\n  topic: '([^']+)'", block)
+    scenario_topic = topic_match.group(1) if topic_match else "onegate"
+    check(scenario_topic in topic_ids, f"scenario topic exists: {sid}", scenario_topic)
+    layout_match = re.search(r"\n  layout: '([^']+)'", block)
+    scenario_layout = layout_match.group(1) if layout_match else "onegate"
+    check(scenario_layout in {"onegate", "docker", "git"}, f"scenario layout exists: {sid}", scenario_layout)
 
 index_text = read(SCENARIOS / "index.js")
 imports: dict[str, str] = {}
@@ -224,11 +239,17 @@ for category in categories:
 layout = read(JS / "sim" / "layout.js")
 nodes_block = section(layout, "export const NODES = {", "export const SUBNODES")
 subnodes_block = section(layout, "export const SUBNODES = {", "export const SUBNODE_SIZE")
+docker_block = section(layout, "export const DOCKER_NODES = {", "/* -------------------------------------------------------------------- Git */")
+git_block = section(layout, "export const GIT_NODES = {", "/* --------------------------------------------------------------- layouts */")
 node_ids = set(re.findall(r"^  (\w+): \{", nodes_block, re.M))
 subnode_ids = set(re.findall(r"^  '([^']+)':", subnodes_block, re.M))
-actors = node_ids | subnode_ids
+docker_ids = set(re.findall(r"^  (\w+): \{", docker_block, re.M))
+git_ids = set(re.findall(r"^  (\w+): \{", git_block, re.M))
+actors = node_ids | subnode_ids | docker_ids | git_ids | {"onegate"}
 
 check({"user", "onegate"} <= actors, "core layout actors exist")
+check({"developer", "daemon", "container"} <= docker_ids, "Docker layout actors exist")
+check({"working", "local", "remote", "actions"} <= git_ids, "Git layout actors exist")
 for actor in sorted(set(re.findall(r"\b(?:from|to):\s*'([^']+)'", scenario_text))):
     check(actor in actors, f"step actor exists in layout: {actor}")
 

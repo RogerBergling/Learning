@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Optional Node.js launcher for the OneGate Learning Lab.
+ * Optional Node.js launcher for the Learning Lab.
  * The primary launcher is start.py (Python stdlib); this file exists for
  * machines where Node is available but Python is not.
  *
@@ -212,7 +212,7 @@ const urlHost = shown.includes(':') ? `[${shown}]` : shown;
 const url = `http://${urlHost}:${port}/`;
 
 console.log('');
-console.log('  OneGate Learning Lab');
+console.log('  Learning Lab');
 console.log('  --------------------');
 console.log(`  Serving : ${ROOT}`);
 console.log(`  Open    : ${url}`);

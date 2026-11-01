@@ -1,5 +1,5 @@
 @echo off
-rem OneGate Learning Lab launcher (Windows).
+rem Learning Lab launcher (Windows).
 rem Requires Python 3.8+. No pip installs, no Node.
 setlocal
 cd /d "%~dp0"

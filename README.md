@@ -1,13 +1,13 @@
-# OneGate Learning Lab
+# Learning Lab
 
 [![CI](https://github.com/RogerBergling/Learning/actions/workflows/ci.yml/badge.svg)](https://github.com/RogerBergling/Learning/actions/workflows/ci.yml)
 
-An interactive, offline study aid for **OpenID Connect, OAuth 2.0, OpenID Federation, SAML, federation, BFF and attribute sources** — built around how OneGate behaves as a reverse proxy, OpenID Provider, Relying Party, Backend-for-Frontend and token handler.
+An interactive, offline learning platform for **OneGate federation, Docker on Linux and Git & GHCR**. Choose a track, read the chapters, run the animated simulations and verify each flow step by step.
 
-Eighteen animated scenarios. A live token vault. Thirteen written chapters. A twelve-question self-assessment. No build step, no dependencies, no network calls.
+**Three learning tracks. Thirty written chapters. Thirty-one animated simulations. A 24-question quiz with local progress.** No build step, no runtime dependencies, no network calls.
 
-```
-Browser → OneGate (proxy · OP · RP · BFF · token handler) → frontend · API · partner IdP
+```text
+Topics → chapters → simulations → live artifact vault → quiz
 ```
 
 ---
@@ -63,8 +63,8 @@ The Python launcher is the primary path; both serve exactly the same static file
 The image contains only the static site and the Python stdlib launcher:
 
 ```bash
-docker build -t onegate-learning-lab .
-docker run --rm -p 8080:8080 onegate-learning-lab
+docker build -t learning-lab .
+docker run --rm -p 8080:8080 learning-lab
 ```
 
 Open <http://localhost:8080>. The container runs as an unprivileged user and listens on port 8080.
@@ -78,7 +78,7 @@ curl -O https://raw.githubusercontent.com/RogerBergling/Learning/main/compose.ya
 docker compose up -d
 ```
 
-Open <http://localhost:8080>. Stop it with `docker compose down`.
+Open <http://localhost:8003>. Stop it with `docker compose down`.
 
 The GHCR package must be public for anonymous pulls, or the user must run `docker login ghcr.io` first.
 
@@ -149,7 +149,7 @@ Local development serves the committed fallback:
 
 ```json
 {
-  "version": "1.1.0",
+  "version": "2.0.0",
   "imageTag": "local",
   "commit": "local",
   "buildDate": null
@@ -161,7 +161,7 @@ The Docker build overwrites that file with real build metadata. The publish work
 To verify that a web server has pulled the newest image:
 
 ```bash
-curl -s http://YOUR_HOST:8080/version.json | python3 -m json.tool
+curl -s http://YOUR_HOST:8003/version.json | python3 -m json.tool
 ```
 
 Compare that output with the image labels:
@@ -177,11 +177,11 @@ For a manual Docker build, stamp it explicitly:
 
 ```bash
 docker build \
-  --build-arg APP_VERSION=1.1.0 \
+  --build-arg APP_VERSION=2.0.0 \
   --build-arg IMAGE_TAG=manual \
   --build-arg GIT_SHA="$(git rev-parse --short HEAD)" \
   --build-arg BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-  -t onegate-learning-lab .
+  -t learning-lab .
 ```
 
 ---
@@ -190,26 +190,27 @@ docker build \
 
 | Page | What it does |
 |---|---|
-| **Overview** (`#/`) | The topology, the five roles, where tokens may live, the learning path |
-| **Learn** (`#/learn`) | Thirteen chapters, full-text search, a table of contents, and chapter-completion tracking |
-| **Simulations** (`#/scenarios`) | Filter/search all 18 flows by category, level, tag or keyword |
-| **Simulator** (`#/sim/{id}`) | Animated stage, live token vault, HTTP wire view, config, pitfalls |
-| **Compare** (`#/compare`) | JWT vs opaque, the storage matrix, a decision helper |
-| **Glossary** (`#/glossary`) | Every acronym in plain language, with an in-page term filter |
-| **Quiz** (`#/quiz`) | A twelve-question knowledge check with explanations, links and saved progress |
-| **Self-check** (`#/selftest`) | Runtime validation of scenarios, tokens and all docs |
+| **Topics** (`#/`) | Choose OneGate federation, Docker on Linux or Git & GHCR |
+| **Topic pages** (`#/topic/{id}`) | A guided path, chapter groups, simulations, progress and glossary for one track |
+| **Learn** (`#/learn`) | Thirty chapters across three tracks, full-text search, TOC and completion tracking |
+| **Simulations** (`#/scenarios`) | Filter/search all 31 flows by topic, category, level, tag or keyword |
+| **Simulator** (`#/sim/{id}`) | Animated stage, live artifact vault, HTTP/CLI wire view, config and pitfalls |
+| **Compare** (`#/compare`) | JWT vs opaque, the storage matrix and a decision helper |
+| **Glossary** (`#/glossary`) | OneGate terms; Docker and Git tracks have their own glossaries |
+| **Quiz** (`#/quiz`) | A 24-question knowledge check across the tracks, with saved progress |
+| **Self-check** (`#/selftest`) | Runtime validation of topics, scenarios, tokens, quizzes and all docs |
 
-The simulator has five tabs per scenario:
+Every scenario has five tabs:
 
 - **Explain** — the current hop, actors, channel, a “What to notice” rule, tags and the full token journey.
-- **Wire** — the HTTP request/response shape.
-- **Tokens** — decode simulated JWTs/entity statements, inspect cookies/opaque tokens/SAML XML.
+- **Wire** — the HTTP request/response, shell command or output shape for the hop.
+- **Tokens / artifacts** — decode simulated JWTs/entity statements, inspect tokens, images, commits, Compose files and other artifacts.
 - **Setup** — the OneGate configuration behind the flow, plus design notes.
 - **Watch out** — troubleshooting for the current hop, common traps and a before-production checklist.
 
-The right rail adds a **Scenario guide** (goal, one thing to remember, first trap), the **live token vault** and the **step list**.
+The right rail adds a **Scenario guide** (goal, one thing to remember, first trap), the **live artifact vault** and the **step list**.
 
-Keyboard: `Space` play/pause, `←` `→` step, `R` restart. Click any vault chip to inspect it.
+Keyboard: `Space` play/pause, `←` `→` step, `R` restart. Click any vault chip to inspect a token, image, commit, configuration or other artifact.
 
 ---
 
@@ -258,11 +259,34 @@ Keyboard: `Space` play/pause, `←` `→` step, `R` restart. Click any vault chi
 | 17 | Delegated attributes | Advanced | 14 | The `actor` object; cache keyed by subject + actor |
 | 18 | [OpenID Federation](public/docs/12-openid-federation.md) | Advanced | 12–16 | Entity statements, trust anchors, trust chains, metadata policy and automatic registration. Standards-based; not documented in the OneGate manual |
 
-Every scenario is reachable from the Simulations page and from the written chapters. The catalog with “start here if…” guidance is in [chapter 9](public/docs/09-scenario-catalog.md).
+### Docker on Linux
+
+| # | Scenario | Level | Steps | Teaches |
+|---|---|---|---|---|
+| 19 | Docker run — image to container | Core | 10 | CLI → Engine, registry pull, ports, bridge network, volume, logs, exec, stop/remove |
+| 20 | Docker build | Core | 8 | Dockerfile, build context, `.dockerignore`, layers/cache, push and deploy |
+| 21 | Docker Compose | Core | 9 | Services, network, volume, resource limits, profiles and Watchtower |
+| 22 | Docker operations | Advanced | 9 | Logs, exec, inspect, stats, events, disk use and safe cleanup |
+| 23 | Docker security | Advanced | 8 | Non-root, read-only, capabilities, limits and runtime verification |
+| 24 | GHCR delivery | Advanced | 9 | Tags, digests, package access, Watchtower and the version stamp |
+
+### Git & GHCR
+
+| # | Scenario | Level | Steps | Teaches |
+|---|---|---|---|---|
+| 25 | First repository | Core | 8 | init, index, review, signed commit, remote, first push |
+| 26 | Branches and merge | Core | 7 | Branch refs, fast-forward, merge commit, safety refs |
+| 27 | Rebase | Advanced | 7 | Fetch, divergence, safety ref, replay, force-with-lease and merge-vs-rebase |
+| 28 | Undo and recovery | Advanced | 7 | Restore, soft reset, revert, reflog and stash |
+| 29 | Secrets and history | Advanced | 8 | Ignore rules, scanning, rotation and coordinated history rewrite |
+| 30 | Remotes and auth | Core | 7 | SSH, `gh auth`, fetch, fast-forward, rejected push and upstream |
+| 31 | Release to GHCR | Advanced | 8 | Tag, Actions, image digest, deployment pull and `/version.json` |
+
+Every scenario is reachable from the Simulations page and from the written chapters. The OneGate catalog with “start here if…” guidance is in [chapter 9](public/docs/09-scenario-catalog.md).
 
 ---
 
-## The big picture
+## OneGate track — the big picture
 
 ```
         untrusted                              trusted network
@@ -355,6 +379,33 @@ All in [`public/docs/`](public/docs/), rendered by the site and readable on GitH
 | 12 | [OpenID Federation](public/docs/12-openid-federation.md) | Entity statements, trust chains, metadata policy, trust marks, automatic registration — standards-based, not a OneGate manual feature |
 | — | [Glossary](public/docs/glossary.md) | Every acronym in the lab |
 
+### Docker track
+
+| Chapter | What it covers |
+|---|---|
+| [Mental model](public/docs/docker-01-mental-model.md) | CLI, daemon, image, container, registry, namespaces and persistence |
+| [Images and builds](public/docs/docker-02-images-and-builds.md) | Dockerfile, context, `.dockerignore`, layers, cache, multi-stage, GHCR |
+| [Container lifecycle](public/docs/docker-03-containers-lifecycle.md) | run/ps/logs/exec/inspect/stop/rm, ports, restart policy, healthchecks |
+| [Storage and networking](public/docs/docker-04-storage-networking.md) | Named volumes, bind mounts, bridge networks, DNS, published ports |
+| [Compose](public/docs/docker-05-compose.md) | Every line of the provided `compose.yaml`, profiles, resources, Watchtower |
+| [Operations and security](public/docs/docker-06-operations-security.md) | Debugging, cleanup, daemon settings, rootless, capabilities, secrets |
+| [GHCR and updates](public/docs/docker-07-ghcr-and-updates.md) | Tags, digests, package visibility, pull/recreate, version verification |
+| [Docker glossary](public/docs/docker-glossary.md) | Every Docker term used in the track |
+
+### Git & GHCR track
+
+| Chapter | What it covers |
+|---|---|
+| [Mental model](public/docs/git-01-mental-model.md) | Working tree, index, commits, refs, graph, HEAD, fetch vs pull |
+| [First repository](public/docs/git-02-first-repository.md) | Identity, defaults, init, staging, commit, remote and first push |
+| [Everyday workflow](public/docs/git-03-everyday-workflow.md) | Status, stage, diff, commit, log and safe review |
+| [Branches, merge and rebase](public/docs/git-04-branches-merge-rebase.md) | Fast-forward, merge commits, rebase safety and conflicts |
+| [Undo and recovery](public/docs/git-05-undo-recovery.md) | Restore, reset, revert, reflog, stash and amend |
+| [Remotes and GitHub](public/docs/git-06-remotes-github.md) | Origin/upstream, SSH, `gh auth`, divergence, PRs and protection |
+| [Settings, files and secrets](public/docs/git-07-settings-files-secrets.md) | Global settings, `.gitignore`, signing, `.env` and history scanning |
+| [Tags, releases and GHCR](public/docs/git-08-tags-releases-ghcr.md) | Tags, releases, GitHub Actions, image digests and verification |
+| [Git glossary](public/docs/git-glossary.md) | Every Git/GHCR term used in the track |
+
 The Markdown is the single source of truth: the site fetches and renders the same files you read on GitHub.
 
 ---
@@ -373,7 +424,7 @@ Learning/
 │   │   ├── css/app.css           Design system, simulator, responsive, print
 │   │   └── js/
 │   │       ├── app.js            Hash router, theme, doc loader
-│   │       ├── content.js        Chapter + category metadata
+│   │       ├── content.js        Topics, chapters, categories and paths
 │   │       ├── markdown.js       Dependency-free Markdown renderer + TOC
 │   │       ├── progress.js       Local-only chapter/quiz progress
 │   │       ├── quiz-data.js      Quiz questions, answers and explanations
@@ -381,11 +432,11 @@ Learning/
 │   │       ├── tokens.js         Simulated JWTs, stores, token kinds
 │   │       ├── ui.js             Icons, toast, helpers
 │   │       ├── version.js        Build metadata + local clock formatting
-│   │       ├── pages/            Home, learn, list, simulator, quiz, compare, selftest
-│   │       ├── scenarios/        Eighteen scenario definitions + helpers
+│   │       ├── pages/            Home, topic, learn, list, simulator, quiz, compare, selftest
+│   │       ├── scenarios/        Thirty-one scenario definitions + helpers
 │   │       └── sim/              Layout geometry + the animation player
 │   ├── version.json              Local fallback; overwritten by Docker build
-│   └── docs/                     Thirteen Markdown chapters
+│   └── docs/                     Thirty Markdown chapters across three tracks
 ├── scripts/
 │   ├── verify.py                 Dependency-free static registry/link checks
 │   └── smoke.py                  Starts start.py and checks real HTTP responses
@@ -408,14 +459,14 @@ No bundler, no framework, no runtime dependency. The browser loads ES modules di
 
 ## How the simulation works
 
-- A fixed **1000 × 600** virtual topology. Nodes are HTML positioned in percentages; wires are SVG paths in the same coordinate space.
-- A scenario is plain data: `{ id, title, category, level, minutes, summary, nodes, nodeLabels, initial, variants, steps, notes, config, pitfalls }`.
+- A fixed **1000 × 600** virtual topology per scenario layout (`onegate`, `docker`, `git`). Nodes are HTML positioned in percentages; wires are SVG paths in the same coordinate space.
+- A scenario is plain data: `{ id, topic, layout, title, category, level, minutes, summary, nodes, nodeLabels, initial, variants, steps, notes, config, pitfalls }`.
 - A step is `{ from, to, badge, detail, channel, http, vault, tags }`.
 - The vault is recomputed from `initial` plus every step's `vault` operations (`add`, `del`, `clearStore`), so it is always consistent with the current step.
 - JWT values are built with a fake signature but real base64url header/payload, so the inspector can decode them.
 - The **token journey** table is generated from the same vault operations.
 
-To add a scenario, create a file in `public/assets/js/scenarios/`, export the object, and register it in `scenarios/index.js`. Add a flow line, a top-level `tags` array (used by the Simulations search) and, if you like, a chapter link. Run [Self-check](#/selftest) to validate the data.
+To add a scenario, create a file in `public/assets/js/scenarios/`, export the object, and register it in `scenarios/index.js`. Add a `topic`, a `layout`, a flow line, a top-level `tags` array and, if you like, a chapter link. Run [Self-check](#/selftest) to validate the data.
 
 ---
 
@@ -425,7 +476,7 @@ To add a scenario, create a file in `public/assets/js/scenarios/`, export the ob
 - **Smoke test** (`python3 scripts/smoke.py`) starts the real `start.py` launcher on a free port and checks the app shell, ES modules, Markdown, SPA fallback, 404 handling, `HEAD` and security headers.
 - **Self-check** (`#/selftest`) validates scenario shape, actor IDs, channels, vault operations, token kinds, Markdown rendering and every doc fetch at runtime. It should report 100%.
 - **curl** the routes: `/`, `/assets/js/app.js`, `/docs/01-architecture.md`, `/version.json` should be 200.
-- Browser check: open `#/`, `#/learn/01-architecture`, `#/learn/12-openid-federation`, `#/sim/bff-login`, `#/sim/openid-federation`, `#/compare`, `#/quiz`, `#/glossary`, `#/selftest`.
+- Browser check: open `#/`, `#/topic/onegate`, `#/topic/docker`, `#/topic/git`, `#/learn/docker-05-compose`, `#/learn/git-08-tags-releases-ghcr`, `#/sim/docker-compose`, `#/sim/git-release-ghcr`, `#/compare`, `#/quiz/docker`, `#/glossary`, `#/selftest`.
 
 Both checks use only the Python standard library and run in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) on every push and pull request. The optional Node launcher is syntax-checked and smoke-tested separately.
 
@@ -435,7 +486,9 @@ If a chapter 404s, make sure you are serving `public/` (the launcher does) rathe
 
 ## Notes and disclaimers
 
-- **Everything is simulated.** Tokens are structurally valid JWTs with fake signatures. No request leaves your browser.
+- **Everything is simulated.** Tokens, images, commits, container IDs and registry digests are illustrative. No request leaves your browser and no real infrastructure is touched.
+- **Docker and Git examples are teaching paths.** Container names, ports, images, commits and workflow snippets are deliberately simple. Verify commands against your Docker/Compose and Git versions before running them on a real host.
+- **The Git track scope is informed by [`RogerBergling/git-create`](https://github.com/RogerBergling/git-create)**, a safe menu-driven Git/GitHub assistant. This lab teaches the concepts and safety decisions; the tool itself is not required.
 - **Endpoint paths are illustrative.** Examples use `/mg-local/portal/...`, `/bff/login`, `/rp/callback`, `ONEGATE_BFF` and `X-CSRFTOKEN`. The Administration Manual names only `/mg-local/(realm)/bff/logout` and `/mg-local/(realm)/bff/accessToken`; the rest are examples. Real deployments generate their own paths, cookie names and menu labels; confirm them in your environment.
 - **Menu names follow the OneGate Administration Manual.** The core objects are Local Providers, Realm Settings, Remote Clients, Remote Providers, RP Authentication, Backend For Frontend, Attribute Sources, Remote/Local Service Providers, Remote IDPs, Attribute Profiles, Access Control Lists (ACL), the Virtual Host Selector and Activate Changes. Labels can differ slightly between versions.
 - **OpenID Federation is standards-based.** The OneGate Administration Manual does not document entity statements, trust anchors, trust chains or automatic registration. The new simulation and chapter explain OpenID Federation 1.0 as a standard, not as a claimed OneGate feature. Verify support in your version.

@@ -186,3 +186,5 @@ Every acronym in this lab, in plain language. Terms that have a simulation link 
 ---
 
 Missing a term? The [OIDC basics](#/learn/02-oidc-basics) and [tokens](#/learn/07-tokens-and-lifecycle) chapters explain most of these in context.
+
+Looking for the other tracks? See the [Docker glossary](#/learn/docker-glossary) and [Git glossary](#/learn/git-glossary).

@@ -72,6 +72,18 @@ export const KINDS = {
   jwk:    { label: 'Public key (JWKS)',       chip: 'JWK',      cls: 'k-jwk' },
   statement: { label: 'Federation entity statement', chip: 'entity', cls: 'k-statement' },
   secret: { label: 'Client secret',           chip: 'secret',   cls: 'k-rt' },
+  image:  { label: 'Container image',          chip: 'image',    cls: 'k-image' },
+  container: { label: 'Container',             chip: 'container', cls: 'k-container' },
+  volume: { label: 'Volume',                   chip: 'volume',   cls: 'k-volume' },
+  compose: { label: 'Compose configuration',   chip: 'compose',  cls: 'k-config' },
+  dockerfile: { label: 'Dockerfile',           chip: 'Dockerfile', cls: 'k-config' },
+  layer:  { label: 'Image layer',              chip: 'layer',    cls: 'k-layer' },
+  commit: { label: 'Git commit',               chip: 'commit',   cls: 'k-git' },
+  branch: { label: 'Git branch',               chip: 'branch',   cls: 'k-git' },
+  tag:    { label: 'Git tag',                  chip: 'tag',      cls: 'k-tag' },
+  workflow: { label: 'GitHub Actions workflow', chip: 'workflow', cls: 'k-workflow' },
+  network: { label: 'Container network',         chip: 'network',  cls: 'k-network' },
+  file:   { label: 'Project file',               chip: 'file',     cls: 'k-config' },
 };
 
 export const STORES = {
@@ -82,6 +94,17 @@ export const STORES = {
   idp:      { label: 'Partner IdP / trust anchor', hint: 'external OP, SAML IdP, or OpenID Federation trust anchor' },
   sp:       { label: 'Partner SP / app',     hint: 'the external service provider' },
   attr:     { label: 'Attribute source',     hint: 'the user attribute / entitlement service' },
+  local:    { label: 'Local machine',        hint: 'working tree, CLI context, shell environment and local files' },
+  docker:   { label: 'Docker Engine',        hint: 'images, layers, build cache and daemon state' },
+  container:{ label: 'Running container',    hint: 'the isolated process, its filesystem and environment' },
+  volume:   { label: 'Docker volume',         hint: 'persistent data managed by Docker' },
+  network:  { label: 'Container network',     hint: 'bridge or user-defined network' },
+  gitrepo:  { label: 'Git repository',       hint: 'index, commits, refs and reflog' },
+  gitremote:{ label: 'Git remote',           hint: 'origin and upstream refs on GitHub' },
+  reflog:   { label: 'Reflog & backups',     hint: 'local recovery refs, patches and stashes' },
+  github:   { label: 'GitHub / Actions',     hint: 'repository metadata, workflow runs and package access' },
+  registry: { label: 'Container registry',   hint: 'GHCR tags, digests and package visibility' },
+  deployment: { label: 'Deployment host',    hint: 'the machine or platform that pulls and runs the image' },
 };
 
 /** Turn a scenario token definition into a concrete, displayable token. */
@@ -174,6 +197,42 @@ export function materialize(item, ctx = {}) {
       break;
     case 'claims':
       out.value = JSON.stringify(item.claims || { sub, name: 'Roger Lind', scope }, null, 2);
+      break;
+    case 'image':
+      out.value = `sha256:${pseudo(seed, 64)}`;
+      break;
+    case 'container':
+      out.value = `ctr_${pseudo(seed, 32)}`;
+      break;
+    case 'volume':
+      out.value = `vol_${pseudo(seed, 32)}`;
+      break;
+    case 'layer':
+      out.value = `sha256:${pseudo(seed, 64)}`;
+      break;
+    case 'compose':
+      out.value = item.value || 'services:\n  app:\n    image: example/app:latest\n';
+      break;
+    case 'dockerfile':
+      out.value = item.value || 'FROM alpine:3.20\nCMD ["sh"]\n';
+      break;
+    case 'commit':
+      out.value = pseudo(seed, 40);
+      break;
+    case 'branch':
+      out.value = item.branch || 'main';
+      break;
+    case 'tag':
+      out.value = item.tag || 'v1.2.0';
+      break;
+    case 'workflow':
+      out.value = item.value || 'name: Build and publish GHCR image\non: [push]\n';
+      break;
+    case 'network':
+      out.value = item.value || 'bridge';
+      break;
+    case 'file':
+      out.value = item.value || '.env\n.env.*\n!.env.example\n';
       break;
     default:
       out.value = String(item.value ?? pseudo(seed, 32));

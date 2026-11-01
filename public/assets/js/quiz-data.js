@@ -1,7 +1,8 @@
 export const QUIZ = [
   {
     id: 'bff-browser-credential',
-    topic: 'BFF & sessions',
+    track: 'onegate',
+    area: 'BFF & sessions',
     question: 'In a BFF design, which credential should the browser hold?',
     options: [
       'An access token in localStorage',
@@ -15,7 +16,8 @@ export const QUIZ = [
   },
   {
     id: 'audience-check',
-    topic: 'Token validation',
+    track: 'onegate',
+    area: 'Token validation',
     question: 'An access token says aud=api.orders. The billing API verifies its signature successfully. What should it do?',
     options: [
       'Accept it because the signature is valid',
@@ -29,7 +31,8 @@ export const QUIZ = [
   },
   {
     id: 'pkce-purpose',
-    topic: 'Browser apps',
+    track: 'onegate',
+    area: 'Browser apps',
     question: 'What does PKCE protect in an authorization code flow?',
     options: [
       'A stolen authorization code being redeemed by another client',
@@ -43,7 +46,8 @@ export const QUIZ = [
   },
   {
     id: 'id-token-purpose',
-    topic: 'OIDC',
+    track: 'onegate',
+    area: 'OIDC',
     question: 'What is an OIDC ID token for?',
     options: [
       'Calling APIs as the user',
@@ -57,7 +61,8 @@ export const QUIZ = [
   },
   {
     id: 'refresh-reuse',
-    topic: 'Sessions',
+    track: 'onegate',
+    area: 'Sessions',
     question: 'A refresh token from an already-rotated family is presented again. What should reuse detection do?',
     options: [
       'Return the same access token',
@@ -71,7 +76,8 @@ export const QUIZ = [
   },
   {
     id: 'saml-validation',
-    topic: 'SAML',
+    track: 'onegate',
+    area: 'SAML',
     question: 'Which set is required when validating an inbound SAML assertion?',
     options: [
       'Only the XML signature',
@@ -85,7 +91,8 @@ export const QUIZ = [
   },
   {
     id: 'federation-trust-anchor',
-    topic: 'OpenID Federation',
+    track: 'onegate',
+    area: 'OpenID Federation',
     question: 'What is the root of trust in an OpenID Federation trust chain?',
     options: [
       'The leaf entity’s self-signed Entity Configuration',
@@ -99,7 +106,8 @@ export const QUIZ = [
   },
   {
     id: 'attribute-cache-key',
-    topic: 'Attributes',
+    track: 'onegate',
+    area: 'Attributes',
     question: 'For a delegated attribute lookup, what must the cache key include?',
     options: [
       'The subject only',
@@ -113,7 +121,8 @@ export const QUIZ = [
   },
   {
     id: 'client-credentials',
-    topic: 'Server-to-server',
+    track: 'onegate',
+    area: 'Server-to-server',
     question: 'Which statement about the client credentials grant is correct?',
     options: [
       'It identifies a user and issues a refresh token',
@@ -127,7 +136,8 @@ export const QUIZ = [
   },
   {
     id: 'exchange-actor',
-    topic: 'Delegation',
+    track: 'onegate',
+    area: 'Delegation',
     question: 'In a BFF exchange for a support agent viewing a customer, what should the exchanged token contain?',
     options: [
       'sub=customer and act=agent',
@@ -141,7 +151,8 @@ export const QUIZ = [
   },
   {
     id: 'opaque-validation',
-    topic: 'Token validation',
+    track: 'onegate',
+    area: 'Token validation',
     question: 'How does an API learn the claims behind an opaque access token?',
     options: [
       'It decodes the JWT payload',
@@ -155,7 +166,8 @@ export const QUIZ = [
   },
   {
     id: 'header-trust-boundary',
-    topic: 'Proxy SSO',
+    track: 'onegate',
+    area: 'Proxy SSO',
     question: 'When is a configured X-USERID header from OneGate safe to trust?',
     options: [
       'Whenever the browser uses HTTPS',
@@ -167,4 +179,185 @@ export const QUIZ = [
     explanation: 'OneGate strips client-supplied X-headers, but the app must not be directly reachable. Otherwise anyone can connect to the app and forge X-USERID. Firewall the app and send only configured headers.',
     link: { label: 'Simulation · Legacy app behind the proxy', href: '#/sim/legacy-proxy-sso' },
   },
+  {
+    id: 'docker-image-vs-container',
+    track: 'docker',
+    area: 'Docker foundations',
+    question: 'What is the difference between an image and a container?',
+    options: [
+      'An image is a running process; a container is a file on disk',
+      'An image is an immutable recipe; a container is a running instance with a writable layer',
+      'A container is stored in a registry; an image is always local',
+      'They are the same thing with different names',
+    ],
+    answer: 1,
+    explanation: 'The image supplies read-only layers and metadata. Creating a container adds a writable layer and starts a process. Removing the container does not delete its image or named volumes.',
+    link: { label: 'Docker mental model', href: '#/learn/docker-01-mental-model' },
+  },
+  {
+    id: 'docker-port-mapping',
+    track: 'docker',
+    area: 'Docker networking',
+    question: 'A service listens on port 8080 inside the container. Which mapping makes it reachable as host port 8003?',
+    options: [
+      '`-p 8080:8003`',
+      '`-p 8003:8080`',
+      '`EXPOSE 8003` only',
+      '`--network host` only',
+    ],
+    answer: 1,
+    explanation: 'The mapping is host:container. `-p 8003:8080` publishes host 8003 to container 8080. EXPOSE only documents the container port; it does not publish it.',
+    link: { label: 'Storage, networking and ports', href: '#/learn/docker-04-storage-networking' },
+  },
+  {
+    id: 'compose-profile',
+    track: 'docker',
+    area: 'Docker Compose',
+    question: 'A service has `profiles: ["auto-update"]`. When does it start?',
+    options: [
+      'Every `docker compose up -d`',
+      'Only when the profile is selected or explicitly named',
+      'Only on Docker Desktop',
+      'Never; profiles are comments',
+    ],
+    answer: 1,
+    explanation: 'Profiles make services opt-in. `docker compose up -d` starts services without a profile (plus explicitly selected services); `--profile auto-update` includes it.',
+    link: { label: 'Docker Compose, line by line', href: '#/learn/docker-05-compose' },
+  },
+  {
+    id: 'docker-volume-persistence',
+    track: 'docker',
+    area: 'Docker storage',
+    question: 'Which data survives `docker rm` of the container?',
+    options: [
+      'Writes in the container writable layer',
+      'A named volume mounted into the container',
+      'The container process environment',
+      'The container filesystem changes',
+    ],
+    answer: 1,
+    explanation: 'The writable layer disappears with the container. Named volumes (and bind-mounted host paths) survive until explicitly deleted.',
+    link: { label: 'Docker run and volumes', href: '#/sim/docker-run' },
+  },
+  {
+    id: 'docker-readonly',
+    track: 'docker',
+    area: 'Docker security',
+    question: 'What does `--read-only` do?',
+    options: [
+      'Makes the host filesystem read-only',
+      'Makes the container root filesystem read-only; explicit writable mounts are still possible',
+      'Blocks all network traffic',
+      'Runs the container as root',
+    ],
+    answer: 1,
+    explanation: 'The root filesystem is read-only. Applications that need to write need a tmpfs or a volume mounted at the specific writable path.',
+    link: { label: 'Docker operations and security', href: '#/learn/docker-06-operations-security' },
+  },
+  {
+    id: 'docker-digest',
+    track: 'docker',
+    area: 'GHCR delivery',
+    question: 'Why record an image digest instead of only an image tag?',
+    options: [
+      'A tag is always private',
+      'A tag is mutable; a digest identifies exact content',
+      'A digest is shorter',
+      'Docker cannot pull a tag',
+    ],
+    answer: 1,
+    explanation: 'Tags can be moved to new manifests. The digest is immutable, so it proves the deployed bytes and supports a safe rollback.',
+    link: { label: 'GHCR and the update loop', href: '#/learn/docker-07-ghcr-and-updates' },
+  },
+  {
+    id: 'git-commit-index',
+    track: 'git',
+    area: 'Git foundations',
+    question: 'What does a Git commit record?',
+    options: [
+      'Every file currently on disk, including untracked files',
+      'The exact staged snapshot in the index, plus metadata and parents',
+      'Only the commit message',
+      'The remote branch',
+    ],
+    answer: 1,
+    explanation: 'The index is the proposed snapshot. Untracked files and unstaged edits are not included until they are added.',
+    link: { label: 'Git mental model', href: '#/learn/git-01-mental-model' },
+  },
+  {
+    id: 'git-rejected-push',
+    track: 'git',
+    area: 'Git remotes',
+    question: 'A push is rejected as non-fast-forward. What is the safe next step?',
+    options: [
+      'Run `git push --force`',
+      'Fetch, inspect the divergence, then merge or rebase deliberately',
+      'Delete the remote repository',
+      'Change your email and push again',
+    ],
+    answer: 1,
+    explanation: 'The remote has commits you do not have. Fetch and compare first. Force-pushing can destroy someone else’s work; never use it as the default.',
+    link: { label: 'Remotes and GitHub', href: '#/learn/git-06-remotes-github' },
+  },
+  {
+    id: 'git-rebase-safety',
+    track: 'git',
+    area: 'Git history',
+    question: 'When is rebasing a branch unsafe?',
+    options: [
+      'When the branch is local and unpublished',
+      'When other people already have those commits',
+      'When the branch has a README',
+      'When the repository uses main',
+    ],
+    answer: 1,
+    explanation: 'Rebase rewrites commit hashes. If the commits are shared, rewriting them forces everyone to recover. Rebase only your unshared local work.',
+    link: { label: 'Branches, merge and rebase', href: '#/learn/git-04-branches-merge-rebase' },
+  },
+  {
+    id: 'git-revert',
+    track: 'git',
+    area: 'Git recovery',
+    question: 'How should you undo a bad commit that is already on a shared branch?',
+    options: [
+      '`git reset --hard` and force-push',
+      '`git revert <sha>` and push the new commit',
+      'Delete `.git` and clone again',
+      '`git commit --amend` and force-push',
+    ],
+    answer: 1,
+    explanation: 'Revert creates a new commit that reverses the change without rewriting shared history. Reset/amend are for unpublished local commits.',
+    link: { label: 'Undo and recovery', href: '#/learn/git-05-undo-recovery' },
+  },
+  {
+    id: 'git-reflog',
+    track: 'git',
+    area: 'Git recovery',
+    question: 'Where can you often find a commit after an accidental reset or branch deletion?',
+    options: [
+      '`git remote -v`',
+      'The reflog',
+      'The Docker registry',
+      'The `.env` file',
+    ],
+    answer: 1,
+    explanation: 'The reflog records local ref/HEAD movements. Use it to find the old tip and create a rescue branch. It is local and expires.',
+    link: { label: 'Undo and recovery', href: '#/learn/git-05-undo-recovery' },
+  },
+  {
+    id: 'git-ghcr-rename',
+    track: 'git',
+    area: 'GHCR delivery',
+    question: 'What happens to an existing GHCR image when the GitHub repository is renamed?',
+    options: [
+      'It is renamed automatically and the server pulls the new path',
+      'The next workflow can publish under the new repository path, but the old package is not automatically renamed',
+      'All tags are deleted',
+      'GHCR stops accepting pushes forever',
+    ],
+    answer: 1,
+    explanation: 'The image path is part of the package identity. Update deployment pull targets and package visibility; the old package remains until handled.',
+    link: { label: 'Tags, releases and GHCR', href: '#/learn/git-08-tags-releases-ghcr' },
+  },
+
 ];

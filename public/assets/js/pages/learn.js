@@ -1,4 +1,4 @@
-import { DOCS, CHAPTERS, docBySlug, CATEGORIES } from '../content.js';
+import { DOCS, TOPICS, TOPIC_ORDER, docBySlug, CATEGORIES } from '../content.js';
 import { scenarioById } from '../scenarios/index.js';
 import { docCard } from './cards.js';
 import { loadDoc } from '../app.js';
@@ -21,6 +21,23 @@ const RELATED = {
   '11-control-center': ['control-center-setup', 'legacy-proxy-sso', 'bff-login', 'attr-rest'],
   '12-openid-federation': ['openid-federation', 'fed-oidc-inbound'],
   glossary: [],
+  'docker-01-mental-model': ['docker-run', 'docker-compose'],
+  'docker-02-images-and-builds': ['docker-build', 'docker-ghcr'],
+  'docker-03-containers-lifecycle': ['docker-run', 'docker-ops'],
+  'docker-04-storage-networking': ['docker-run', 'docker-compose'],
+  'docker-05-compose': ['docker-compose', 'docker-ghcr'],
+  'docker-06-operations-security': ['docker-ops', 'docker-security'],
+  'docker-07-ghcr-and-updates': ['docker-ghcr', 'git-release-ghcr'],
+  'docker-glossary': ['docker-run'],
+  'git-01-mental-model': ['git-first-push', 'git-branch-merge'],
+  'git-02-first-repository': ['git-first-push', 'git-remotes-auth'],
+  'git-03-everyday-workflow': ['git-first-push', 'git-branch-merge'],
+  'git-04-branches-merge-rebase': ['git-branch-merge', 'git-rebase'],
+  'git-05-undo-recovery': ['git-undo', 'git-secrets'],
+  'git-06-remotes-github': ['git-remotes-auth', 'git-first-push'],
+  'git-07-settings-files-secrets': ['git-secrets', 'git-remotes-auth'],
+  'git-08-tags-releases-ghcr': ['git-release-ghcr', 'docker-ghcr'],
+  'git-glossary': ['git-first-push'],
 };
 
 export function renderLearnIndex(view) {
@@ -33,9 +50,8 @@ export function renderLearnIndex(view) {
       <p class="eyebrow">Written track</p>
       <h1>Learn the whole machine</h1>
       <p class="page-lede">
-        ${DOCS.length} chapters, in the order that makes the simulations legible. Start with the topology,
-        then the protocol primitives, then the OneGate configuration that maps onto them. Every chapter ends
-        with links to the scenarios that put it in motion.
+        ${DOCS.length} chapters across ${TOPIC_ORDER.length} tracks. Start with OneGate federation, Docker on Linux
+        or Git &amp; GHCR — each track has its own path, but search and progress work across all of them.
       </p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="#/learn/01-architecture">${icon('book', 15)} Start with the big picture</a>
@@ -66,14 +82,26 @@ export function renderLearnIndex(view) {
     <section class="search-results" data-search-results hidden></section>
 
     <section class="doc-index" data-doc-index>
-      ${CHAPTERS.map((chapter) => {
-        const docs = DOCS.filter((d) => d.chapter === chapter);
-        return `<section class="chapter-block">
-          <div class="chapter-head">
-            <h2>${esc(chapter)}</h2>
-            <span class="pill">${docs.length} chapter${docs.length === 1 ? '' : 's'}</span>
+      ${TOPIC_ORDER.map((topicId) => {
+        const topic = TOPICS[topicId];
+        const docs = DOCS.filter((d) => d.topic === topicId);
+        const chapters = [...new Set(docs.map((d) => d.chapter))];
+        return `<section class="topic-learn-block">
+          <div class="topic-learn-head">
+            <div class="chapter-head">
+              <h2><span class="topic-mini-icon ${topic.accent}">${icon(topic.icon, 17)}</span>${esc(topic.title)}</h2>
+              <span class="pill">${docs.length} chapters</span>
+            </div>
+            <p>${esc(topic.summary)}</p>
+            <a class="btn btn-sm btn-ghost" href="#/topic/${esc(topicId)}">Open the ${esc(topic.shortTitle)} track ${icon('arrow', 13)}</a>
           </div>
-          <div class="cards">${docs.map((d) => docCard(d, completed.has(d.slug))).join('')}</div>
+          ${chapters.map((chapter) => {
+            const items = docs.filter((d) => d.chapter === chapter);
+            return `<div class="chapter-block">
+              <div class="chapter-head"><h3>${esc(chapter)}</h3><span class="pill">${items.length}</span></div>
+              <div class="cards">${items.map((d) => docCard(d, completed.has(d.slug))).join('')}</div>
+            </div>`;
+          }).join('')}
         </section>`;
       }).join('')}
     </section>
@@ -102,11 +130,15 @@ export function renderLearnIndex(view) {
       return;
     }
     count.textContent = `${items.length} matching section${items.length === 1 ? '' : 's'}${items.length >= 30 ? ' (first 30)' : ''} — showing the best matches first.`;
-    results.innerHTML = `<div class="cards">${items.map((item) => `<a class="card search-result" href="#/learn/${esc(item.slug)}">
-      <div class="card-meta"><span class="pill">${esc(item.docTitle)}</span>${item.chapter ? '' : `<span class="pill">${esc(item.heading)}</span>`}</div>
-      <h3>${esc(item.chapter ? item.docTitle : item.heading)}</h3>
-      <p>${item.snippetHtml}</p>
-    </a>`).join('')}</div>`;
+    results.innerHTML = `<div class="cards">${items.map((item) => {
+      const doc = docBySlug(item.slug);
+      const topic = doc ? TOPICS[doc.topic] : null;
+      return `<a class="card search-result" href="#/learn/${esc(item.slug)}">
+        <div class="card-meta"><span class="pill">${esc(item.docTitle)}</span>${topic ? `<span class="pill">${esc(topic.shortTitle)}</span>` : ''}${item.chapter ? '' : `<span class="pill">${esc(item.heading)}</span>`}</div>
+        <h3>${esc(item.chapter ? item.docTitle : item.heading)}</h3>
+        <p>${item.snippetHtml}</p>
+      </a>`;
+    }).join('')}</div>`;
   };
 
   const runSearch = debounce(async () => {
@@ -177,13 +209,16 @@ export async function renderLearnDoc(view, slug, isCurrent = () => true) {
   const related = (RELATED[slug] || []).map(scenarioById).filter(Boolean);
   const minutes = readingTime(source);
   const complete = chapterIsComplete(slug);
+  const topic = TOPICS[meta.topic];
 
-  document.title = `${meta.title} · OneGate Learning Lab`;
+  document.title = `${meta.title} · Learning Lab`;
 
   view.innerHTML = `
     <div class="doc-wrap">
       <nav class="crumbs" aria-label="Breadcrumb">
-        <a href="#/learn">Learn</a><span aria-hidden="true">/</span><span>${esc(meta.chapter)}</span>
+        <a href="#/learn">Learn</a><span aria-hidden="true">/</span>
+        <a href="#/topic/${esc(meta.topic)}">${esc(topic?.shortTitle || meta.topic)}</a><span aria-hidden="true">/</span>
+        <span>${esc(meta.chapter)}</span>
       </nav>
 
       <header class="doc-head">

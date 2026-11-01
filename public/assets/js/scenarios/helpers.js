@@ -22,6 +22,18 @@ export const ITEM = {
   secret: (o = {}) => ({ id: 'secret', kind: 'secret', name: 'Client secret', meta: 'never leaves the server', ...o }),
   saml: (o = {}) => ({ id: 'saml', kind: 'saml', name: 'SAML assertion', meta: 'signed XML', ...o }),
   statement: (o = {}) => ({ id: 'stmt', kind: 'statement', name: 'Federation entity statement', meta: 'JWT · typ=entity-statement+jwt', ...o }),
+  image: (o = {}) => ({ id: 'image', kind: 'image', name: 'Container image', meta: 'tag + digest', ...o }),
+  container: (o = {}) => ({ id: 'container', kind: 'container', name: 'Container', meta: 'running process', ...o }),
+  volume: (o = {}) => ({ id: 'volume', kind: 'volume', name: 'Volume', meta: 'persistent data', ...o }),
+  compose: (o = {}) => ({ id: 'compose', kind: 'compose', name: 'compose.yaml', meta: 'services · networks · volumes', ...o }),
+  dockerfile: (o = {}) => ({ id: 'dockerfile', kind: 'dockerfile', name: 'Dockerfile', meta: 'build recipe', ...o }),
+  layer: (o = {}) => ({ id: 'layer', kind: 'layer', name: 'Image layer', meta: 'content-addressed filesystem diff', ...o }),
+  commit: (o = {}) => ({ id: 'commit', kind: 'commit', name: 'Git commit', meta: 'snapshot + parent + author', ...o }),
+  branch: (o = {}) => ({ id: 'branch', kind: 'branch', name: 'Branch', meta: 'movable ref', ...o }),
+  tag: (o = {}) => ({ id: 'tag', kind: 'tag', name: 'Git tag', meta: 'stable version marker', ...o }),
+  workflow: (o = {}) => ({ id: 'workflow', kind: 'workflow', name: 'GitHub Actions workflow', meta: 'CI · publish', ...o }),
+  network: (o = {}) => ({ id: 'network', kind: 'network', name: 'Container network', meta: 'service DNS · isolation', ...o }),
+  file: (o = {}) => ({ id: 'file', kind: 'file', name: 'Project file', meta: 'tracked or ignored', ...o }),
 };
 
 /** Config checklist block. */

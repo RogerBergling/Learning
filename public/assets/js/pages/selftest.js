@@ -1,6 +1,6 @@
 import { SCENARIOS } from '../scenarios/index.js';
-import { NODES, SUBNODES } from '../sim/layout.js';
-import { CATEGORIES, DOCS, LEARNING_PATH, docBySlug } from '../content.js';
+import { allActors, LAYOUTS } from '../sim/layout.js';
+import { CATEGORIES, DOCS, LEARNING_PATH, TOPICS, TOPIC_ORDER, docBySlug } from '../content.js';
 import { KINDS, STORES, materialize, decodeJwt, mockJwt } from '../tokens.js';
 import { render } from '../markdown.js';
 import { loadDoc } from '../app.js';
@@ -9,8 +9,8 @@ import { searchChapters } from '../search.js';
 import { getProgress, progressSummary } from '../progress.js';
 import { esc, icon } from '../ui.js';
 
-const CHANNELS = new Set(['front', 'back', 'cookie', 'attr', 'internal', 'saml']);
-const ACTORS = new Set([...Object.keys(NODES), ...Object.keys(SUBNODES)]);
+const CHANNELS = new Set(['front', 'back', 'cookie', 'attr', 'internal', 'saml', 'cli', 'engine', 'network', 'registry', 'git', 'ci', 'deploy']);
+const ACTORS = allActors();
 
 export async function renderSelftest(view, isCurrent = () => true) {
   view.innerHTML = `
@@ -50,6 +50,8 @@ async function runTests() {
     add(`${prefix}: required fields`, Boolean(s.id && s.title && s.summary && s.level && s.category),
       !s.id ? 'missing id' : !s.title ? 'missing title' : !s.summary ? 'missing summary' : '');
     add(`${prefix}: known category`, catKeys.has(s.category), s.category || 'missing');
+    add(`${prefix}: known topic`, Boolean(TOPICS[s.topic]), s.topic || 'missing');
+    add(`${prefix}: known layout`, Boolean(LAYOUTS[s.layout || 'onegate']), s.layout || 'onegate');
     add(`${prefix}: flow line`, Boolean(s.flow), s.flow || 'missing');
     add(`${prefix}: search tags`, Array.isArray(s.tags) && s.tags.length >= 3 && s.tags.every((t) => typeof t === 'string' && t.trim()),
       Array.isArray(s.tags) ? `${s.tags.length} tags` : 'missing');
@@ -92,6 +94,21 @@ async function runTests() {
   }
   add('learning path has no duplicates', new Set(LEARNING_PATH).size === LEARNING_PATH.length);
 
+  /* ------------------------------------------------------------------ topics */
+  add('topic order is not empty', TOPIC_ORDER.length >= 3, `${TOPIC_ORDER.length} topics`);
+  for (const id of TOPIC_ORDER) {
+    const topic = TOPICS[id];
+    const docs = DOCS.filter((doc) => doc.topic === id);
+    const scenarios = SCENARIOS.filter((scenario) => scenario.topic === id);
+    add(`topic ${id}: metadata`, Boolean(topic && topic.title && topic.summary && topic.icon));
+    add(`topic ${id}: has chapters`, docs.length > 0, `${docs.length} chapters`);
+    add(`topic ${id}: has simulations`, scenarios.length > 0, `${scenarios.length} simulations`);
+    add(`topic ${id}: all path slugs exist`, (topic?.path || []).every((slug) => slugs.has(slug)));
+  }
+  for (const doc of DOCS) {
+    add(`doc ${doc.slug}: known topic`, Boolean(TOPICS[doc.topic]), doc.topic || 'missing');
+  }
+
   /* ------------------------------------------------------------------- quiz */
   const quizIds = new Set();
   add('quiz has questions', QUIZ.length >= 10, `${QUIZ.length} questions`);
@@ -100,6 +117,7 @@ async function runTests() {
     add(`${at}: unique id`, Boolean(q.id) && !quizIds.has(q.id), q.id || 'missing');
     quizIds.add(q.id);
     add(`${at}: question`, typeof q.question === 'string' && q.question.length > 15);
+    add(`${at}: known track`, Boolean(TOPICS[q.track]), q.track || 'missing');
     add(`${at}: options`, Array.isArray(q.options) && q.options.length >= 2 && q.options.every((o) => typeof o === 'string' && o));
     add(`${at}: answer index`, Number.isInteger(q.answer) && q.answer >= 0 && q.answer < (q.options?.length || 0), String(q.answer));
     add(`${at}: explanation`, typeof q.explanation === 'string' && q.explanation.length > 20);

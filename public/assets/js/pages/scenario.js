@@ -1,5 +1,5 @@
 import { SCENARIOS, scenarioById } from '../scenarios/index.js';
-import { CATEGORIES } from '../content.js';
+import { CATEGORIES, TOPICS } from '../content.js';
 import { SimPlayer } from '../sim/player.js';
 import { esc, icon } from '../ui.js';
 
@@ -14,6 +14,13 @@ const DOCS_FOR = {
   attributes: ['06-attribute-providers'],
   proxy: ['01-architecture', '05-bff'],
   setup: ['11-control-center', '01-architecture'],
+  'docker-build': ['docker-02-images-and-builds', 'docker-07-ghcr-and-updates'],
+  'docker-run': ['docker-03-containers-lifecycle', 'docker-04-storage-networking', 'docker-06-operations-security'],
+  compose: ['docker-05-compose', 'docker-07-ghcr-and-updates'],
+  git: ['git-01-mental-model', 'git-02-first-repository'],
+  'git-workflow': ['git-03-everyday-workflow', 'git-04-branches-merge-rebase', 'git-05-undo-recovery'],
+  'git-security': ['git-07-settings-files-secrets'],
+  'git-delivery': ['git-08-tags-releases-ghcr'],
 };
 
 const DOC_TITLES = {
@@ -26,6 +33,21 @@ const DOC_TITLES = {
   '04-federation-rp-saml': 'Federation & SAML',
   '12-openid-federation': 'OpenID Federation',
   '11-control-center': 'The Control Center, end to end',
+  'docker-01-mental-model': 'Docker mental model',
+  'docker-02-images-and-builds': 'Images, layers and builds',
+  'docker-03-containers-lifecycle': 'Container lifecycle',
+  'docker-04-storage-networking': 'Storage, networking and ports',
+  'docker-05-compose': 'Docker Compose',
+  'docker-06-operations-security': 'Operations and security',
+  'docker-07-ghcr-and-updates': 'GHCR and updates',
+  'git-01-mental-model': 'Git mental model',
+  'git-02-first-repository': 'Your first repository',
+  'git-03-everyday-workflow': 'Everyday Git',
+  'git-04-branches-merge-rebase': 'Branches, merge and rebase',
+  'git-05-undo-recovery': 'Undo and recovery',
+  'git-06-remotes-github': 'Remotes and GitHub',
+  'git-07-settings-files-secrets': 'Settings, files and secrets',
+  'git-08-tags-releases-ghcr': 'Tags, releases and GHCR',
 };
 
 export async function renderScenarioPage(view, id) {
@@ -41,16 +63,19 @@ export async function renderScenarioPage(view, id) {
   }
 
   const cat = CATEGORIES[s.category] || { label: s.category };
+  const topic = TOPICS[s.topic] || { title: s.topic, shortTitle: s.topic };
   const idx = SCENARIOS.findIndex((x) => x.id === s.id);
   const prev = idx > 0 ? SCENARIOS[idx - 1] : null;
   const next = idx < SCENARIOS.length - 1 ? SCENARIOS[idx + 1] : null;
   const docs = (DOCS_FOR[s.category] || []).filter((slug) => DOC_TITLES[slug]);
 
-  document.title = `${s.title} · OneGate Learning Lab`;
+  document.title = `${s.title} · Learning Lab`;
 
   view.innerHTML = `
     <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="#/scenarios">Simulations</a><span aria-hidden="true">/</span><span>${esc(cat.label)}</span>
+      <a href="#/scenarios">Simulations</a><span aria-hidden="true">/</span>
+      <a href="#/topic/${esc(s.topic)}">${esc(topic.shortTitle)}</a><span aria-hidden="true">/</span>
+      <span>${esc(cat.label)}</span>
     </nav>
 
     <header class="sim-head">

@@ -1,6 +1,8 @@
 # Scenario catalog & how to read the simulator
 
-Eighteen scenarios, one fixed topology. This chapter explains the stage, the controls and what each scenario is for — so you can pick the right one instead of watching all of them in order.
+Eighteen OneGate scenarios, one fixed OneGate topology. This chapter explains the stage, the controls and what each OneGate scenario is for — so you can pick the right one instead of watching all of them in order.
+
+The lab also has separate [Docker](#/topic/docker) and [Git & GHCR](#/topic/git) tracks with their own chapters and simulations.
 
 Two scenarios are new in this edition: [Control Center setup](#/sim/control-center-setup) is a configuration walkthrough based on the **OneGate Administration Manual**; [OpenID Federation](#/sim/openid-federation) is a standards-based trust-framework deep dive. Start with Control Center setup if the menu names in the other scenarios feel unmotivated, and use OpenID Federation when you need trust at scale.
 

@@ -7,6 +7,12 @@ import { attrRest, attrDelegation } from './attributes.js';
 import { legacyProxySso } from './proxy.js';
 import { controlCenterSetup } from './setup.js';
 import { openidFederation } from './openid-federation.js';
+import {
+  dockerRun, dockerBuild, dockerCompose, dockerOps, dockerSecurity, dockerGhcr,
+} from './docker.js';
+import {
+  gitFirstPush, gitBranchMerge, gitRebase, gitUndo, gitSecrets, gitRemotesAuth, gitReleaseGhcr,
+} from './git.js';
 
 const FLOW = {
   'client-credentials': 'Service → token endpoint → API',
@@ -27,6 +33,19 @@ const FLOW = {
   'attr-delegation': 'Agent → actor lookup → delegated token',
   'control-center-setup': 'Control Center → Local Provider → RP → BFF → Web Resource',
   'openid-federation': 'RP ⇄ Trust Anchor ⇄ OP → trust chain → automatic client',
+  'docker-run': 'CLI → Engine → Registry → Container → Volume',
+  'docker-build': 'Context → BuildKit → Image → GHCR → Deployment',
+  'docker-compose': 'compose.yaml → services → network/volume → update',
+  'docker-ops': 'CLI → logs/exec/inspect → cleanup',
+  'docker-security': 'Hardened image → container → runtime verification',
+  'docker-ghcr': 'Tag → GHCR → pull → recreate → version stamp',
+  'git-first-push': 'Working tree → index → commit → GitHub',
+  'git-branch-merge': 'branch → commit → merge → push',
+  'git-rebase': 'fetch → compare → rebase → push',
+  'git-undo': 'working tree / index / history → recover',
+  'git-secrets': 'stage → scan → ignore → rotate → history decision',
+  'git-remotes-auth': 'SSH → fetch → pull/push → upstream',
+  'git-release-ghcr': 'tag → Actions → GHCR → pull → verify',
 };
 
 const ALL = [
@@ -48,9 +67,25 @@ const ALL = [
   attrDelegation,
   controlCenterSetup,
   openidFederation,
+  dockerRun,
+  dockerBuild,
+  dockerCompose,
+  dockerOps,
+  dockerSecurity,
+  dockerGhcr,
+  gitFirstPush,
+  gitBranchMerge,
+  gitRebase,
+  gitUndo,
+  gitSecrets,
+  gitRemotesAuth,
+  gitReleaseGhcr,
 ];
 
-const FEATURED = new Set(['bff-login', 'token-formats', 'webapp-confidential', 'attr-rest', 'openid-federation']);
+const FEATURED = new Set([
+  'bff-login', 'token-formats', 'webapp-confidential', 'attr-rest', 'openid-federation',
+  'docker-run', 'docker-build', 'docker-compose', 'git-first-push', 'git-release-ghcr',
+]);
 
 export const SCENARIOS = ALL.map((s, i) => {
   const stepCount = s.variants
@@ -60,6 +95,7 @@ export const SCENARIOS = ALL.map((s, i) => {
   const stepLabel = new Set(lengths).size > 1 ? `${Math.min(...lengths)}–${Math.max(...lengths)} steps` : `${stepCount} steps`;
   return {
     ...s,
+    topic: s.topic || 'onegate',
     order: i + 1,
     stepCount,
     stepLabel,
@@ -72,6 +108,8 @@ export const SCENARIOS = ALL.map((s, i) => {
 export const scenarioById = (id) => SCENARIOS.find((s) => s.id === id) || null;
 
 export const featuredScenarios = () => SCENARIOS.filter((s) => s.featured);
+
+export const scenariosByTopic = (topic) => SCENARIOS.filter((s) => s.topic === topic);
 
 export const categoryCounts = () => {
   const counts = {};

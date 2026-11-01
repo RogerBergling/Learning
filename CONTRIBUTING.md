@@ -1,4 +1,4 @@
-# Contributing to the OneGate Learning Lab
+# Contributing to the Learning Lab
 
 This project is deliberately small: static ES modules, dependency-free Python
 launchers and Markdown chapters. There is no build step, package install or
@@ -33,12 +33,12 @@ pull request.
    catalog checker can find it.
 4. Run `python3 scripts/verify.py` and `#/selftest`.
 5. Keep the data honest:
-   - `id`, `title`, `level`, `category`, `summary`, `minutes`;
+   - `id`, `topic`, `layout`, `title`, `level`, `category`, `summary`, `minutes`;
    - a top-level `tags` array for the Simulations search;
-   - actors are keys from `sim/layout.js`;
+   - actors are keys from the selected layout in `sim/layout.js`;
    - every step has a `badge`, a meaningful `detail` and a valid `channel`;
-   - vault stores and token kinds exist in `tokens.js`;
-   - endpoints are illustrative unless they are documented in the vendor manual.
+   - vault stores and artifact kinds exist in `tokens.js`;
+   - endpoints and CLI examples are illustrative unless documented in the vendor manual.
 
 When a flow relies on a OneGate feature the manual does not document, label it
 as generic OAuth/OIDC and say “verify in your deployment”. Look at the existing
@@ -48,8 +48,9 @@ scenario notes for the wording.
 
 - Keep the Markdown in `public/docs/` as the single source of truth; the site
   fetches the same files.
-- Add the chapter to `DOCS`, `CHAPTERS` and, where appropriate,
-  `LEARNING_PATH` in `content.js`.
+- Add the chapter to `DOCS` with a `topic` and `chapter`, then add it to the
+  appropriate topic path in `TOPICS` and to `CHAPTERS` when introducing a new
+  chapter group. Keep `LEARNING_PATH` for the OneGate track.
 - Use `#/learn/<slug>` and `#/sim/<id>` links; the checker rejects broken ones.
 - Do not add relative file links or external assets. The lab must stay offline
   and dependency-free.
@@ -60,8 +61,9 @@ scenario notes for the wording.
 - The Learn search index is built from the same Markdown files; do not add a
   second content index.
 - Quiz questions live in `public/assets/js/quiz-data.js`. Every question needs
-  a unique id, an in-range answer, an explanation and a `#/learn/...` or
-  `#/sim/...` link. The self-check validates them.
+  a unique id, a `track` from `TOPICS`, an area label, an in-range answer, an
+  explanation and a `#/learn/...` or `#/sim/...` link. The self-check validates
+  them.
 - Chapter and quiz progress is stored only in `localStorage` under
   `og-progress-v1` by `progress.js`. Never add server-side or third-party
   tracking.

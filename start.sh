@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# OneGate Learning Lab launcher (Linux / macOS).
+# Learning Lab launcher (Linux / macOS).
 # Requires Python 3.8+. No pip installs, no Node.
 set -eu
 cd "$(dirname "$0")"

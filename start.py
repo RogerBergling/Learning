@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""OneGate Learning Lab — zero-dependency static server.
+"""Learning Lab — zero-dependency static server.
 
 Serves ./public over HTTP so the ES modules and the Markdown chapters load
 correctly (file:// URLs cannot fetch /docs/*.md).
@@ -135,7 +135,7 @@ def choose_port(host: str, requested: int | None) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Serve the OneGate Learning Lab.")
+    parser = argparse.ArgumentParser(description="Serve the Learning Lab.")
     parser.add_argument("--port", type=int, default=None, help="preferred port (default: first free 8080–8099)")
     parser.add_argument("--host", default="127.0.0.1", help="bind address (default: 127.0.0.1)")
     parser.add_argument("--no-browser", action="store_true", help="do not open a browser")
@@ -157,7 +157,7 @@ def main() -> int:
     url = f"http://{shown_host}:{port}/"
 
     print()
-    print("  OneGate Learning Lab")
+    print("  Learning Lab")
     print("  --------------------")
     print(f"  Serving : {WEB_ROOT}")
     print(f"  Open    : {url}")

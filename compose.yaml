@@ -1,14 +1,14 @@
-name: onegate-learning-lab
+name: learning-lab
 
 services:
-  onegate-learning-lab:
+  learning-lab:
     image: ghcr.io/rogerbergling/learning:latest
-    container_name: onegate-learning-lab
+    container_name: learning-lab
     mem_limit: 100m
     mem_reservation: 32m
     memswap_limit: 100m      # same as mem_limit = no swap
     ports:
-      - "8080:8080"
+      - "8003:8080"
     restart: unless-stopped
     pull_policy: always
     read_only: true
@@ -18,7 +18,7 @@ services:
       - ALL
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
-      - "com.centurylinklabs.watchtower.scope=onegate"
+      - "com.centurylinklabs.watchtower.scope=learning"
 
   watchtower:
     image: nickfedor/watchtower:1.23.2
@@ -29,4 +29,4 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       # Uncomment only for a private GHCR image, after `docker login ghcr.io`:
       # - ${HOME}/.docker/config.json:/config.json:ro
-    command: --interval 3600 --label-enable --scope onegate --cleanup
+    command: --interval 3600 --label-enable --scope learning --cleanup

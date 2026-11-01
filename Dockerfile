@@ -9,7 +9,7 @@ ARG IMAGE_TAG=local
 ARG GIT_SHA=local
 ARG BUILD_DATE=
 
-LABEL org.opencontainers.image.title="OneGate Learning Lab" \
+LABEL org.opencontainers.image.title="Learning Lab" \
       org.opencontainers.image.version="$APP_VERSION" \
       org.opencontainers.image.revision="$GIT_SHA" \
       io.onegate.build.version="$APP_VERSION" \

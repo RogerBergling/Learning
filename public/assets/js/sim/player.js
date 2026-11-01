@@ -1,4 +1,4 @@
-import { NODES, SUBNODES, pathFor, pctX, pctY } from './layout.js';
+import { getLayout, pathFor, pctX, pctY } from './layout.js';
 import { materialize, KINDS, STORES, decodeJwt, relTime, preview } from '../tokens.js';
 import { md, inlineMd } from '../markdown.js';
 import { icon, esc, prefersReducedMotion } from '../ui.js';
@@ -10,14 +10,44 @@ const CHANNELS = {
   attr: 'attribute call',
   internal: 'internal',
   saml: 'SAML',
+  cli: 'local CLI',
+  engine: 'Docker engine',
+  network: 'container network',
+  registry: 'registry',
+  git: 'Git transport',
+  ci: 'CI runner',
+  deploy: 'deployment',
+};
+
+const CHANNEL_META = {
+  front: { label: 'front channel', color: 'var(--accent)' },
+  back: { label: 'back channel', color: 'var(--ok)' },
+  cookie: { label: 'cookie', color: 'var(--warn)' },
+  attr: { label: 'attribute call', color: 'var(--accent-2)' },
+  internal: { label: 'internal', color: 'var(--dim)' },
+  saml: { label: 'SAML', color: 'var(--orange)' },
+  cli: { label: 'local CLI', color: 'var(--accent)' },
+  engine: { label: 'Docker engine', color: 'var(--ok)' },
+  network: { label: 'network', color: 'var(--teal)' },
+  registry: { label: 'registry', color: 'var(--accent-2)' },
+  git: { label: 'Git transport', color: 'var(--orange)' },
+  ci: { label: 'CI runner', color: 'var(--pink)' },
+  deploy: { label: 'deployment', color: 'var(--warn)' },
 };
 
 const STORE_ICONS = {
   browser: 'browser', onegate: 'gate', frontend: 'server', backend: 'database',
   idp: 'cloud', sp: 'layers', attr: 'sparkle',
+  local: 'terminal', docker: 'server', container: 'box', registry: 'cloud',
+  volume: 'database', network: 'network',
+  gitrepo: 'database', gitremote: 'cloud', reflog: 'clock', github: 'server', deployment: 'server',
 };
 
-const STORE_ORDER = ['browser', 'onegate', 'frontend', 'backend', 'idp', 'sp', 'attr'];
+const STORE_ORDER = [
+  'browser', 'local', 'onegate', 'docker', 'container', 'volume', 'network',
+  'gitrepo', 'gitremote', 'reflog', 'github', 'registry', 'deployment',
+  'frontend', 'backend', 'idp', 'sp', 'attr',
+];
 
 const easeInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
@@ -27,6 +57,7 @@ export class SimPlayer {
     this.scenario = scenario;
     this.opts = opts;
     this.mode = scenario.variants ? (scenario.defaultMode || 'jwt') : null;
+    this.layout = getLayout(scenario.layout || 'onegate');
     this.speed = 1;
     this.index = 0;
     this.playing = false;
@@ -173,12 +204,8 @@ export class SimPlayer {
               </div>
             </div>
             <div class="stage-legend">
-              <span><i class="lg-dot" style="background:var(--accent)"></i>front channel</span>
-              <span><i class="lg-dot" style="background:var(--ok)"></i>back channel</span>
-              <span><i class="lg-dot" style="background:var(--warn)"></i>cookie</span>
-              <span><i class="lg-dot" style="background:var(--accent-2)"></i>attribute call</span>
-              <span><i class="lg-dot" style="background:var(--orange)"></i>SAML</span>
-              <span style="margin-left:auto">access &amp; refresh tokens never travel in the front channel</span>
+              ${this.legendHtml()}
+              <span style="margin-left:auto">${this.scenario.topic === 'onegate' ? 'access &amp; refresh tokens never travel in the front channel' : 'artifacts and configuration flow through the selected channel'}</span>
             </div>
           </div>
 
@@ -245,51 +272,65 @@ export class SimPlayer {
   q(sel) { return this.root.querySelector(sel); }
   qa(sel) { return [...this.root.querySelectorAll(sel)]; }
 
+  legendHtml() {
+    const used = [...new Set(this.steps.map((step) => step.channel || 'front'))];
+    return used.map((channel) => {
+      const meta = CHANNEL_META[channel] || CHANNEL_META.front;
+      return `<span><i class="lg-dot" style="background:${meta.color}"></i>${esc(meta.label)}</span>`;
+    }).join('');
+  }
+
   storeLabel(store) {
     return this.scenario.storeLabels?.[store] || STORES[store]?.label || store;
   }
 
   actorName(id) {
-    if (SUBNODES[id]) return `OneGate · ${SUBNODES[id].name}`;
-    return this.scenario.nodeLabels?.[id]?.name || NODES[id]?.name || id;
+    const custom = this.scenario.nodeLabels?.[id];
+    if (custom?.name) return custom.name;
+    if (this.layout.nodes?.[id]) return this.layout.nodes[id].name;
+    for (const group of this.layout.groups || []) {
+      if (group.id === id) return group.name;
+      if (group.subnodes?.[id]) return `${group.name} · ${group.subnodes[id].name}`;
+    }
+    return id;
   }
 
   renderNodes() {
-    const node = (id, extraClass = '') => {
-      const n = NODES[id];
+    const node = (id, n) => {
       const custom = this.scenario.nodeLabels?.[id] || {};
       const r = n.rect;
-      return `<div class="node ${extraClass}" data-node="${id}" style="left:${pctX(r.x)}%;top:${pctY(r.y)}%;width:${(r.w / 10)}%;height:${(r.h / 6)}%">
+      return `<div class="node" data-node="${id}" style="left:${pctX(r.x)}%;top:${pctY(r.y)}%;width:${(r.w / 10)}%;height:${(r.h / 6)}%">
         <div class="node-pulse"></div>
-        <div class="node-icon">${icon(n.icon, 26)}</div>
+        <div class="node-icon">${icon(n.icon || 'server', 26)}</div>
         <div class="node-name">${esc(custom.name || n.name)}</div>
         <div class="node-sub">${esc(custom.sub || n.sub)}</div>
       </div>`;
     };
 
-    const sub = (id) => {
-      const sn = SUBNODES[id];
-      return `<div class="subnode" data-node="${id}" style="left:${pctX(sn.x)}%;top:${pctY(sn.y)}%;width:${124 / 10}%;height:${62 / 6}%">
+    const subnode = (id, sn, group) => {
+      const custom = this.scenario.nodeLabels?.[id] || {};
+      const left = ((sn.x - group.rect.x) / group.rect.w + 0.5) * 100;
+      const top = ((sn.y - group.rect.y) / group.rect.h + 0.5) * 100;
+      return `<div class="subnode" data-node="${id}" style="left:${left}%;top:${top}%">
         <span class="sn-dot"></span>
-        <span class="sn-name">${esc(sn.name)}</span>
-        <span class="sn-sub">${esc(sn.sub)}</span>
+        <span class="sn-name">${esc(custom.name || sn.name)}</span>
+        <span class="sn-sub">${esc(custom.sub || sn.sub)}</span>
       </div>`;
     };
 
-    const og = NODES.onegate.rect;
-    return `
-      ${node('user')}
-      ${node('idp')}
-      ${node('frontend')}
-      ${node('sp')}
-      ${node('backend')}
-      ${node('attr')}
-      <div class="og-box" data-node="onegate" style="left:${pctX(og.x)}%;top:${pctY(og.y)}%;width:${og.w / 10}%;height:${og.h / 6}%">
-        <div class="og-title">${esc(this.scenario.nodeLabels?.onegate?.name || 'OneGate')} <span>${esc(this.scenario.nodeLabels?.onegate?.sub || 'proxy · OP · RP · BFF · token handler')}</span></div>
-        ${Object.keys(SUBNODES).map(sub).join('')}
-        <div class="og-foot">session store · signing keys · attribute cache</div>
-      </div>
-    `;
+    const group = (g) => {
+      const custom = this.scenario.nodeLabels?.[g.id] || {};
+      return `<div class="og-box actor-group" data-node="${g.id}" style="left:${pctX(g.rect.x)}%;top:${pctY(g.rect.y)}%;width:${g.rect.w / 10}%;height:${g.rect.h / 6}%">
+        <div class="og-title">${esc(custom.name || g.name)} <span>${esc(custom.sub || g.sub || '')}</span></div>
+        ${Object.entries(g.subnodes || {}).map(([id, sn]) => subnode(id, sn, g)).join('')}
+        <div class="og-foot">${esc(custom.footer || g.footer || '')}</div>
+      </div>`;
+    };
+
+    return [
+      ...Object.entries(this.layout.nodes || {}).map(([id, n]) => node(id, n)),
+      ...(this.layout.groups || []).map(group),
+    ].join('');
   }
 
   renderStepList() {
@@ -328,20 +369,25 @@ export class SimPlayer {
       ? ['Fetch only from an allow-listed entity host over HTTPS; set timeouts and response-size limits.', 'Validate `typ`, `alg`/`kid`, signature, `iss`/`sub` linkage, key binding and `iat`/`exp`.', 'Do not follow arbitrary `authority_hints` from an untrusted request.']
       : s.id === 'openid-federation' && ch === 'internal'
         ? ['Validate the complete chain to the pinned Trust Anchor, not just the leaf signature.', 'Apply metadata policy, then check the resolved `redirect_uris` and client authentication method.', 'Cache only until the earliest `exp`; re-resolve after key rollover.']
-        : channelChecks(step);
+        : channelChecks(step, s.topic);
+    const onegateProduction = (s.topic || 'onegate') === 'onegate'
+      ? [
+        'Every redirect URI is registered exactly, or inside a deliberately narrow prefix whitelist.',
+        'Issuer, audience and token type are checked by every consumer.',
+        'Secrets and refresh tokens stay server-side; nothing sensitive is logged.',
+        'Where sessions exist, logout ends the local session, the OP/partner session and downstream sessions.',
+        'Failure paths are tested: timeout, bad signature, unknown user, expired token.',
+      ]
+      : [];
     const production = [
-      'Every redirect URI is registered exactly, or inside a deliberately narrow prefix whitelist.',
-      'Issuer, audience and token type are checked by every consumer.',
-      'Secrets and refresh tokens stay server-side; nothing sensitive is logged.',
-      'Where sessions exist, logout ends the local session, the OP/partner session and downstream sessions.',
-      'Failure paths are tested: timeout, bad signature, unknown user, expired token.',
+      ...onegateProduction,
       ...(s.productionChecks || []),
     ];
     this.q('[data-panel="risks"]').innerHTML = `
       <div class="callout"><strong>Read this after the animation.</strong> Start with the current hop, then check the traps and the production list.</div>
       <div class="watch-block">
         <h5>Troubleshooting this hop</h5>
-        <p class="watch-hop">${esc(this.actorName(step.from))} → ${esc(this.actorName(step.to))} <span class="pill">${esc(CHANNELS[ch])}</span></p>
+        <p class="watch-hop">${esc(this.actorName(step.from))} → ${esc(this.actorName(step.to))} <span class="pill">${esc(CHANNELS[ch] || ch)}</span></p>
         <ul class="checklist">${checks.map((c) => `<li>${inlineMd(c)}</li>`).join('')}</ul>
       </div>
       <div class="watch-block">
@@ -570,9 +616,12 @@ export class SimPlayer {
 
   renderVault(newKeys) {
     const focus = this.steps[this.index]?.vault?.map((o) => o.store) || [];
+    const always = this.scenario.stores
+      || ((this.scenario.topic || 'onegate') === 'onegate' ? ['browser', 'onegate'] : []);
     const stores = STORE_ORDER.filter((st) => {
-      if (st === 'browser' || st === 'onegate') return true;
-      return this.vault.get(st)?.size > 0 || (this.scenario.nodes || []).includes(st);
+      return always.includes(st)
+        || this.vault.get(st)?.size > 0
+        || (this.scenario.nodes || []).includes(st);
     });
     this.$vault.innerHTML = stores.map((st) => {
       const items = this.vault.get(st) || new Map();
@@ -595,7 +644,7 @@ export class SimPlayer {
   }
 
   renderWire(step, animate) {
-    const channelClasses = ['front', 'back', 'cookie', 'attr', 'internal', 'saml'].map((c) => `ch-${c}`);
+    const channelClasses = ['front', 'back', 'cookie', 'attr', 'internal', 'saml', 'cli', 'engine', 'network', 'registry', 'git', 'ci', 'deploy'].map((c) => `ch-${c}`);
     // fade everything, then bring the current hop to the front
     for (const p of this.wireEls.values()) {
       p.classList.remove('is-active', ...channelClasses);
@@ -606,7 +655,7 @@ export class SimPlayer {
     if (!path) {
       const ns = 'http://www.w3.org/2000/svg';
       path = document.createElementNS(ns, 'path');
-      path.setAttribute('d', pathFor(step.from, step.to).d);
+      path.setAttribute('d', pathFor(step.from, step.to, this.layout).d);
       path.setAttribute('class', 'wire');
       path.setAttribute('vector-effect', 'non-scaling-stroke');
       this.$wires.appendChild(path);
@@ -740,7 +789,7 @@ export class SimPlayer {
             <span class="pill">${esc(ch)}</span>
           </div>
           <div class="detail">${md(step.detail || '')}</div>
-          <div class="channel-rule"><span class="cr-label">What to notice</span>${inlineMd(channelRule(step))}</div>
+          <div class="channel-rule"><span class="cr-label">What to notice</span>${inlineMd(channelRule(step, this.scenario.topic))}</div>
           ${tags ? `<div class="tag-row">${tags}</div>` : ''}
         </div>
       </div>
@@ -885,24 +934,47 @@ function explainKind(kind) {
     session: 'A server-side session has no readable value. The client only holds a pointer (a cookie) to it.',
     csrf: 'A CSRF token is not an authentication credential. It proves the request came from your own page, not from another site.',
     secret: 'A client secret authenticates an application to the token endpoint. It must never reach a browser, a log or a repository.',
+    image: 'An image is an immutable, content-addressed filesystem plus metadata. A tag points at a digest; the digest is what you should record when verifying a deployment.',
+    container: 'A container is an isolated process (or group of processes) created from an image, with its own filesystem, network namespace and resource limits.',
+    volume: 'A volume is persistent storage managed by Docker. It survives container replacement and is the right home for state that must not disappear.',
+    compose: 'Compose describes multiple services, networks and volumes in one file. It creates the same resources the CLI would, with the relationships declared once.',
+    dockerfile: 'A Dockerfile is a build recipe. Each instruction creates a layer or metadata; order matters because the build cache reuses unchanged layers.',
+    layer: 'A layer is a content-addressed filesystem diff. Layers are shared between images and cached locally; changing one instruction invalidates that layer and everything after it.',
+    commit: 'A commit is a snapshot of the index plus metadata and parent links. In Git, the commit is the history; the working tree is only your current editable copy.',
+    branch: 'A branch is a movable ref to a commit. Creating a branch is cheap; deleting a branch only removes the name, not the commits still reachable elsewhere.',
+    tag: 'A tag names a commit without moving like a branch. Release tags should be pushed deliberately and protected from casual deletion.',
+    workflow: 'A GitHub Actions workflow runs on GitHub infrastructure against a committed ref. It has its own permissions, secrets, runner and logs.',
+    file: 'A project file can be tracked, ignored or excluded from a build context. The important question is not just “does it exist?” but “where will it be copied, cached or logged?”',
   };
   return map[kind] || 'Simulated credential.';
 }
 
-function channelRule(step) {
+function channelRule(step, topic = 'onegate') {
   const ch = step.channel || 'front';
+  const internal = {
+    onegate: 'This happens inside the entity shown as the source — no network request leaves it. For OneGate, check configuration, the selected virtual host and logs; for an RP/OP, check local trust-chain, policy and cache state.',
+    docker: 'This happens inside the local Docker Engine or the container namespace. Check the active context, daemon logs, container logs and the exact image digest.',
+    git: 'This happens inside the repository, index or local refs. Check the current branch, staged diff, reflog and repository-local config before changing anything.',
+  }[topic] || 'This happens inside the selected component. Check its own state, logs and configuration rather than only the final error.';
   const rules = {
     front: 'Front-channel data is visible to the browser. Codes, `state`, `nonce` and cookies belong here; access tokens, refresh tokens and secrets do not.',
     back: 'Back-channel traffic is server-to-server. Client secrets and tokens may travel here, but never through the browser.',
     cookie: 'The browser sends this automatically. Treat it as a credential: `HttpOnly`, `Secure`, `SameSite`, and the narrowest possible `Path`.',
     attr: 'This is an attribute lookup, not a login. The response is cached and becomes claims, headers or an authorisation decision.',
-    internal: 'This happens inside the entity shown as the source — no network request leaves it. For OneGate, check configuration, the selected virtual host and logs; for an RP/OP, check local trust-chain, policy and cache state.',
+    internal,
     saml: 'SAML is signed XML carried through the browser. Validate the signature, `Audience`, `Destination`, time conditions and replay.',
+    cli: 'The local CLI turns your intent into an API call. It runs with your user permissions, so shell history, environment variables and local credentials matter.',
+    engine: 'The Docker Engine performs the work: pulling, building, creating and starting. The CLI is only the client; check the active context and the daemon state.',
+    network: 'Containers on the same user-defined network resolve each other by service name. Published ports are the only intended path from the host or LAN.',
+    registry: 'A registry stores image layers under digests and tags. Tags are mutable pointers; a digest is the immutable identity of the content you tested.',
+    git: 'Git moves commits and refs. Fetch is read-only; push updates a remote branch. Never force-push shared history without an explicit recovery plan.',
+    ci: 'CI builds the committed ref, not your local working tree. Verify the SHA, workflow permissions, secrets and the job log — not just the green badge.',
+    deploy: 'The deployment host pulls and runs an image. Verify the digest, version stamp, healthcheck and logs — “running” is not the same as “the intended build”.',
   };
   return rules[ch] || rules.front;
 }
 
-function channelChecks(step) {
+function channelChecks(step, topic = 'onegate') {
   const ch = step.channel || 'front';
   if (ch === 'back') return [
     'Client authentication: `client_secret_basic`, `private_key_jwt`, certificate — match what the server expects.',
@@ -919,15 +991,62 @@ function channelChecks(step) {
     '`realm`, `subject`, `actor`, `requested_attributes` and `ext` match the source contract.',
     '`Valid time`, cache key, and whether a failed lookup fails open or closed.',
   ];
-  if (ch === 'internal') return [
-    'Which component is doing the work? Check its own logs and configuration, not only the final error page.',
-    'OneGate: confirm the **Virtual Host Selector**, then **Activate Changes → Reload configuration** (and **Reindex files** for file changes).',
-    'RP/OP: check the local session, trust-chain cache, policy result and clock.',
-  ];
+  if (ch === 'internal') {
+    if (topic === 'docker') return [
+      'Check `docker context ls` and `docker info`; the CLI may be talking to a different engine.',
+      'Find the first failing build step or container exit; not the last line of the output.',
+      'Check disk space, registry authentication, image architecture and volume permissions.',
+    ];
+    if (topic === 'git') return [
+      'Check `git status -sb`, the current branch and the staged diff.',
+      'Inspect the reflog and safety refs before any reset or history-changing command.',
+      'Repository-local config overrides global settings; validate identity and signing here.',
+    ];
+    return [
+      'Which component is doing the work? Check its own logs and configuration, not only the final error page.',
+      'OneGate: confirm the **Virtual Host Selector**, then **Activate Changes → Reload configuration** (and **Reindex files** for file changes).',
+      'RP/OP: check the local session, trust-chain cache, policy result and clock.',
+    ];
+  }
   if (ch === 'saml') return [
     'Signature: assertion, response, or both — whichever the SP validates.',
     '`Audience`, `Destination`, `NotBefore`/`NotOnOrAfter`, `InResponseTo` and clock skew.',
     'Certificate rollover and replay cache.',
+  ];
+  if (ch === 'cli') return [
+    'Run `docker context ls` / `git remote -v` and confirm you are targeting the machine and repository you think you are.',
+    'Check the exact command, current directory, environment variables and exit code.',
+    'Do not paste tokens into a command line; use a credential helper, SSH agent or secret store.',
+  ];
+  if (ch === 'engine') return [
+    'The daemon can only use images it can pull or build locally; check registry auth, network and disk space.',
+    '`docker info`, `docker ps -a`, `docker images` and `docker events` describe the real engine state.',
+    'A failed build is usually the first failing layer, not the last line of output.',
+  ];
+  if (ch === 'network') return [
+    'Use the service name and container port inside the network; use the published host port from outside.',
+    'Check `docker network inspect`, `docker port` and the Compose `networks`/`ports` sections.',
+    'Host firewalls, bind addresses and IPv4/IPv6 differences can make a listening service unreachable.',
+  ];
+  if (ch === 'registry') return [
+    '`docker login ghcr.io` with a token that has `read:packages` or `write:packages` as appropriate.',
+    'A tag can move; record the image digest or version label you actually deployed.',
+    'Package visibility and repository linking also control whether anonymous pulls and Actions pushes work.',
+  ];
+  if (ch === 'git') return [
+    '`git remote -v`, `git status -sb` and `git log --oneline --graph --all` show the real relationship.',
+    'Fetch before comparing; a push rejected for non-fast-forward means local and remote diverged.',
+    'Check SSH keys, `gh auth status`, branch protection and upstream names before retrying.',
+  ];
+  if (ch === 'ci') return [
+    'Confirm the workflow ran for the commit you think it did, not an older push.',
+    'Check `permissions`, trigger filters, runner labels and secret availability.',
+    'Read the first failing step; a later “push denied” error often means login or package permissions.',
+  ];
+  if (ch === 'deploy') return [
+    'Confirm the host pulled the intended tag or digest and recreated the container.',
+    'Check `/version.json`, container health, logs and the published port.',
+    'If the version stamp did not change, the old container is still running or the image was not updated.',
   ];
   return [
     'Is the browser hitting the expected host and path? Check DNS, reverse proxy and the selected virtual host.',

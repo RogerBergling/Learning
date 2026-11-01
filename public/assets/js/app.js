@@ -18,18 +18,19 @@ function parseRoute() {
 }
 
 const TITLES = {
-  home: 'OneGate Learning Lab',
-  learn: 'Learn · OneGate Learning Lab',
-  scenarios: 'Simulations · OneGate Learning Lab',
-  sim: 'Simulation · OneGate Learning Lab',
-  compare: 'Compare · OneGate Learning Lab',
-  glossary: 'Glossary · OneGate Learning Lab',
-  quiz: 'Quiz · OneGate Learning Lab',
-  selftest: 'Self-check · OneGate Learning Lab',
+  home: 'Learning Lab',
+  learn: 'Learn · Learning Lab',
+  topic: 'Topic · Learning Lab',
+  scenarios: 'Simulations · Learning Lab',
+  sim: 'Simulation · Learning Lab',
+  compare: 'Compare · Learning Lab',
+  glossary: 'Glossary · Learning Lab',
+  quiz: 'Quiz · Learning Lab',
+  selftest: 'Self-check · Learning Lab',
 };
 
 function setNav(page) {
-  const map = { sim: 'scenarios', learn: 'learn', home: 'home', scenarios: 'scenarios', compare: 'compare', glossary: 'glossary', quiz: 'quiz' };
+  const map = { sim: 'scenarios', learn: 'learn', home: 'home', topic: 'home', scenarios: 'scenarios', compare: 'compare', glossary: 'glossary', quiz: 'quiz' };
   document.querySelectorAll('.nav a').forEach((a) => {
     const active = Boolean(map[page]) && a.dataset.nav === map[page];
     a.classList.toggle('active', active);
@@ -67,6 +68,12 @@ async function render() {
         const { renderHome } = await import('./pages/home.js');
         if (!isCurrent()) return;
         renderHome(view);
+        break;
+      }
+      case 'topic': {
+        const { renderTopic } = await import('./pages/topic.js');
+        if (!isCurrent()) return;
+        renderTopic(view, param);
         break;
       }
       case 'learn': {
@@ -117,7 +124,7 @@ async function render() {
       case 'quiz': {
         const { renderQuiz } = await import('./pages/quiz.js');
         if (!isCurrent()) return;
-        renderQuiz(view);
+        renderQuiz(view, param || 'all');
         break;
       }
       case 'selftest': {

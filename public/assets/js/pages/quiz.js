@@ -1,5 +1,5 @@
 import { QUIZ } from '../quiz-data.js';
-import { DOCS } from '../content.js';
+import { DOCS, TOPICS, TOPIC_ORDER } from '../content.js';
 import { getProgress, progressSummary, recordQuizAttempt, resetProgress } from '../progress.js';
 import { esc, icon, toast } from '../ui.js';
 
@@ -45,14 +45,20 @@ function questionMarkup(question, index, savedAnswers) {
   </fieldset>`;
 }
 
-export function renderQuiz(view) {
+export function renderQuiz(view, topicId = 'all') {
+  const validTopic = topicId === 'all' || Boolean(TOPICS[topicId]);
+  const selectedTopic = validTopic ? topicId : 'all';
+  const questions = selectedTopic === 'all' ? QUIZ : QUIZ.filter((question) => question.track === selectedTopic);
   const progress = getProgress();
+  const topic = selectedTopic === 'all' ? null : TOPICS[selectedTopic];
+  document.title = `${topic ? `${topic.shortTitle} quiz` : 'Quiz'} · Learning Lab`;
+
   view.innerHTML = `
     <header class="page-head">
       <p class="eyebrow">Knowledge check</p>
-      <h1>Quiz: can you spot the boundary?</h1>
+      <h1>${topic ? `${esc(topic.shortTitle)} quiz` : 'Quiz: can you spot the boundary?'}</h1>
       <p class="page-lede">
-        ${QUIZ.length} questions across tokens, BFF, federation, SAML, attributes and proxy trust.
+        ${questions.length} questions${topic ? ` from the ${esc(topic.title)} track` : ' across tokens, BFF, Docker, Git, SAML and more'}.
         Answer them in one sitting; every answer links back to the chapter or simulation that explains it.
       </p>
       <div class="hero-actions">
@@ -61,10 +67,18 @@ export function renderQuiz(view) {
       </div>
     </header>
 
+    <nav class="quiz-topics" aria-label="Quiz track">
+      <a class="filter ${selectedTopic === 'all' ? 'active' : ''}" href="#/quiz">All tracks <span class="fc">${QUIZ.length}</span></a>
+      ${TOPIC_ORDER.map((id) => {
+        const count = QUIZ.filter((question) => question.track === id).length;
+        return `<a class="filter ${selectedTopic === id ? 'active' : ''}" href="#/quiz/${id}">${esc(TOPICS[id].shortTitle)} <span class="fc">${count}</span></a>`;
+      }).join('')}
+    </nav>
+
     <section data-quiz-progress class="quiz-progress">${progressMarkup()}</section>
 
     <form class="quiz" data-quiz novalidate>
-      ${QUIZ.map((question, index) => questionMarkup(question, index, progress.quiz.answers)).join('')}
+      ${questions.map((question, index) => questionMarkup(question, index, progress.quiz.answers)).join('')}
       <div class="quiz-actions">
         <button class="btn btn-primary" type="submit">${icon('check', 15)} Check answers</button>
         <button class="btn btn-ghost" type="button" data-quiz-reset>${icon('reset', 15)} Reset all progress</button>
@@ -83,7 +97,7 @@ export function renderQuiz(view) {
   form.addEventListener('submit', (event) => {
     event.preventDefault();
 
-    const answers = QUIZ.map((question) => {
+    const answers = questions.map((question) => {
       const inputs = [...form.querySelectorAll(`input[name="q-${question.id}"]`)];
       const selectedInput = inputs.find((input) => input.checked);
       const selected = selectedInput ? Number(selectedInput.value) : null;
@@ -92,7 +106,7 @@ export function renderQuiz(view) {
 
     const missing = answers.find((answer) => answer.selected === null);
     if (missing) {
-      status.textContent = `Answer question ${QUIZ.indexOf(missing.question) + 1} before checking.`;
+      status.textContent = `Answer question ${questions.indexOf(missing.question) + 1} before checking.`;
       const fieldset = form.querySelector(`[data-quiz-question="${missing.question.id}"]`);
       fieldset?.classList.add('is-missing');
       fieldset?.querySelector('input')?.focus();
@@ -120,10 +134,10 @@ export function renderQuiz(view) {
         <a href="${esc(answer.question.link.href)}">${esc(answer.question.link.label)} →</a>`;
     }
 
-    const percent = Math.round((score / QUIZ.length) * 100);
+    const percent = Math.round((score / questions.length) * 100);
     recordQuizAttempt({
       score,
-      total: QUIZ.length,
+      total: questions.length,
       answers: answers.map((answer) => ({
         id: answer.question.id,
         selected: answer.selected,
@@ -135,7 +149,7 @@ export function renderQuiz(view) {
     result.hidden = false;
     result.innerHTML = `
       <div class="quiz-score ${percent >= 80 ? 'ok' : percent >= 50 ? 'care' : 'bad'}">
-        <span class="quiz-score-value">${score}<small>/${QUIZ.length}</small></span>
+        <span class="quiz-score-value">${score}<small>/${questions.length}</small></span>
         <div>
           <strong>${percent}%</strong>
           <p>${percent >= 80 ? 'Strong. The boundaries are clear.' : percent >= 50 ? 'Good start. Review the links below.' : 'Read the linked chapters, then try again.'}</p>
@@ -153,6 +167,6 @@ export function renderQuiz(view) {
     if (typeof window.confirm === 'function' && !window.confirm('Reset chapter and quiz progress in this browser?')) return;
     resetProgress();
     toast('Progress reset');
-    renderQuiz(view);
+    renderQuiz(view, selectedTopic);
   });
 }

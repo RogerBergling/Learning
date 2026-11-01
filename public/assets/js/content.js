@@ -1,4 +1,4 @@
-export const DOCS = [
+const ONEGATE_DOCS = [
   {
     slug: '01-architecture',
     title: 'The big picture',
@@ -92,9 +92,243 @@ export const DOCS = [
   },
 ];
 
-export const CHAPTERS = ['Foundations', 'OneGate configuration', 'Federation & trust', 'Deep dives', 'Reference'];
+const DOCKER_DOCS = [
+  {
+    slug: 'docker-01-mental-model',
+    title: 'Docker mental model: images, containers, daemon and registry',
+    blurb: 'Understand the four objects behind every Docker command: the image, the container, the daemon and the registry — and where your files, ports and data actually go.',
+    chapter: 'Docker foundations',
+    minutes: 12,
+  },
+  {
+    slug: 'docker-02-images-and-builds',
+    title: 'Images, layers, Dockerfiles and build context',
+    blurb: 'Read and write a Dockerfile, understand layer caching, multi-stage builds, .dockerignore and why build context size affects speed and security.',
+    chapter: 'Docker in practice',
+    minutes: 14,
+  },
+  {
+    slug: 'docker-03-containers-lifecycle',
+    title: 'Container lifecycle: run, inspect, stop, remove',
+    blurb: 'Everyday Docker CLI: run, ps, logs, exec, stop, rm, inspect, stats and the difference between an image, a container and a stopped container.',
+    chapter: 'Docker in practice',
+    minutes: 14,
+  },
+  {
+    slug: 'docker-04-storage-networking',
+    title: 'Storage, networking and ports',
+    blurb: 'Volumes versus bind mounts, bridge and user-defined networks, DNS, published ports and the host-versus-container point of view.',
+    chapter: 'Docker in practice',
+    minutes: 14,
+  },
+  {
+    slug: 'docker-05-compose',
+    title: 'Docker Compose: the whole file, line by line',
+    blurb: 'A complete compose.yaml reference: services, image, container_name, ports, resources, restart, pull_policy, profiles, networks, volumes, healthchecks and Watchtower.',
+    chapter: 'Docker in practice',
+    minutes: 20,
+  },
+  {
+    slug: 'docker-06-operations-security',
+    title: 'Operations, debugging, cleanup and hardening',
+    blurb: 'Logs, exec, inspect, events, stats and prune; then production controls: non-root users, read-only filesystems, dropped capabilities, memory limits and secret handling.',
+    chapter: 'Docker operations',
+    minutes: 18,
+  },
+  {
+    slug: 'docker-07-ghcr-and-updates',
+    title: 'GHCR, tags, digests and the update loop',
+    blurb: 'Build, tag, push and pull from GitHub Container Registry; understand package visibility, mutable tags, immutable digests, version stamps and automatic updates.',
+    chapter: 'Docker delivery',
+    minutes: 16,
+  },
+  {
+    slug: 'docker-glossary',
+    title: 'Docker glossary',
+    blurb: 'Daemon, image, layer, container, volume, bind mount, bridge network, Compose, registry, digest and every other Docker term used in the lab.',
+    chapter: 'Reference',
+    minutes: 8,
+  },
+];
+
+const GIT_DOCS = [
+  {
+    slug: 'git-01-mental-model',
+    title: 'Git mental model: working tree, index, commits and refs',
+    blurb: 'The four places in Git and what each one means. Learn why a commit records the staging area, what a branch really is, and why Git is a graph.',
+    chapter: 'Git foundations',
+    minutes: 12,
+  },
+  {
+    slug: 'git-02-first-repository',
+    title: 'Your first repository: config, init, commit and push',
+    blurb: 'Set identity, create a repository, write a README and .gitignore, make the first signed commit and publish safely to GitHub.',
+    chapter: 'Git foundations',
+    minutes: 14,
+  },
+  {
+    slug: 'git-03-everyday-workflow',
+    title: 'Everyday Git: status, stage, diff, commit, log',
+    blurb: 'A precise daily loop with staging, review, commit messages, history inspection and the commands that make changes visible before they are permanent.',
+    chapter: 'Git in practice',
+    minutes: 14,
+  },
+  {
+    slug: 'git-04-branches-merge-rebase',
+    title: 'Branches, merge, rebase and conflicts',
+    blurb: 'Create branches, understand fast-forward versus merge commits, when rebase is safe, how conflicts happen and how to finish or abort safely.',
+    chapter: 'Git in practice',
+    minutes: 16,
+  },
+  {
+    slug: 'git-05-undo-recovery',
+    title: 'Undo and recovery: restore, reset, revert, stash, reflog',
+    blurb: 'Recover from almost anything: unstage, discard with a backup, revert shared history, recover a lost commit with the reflog and park work in a stash.',
+    chapter: 'Git in practice',
+    minutes: 16,
+  },
+  {
+    slug: 'git-06-remotes-github',
+    title: 'Remotes, GitHub, SSH and pull requests',
+    blurb: 'Understand origin, upstream, fetch, pull, push, divergence, SSH authentication and the safe collaboration loop around pull requests.',
+    chapter: 'Git collaboration',
+    minutes: 14,
+  },
+  {
+    slug: 'git-07-settings-files-secrets',
+    title: 'Global settings, project files and secret safety',
+    blurb: 'The Git settings that matter (and what each value means), the files every repository needs, SSH commit signing, .env safety and history secret scanning.',
+    chapter: 'Git security',
+    minutes: 18,
+  },
+  {
+    slug: 'git-08-tags-releases-ghcr',
+    title: 'Tags, releases and GHCR delivery',
+    blurb: 'Turn a commit into a release: annotated and signed tags, GitHub releases, semantic versions, the GHCR workflow, package visibility and the pull/verify loop.',
+    chapter: 'Git delivery',
+    minutes: 16,
+  },
+  {
+    slug: 'git-glossary',
+    title: 'Git glossary',
+    blurb: 'Commit, branch, ref, HEAD, index, upstream, fetch, merge, rebase, reflog, tag, GHCR digest and every other term used in the Git track.',
+    chapter: 'Reference',
+    minutes: 8,
+  },
+];
+
+const withTopic = (docs, topic) => docs.map((doc) => ({ ...doc, topic }));
+
+export const DOCS = [
+  ...withTopic(ONEGATE_DOCS, 'onegate'),
+  ...withTopic(DOCKER_DOCS, 'docker'),
+  ...withTopic(GIT_DOCS, 'git'),
+];
+
+export const CHAPTERS = [
+  'Foundations',
+  'OneGate configuration',
+  'Federation & trust',
+  'Docker foundations',
+  'Docker in practice',
+  'Docker operations',
+  'Docker delivery',
+  'Git foundations',
+  'Git in practice',
+  'Git collaboration',
+  'Git security',
+  'Git delivery',
+  'Deep dives',
+  'Reference',
+];
 
 export const docBySlug = (slug) => DOCS.find((d) => d.slug === slug);
+
+export const TOPICS = {
+  onegate: {
+    id: 'onegate',
+    title: 'OneGate Federation',
+    shortTitle: 'OneGate',
+    eyebrow: 'Identity, OAuth & federation',
+    icon: 'gate',
+    accent: 'accent',
+    summary: 'Become fluent in OAuth 2.0, OpenID Connect, BFF, SAML and OpenID Federation — and see exactly where every credential is allowed to live.',
+    description: 'The original OneGate track. Start with the topology, then work through tokens, BFF, SAML, federation and attribute sources. Eighteen animated flows show the same product playing five roles.',
+    outcomes: [
+      'Explain OP, RP, BFF, proxy and token-handler responsibilities',
+      'Choose between JWT, opaque, PKCE and BFF designs',
+      'Validate tokens, assertions and federation trust chains',
+      'Trace where access, refresh and ID tokens live',
+    ],
+    path: [
+      '01-architecture',
+      '02-oidc-basics',
+      '07-tokens-and-lifecycle',
+      '03-onegate-local-provider',
+      '11-control-center',
+      '05-bff',
+      '06-attribute-providers',
+      '04-federation-rp-saml',
+      '12-openid-federation',
+      '08-server-to-server',
+      '09-scenario-catalog',
+      '10-troubleshooting',
+    ],
+  },
+  docker: {
+    id: 'docker',
+    title: 'Docker on Linux',
+    shortTitle: 'Docker',
+    eyebrow: 'Containers, Compose & operations',
+    icon: 'box',
+    accent: 'ok',
+    summary: 'Run, inspect, debug and ship containers on your own Linux machine. Learn the Dockerfile, Compose, storage, networking, hardening and GHCR update loop.',
+    description: 'A practical container track built around commands you will actually run. Start with the mental model, then move through builds, container lifecycle, volumes, networks, Compose and production operations.',
+    outcomes: [
+      'Read and write a Dockerfile with layer caching in mind',
+      'Run and troubleshoot containers with logs, exec and inspect',
+      'Explain every line of a compose.yaml file',
+      'Secure a container and verify the image actually deployed',
+    ],
+    path: [
+      'docker-01-mental-model',
+      'docker-02-images-and-builds',
+      'docker-03-containers-lifecycle',
+      'docker-04-storage-networking',
+      'docker-05-compose',
+      'docker-06-operations-security',
+      'docker-07-ghcr-and-updates',
+    ],
+  },
+  git: {
+    id: 'git',
+    title: 'Git & GHCR',
+    shortTitle: 'Git',
+    eyebrow: 'Version control & delivery',
+    icon: 'branch',
+    accent: 'orange',
+    summary: 'Learn Git from the object model to a safe daily workflow, then take a commit all the way through tags, GitHub Actions and a verified GHCR deployment.',
+    description: 'A safety-first Git track. Understand the index, branches, merge/rebase, undo and recovery, remote authentication, global settings, secret hygiene and the release pipeline.',
+    outcomes: [
+      'Read the working tree, index, commit graph and refs',
+      'Stage and review changes before they become history',
+      'Recover from mistakes with reflog, revert and stash',
+      'Tag a release, publish to GHCR and verify the image digest',
+    ],
+    path: [
+      'git-01-mental-model',
+      'git-02-first-repository',
+      'git-03-everyday-workflow',
+      'git-04-branches-merge-rebase',
+      'git-05-undo-recovery',
+      'git-06-remotes-github',
+      'git-07-settings-files-secrets',
+      'git-08-tags-releases-ghcr',
+    ],
+  },
+};
+
+export const TOPIC_ORDER = ['onegate', 'docker', 'git'];
 
 export const CATEGORIES = {
   foundation: { label: 'Foundations', blurb: 'The primitives, with no browser in the way.' },
@@ -107,19 +341,13 @@ export const CATEGORIES = {
   attributes: { label: 'Attributes', blurb: 'LDAP, REST and Graph attribute sources, caching and delegation.' },
   proxy: { label: 'Proxy & SSO', blurb: 'Protecting apps that know nothing about OIDC.' },
   setup: { label: 'Setup walkthrough', blurb: 'Where each setting lives in the Control Center.' },
+  'docker-build': { label: 'Docker builds', blurb: 'Dockerfiles, layers, context and caching.' },
+  'docker-run': { label: 'Docker operations', blurb: 'Run, inspect, debug, store and network.' },
+  compose: { label: 'Compose & delivery', blurb: 'compose.yaml, GHCR, updates and version verification.' },
+  git: { label: 'Git foundations', blurb: 'Index, commits, branches and history.' },
+  'git-workflow': { label: 'Git workflow', blurb: 'Daily staging, merge, rebase and recovery.' },
+  'git-security': { label: 'Git security', blurb: 'Permissions, signing, secrets and safe defaults.' },
+  'git-delivery': { label: 'Git delivery', blurb: 'Remotes, tags, Actions and GHCR.' },
 };
 
-export const LEARNING_PATH = [
-  '01-architecture',
-  '02-oidc-basics',
-  '07-tokens-and-lifecycle',
-  '03-onegate-local-provider',
-  '11-control-center',
-  '05-bff',
-  '06-attribute-providers',
-  '04-federation-rp-saml',
-  '12-openid-federation',
-  '08-server-to-server',
-  '09-scenario-catalog',
-  '10-troubleshooting',
-];
+export const LEARNING_PATH = TOPICS.onegate.path;
