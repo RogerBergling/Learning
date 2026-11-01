@@ -92,5 +92,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           package="${GITHUB_REPOSITORY#*/}"
-          gh api --method PATCH "/user/packages/container/${package,,}" \
-            -f visibility=public
+          for name in "${package,,}" "$package"; do
+            if gh api --method PATCH "/user/packages/container/$name" -f visibility=public; then
+              echo "Package $name is public"
+              exit 0
+            fi
+          done
+          echo "Could not change package visibility automatically."
+          gh api '/user/packages?package_type=container' --jq '.[].name' || true
+          exit 1
