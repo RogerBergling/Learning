@@ -41,11 +41,13 @@ const STORE_ICONS = {
   local: 'terminal', docker: 'server', container: 'box', registry: 'cloud',
   volume: 'database', network: 'network',
   gitrepo: 'database', gitremote: 'cloud', reflog: 'clock', github: 'server', deployment: 'server',
+  haproxy: 'proxy', servers: 'server', logs: 'eye', certs: 'lock',
 };
 
 const STORE_ORDER = [
   'browser', 'local', 'onegate', 'docker', 'container', 'volume', 'network',
   'gitrepo', 'gitremote', 'reflog', 'github', 'registry', 'deployment',
+  'haproxy', 'servers', 'certs', 'logs',
   'frontend', 'backend', 'idp', 'sp', 'attr',
 ];
 
@@ -945,6 +947,14 @@ function explainKind(kind) {
     tag: 'A tag names a commit without moving like a branch. Release tags should be pushed deliberately and protected from casual deletion.',
     workflow: 'A GitHub Actions workflow runs on GitHub infrastructure against a committed ref. It has its own permissions, secrets, runner and logs.',
     file: 'A project file can be tracked, ignored or excluded from a build context. The important question is not just “does it exist?” but “where will it be copied, cached or logged?”',
+    request: 'An HTTP request is matched against the frontend bind, TLS/SNI state, http-request rules and ACLs before HAProxy chooses a backend.',
+    response: 'The response comes from the selected backend or from HAProxy itself (for example 503 with no healthy server, or a local redirect/deny).',
+    certificate: 'A certificate proves a hostname to the client; the private key must stay protected. SNI passthrough does not terminate TLS, so HAProxy never sees the HTTP request.',
+    acl: 'An ACL is a named condition. `use_backend` rules are evaluated in order and the first match wins; the default backend is only a fallback.',
+    backend: 'A backend groups servers, a balancing algorithm, health checks and options. The frontend decides which backend; the backend decides which server.',
+    server: 'A backend server is an address/port with health state, weight and optional backup role. A server marked down is skipped until checks recover.',
+    metric: 'HAProxy metrics expose request rate, errors, queues, response times and server health. They are aggregated at the proxy, not a substitute for application tracing.',
+    log: 'A request log records client, frontend, backend/server, status and timers. Use it to distinguish a routing miss, a timeout and an upstream error.',
   };
   return map[kind] || 'Simulated credential.';
 }
@@ -955,10 +965,17 @@ function channelRule(step, topic = 'onegate') {
     onegate: 'This happens inside the entity shown as the source — no network request leaves it. For OneGate, check configuration, the selected virtual host and logs; for an RP/OP, check local trust-chain, policy and cache state.',
     docker: 'This happens inside the local Docker Engine or the container namespace. Check the active context, daemon logs, container logs and the exact image digest.',
     git: 'This happens inside the repository, index or local refs. Check the current branch, staged diff, reflog and repository-local config before changing anything.',
+    haproxy: 'This happens inside HAProxy: ACL evaluation, backend selection, health-state decisions or TLS handling. Check the exact matching rule, order and state, not only the final status code.',
   }[topic] || 'This happens inside the selected component. Check its own state, logs and configuration rather than only the final error.';
+  const front = topic === 'haproxy'
+    ? 'The client-facing side. TLS, SNI, Host and request headers are visible here; do not assume the backend sees the same values unless HAProxy forwards them.'
+    : 'Front-channel data is visible to the browser. Codes, `state`, `nonce` and cookies belong here; access tokens, refresh tokens and secrets do not.';
+  const back = topic === 'haproxy'
+    ? 'HAProxy-to-server traffic. The backend sees the forwarded request and any configured headers; health checks and retries happen on this side.'
+    : 'Back-channel traffic is server-to-server. Client secrets and tokens may travel here, but never through the browser.';
   const rules = {
-    front: 'Front-channel data is visible to the browser. Codes, `state`, `nonce` and cookies belong here; access tokens, refresh tokens and secrets do not.',
-    back: 'Back-channel traffic is server-to-server. Client secrets and tokens may travel here, but never through the browser.',
+    front,
+    back,
     cookie: 'The browser sends this automatically. Treat it as a credential: `HttpOnly`, `Secure`, `SameSite`, and the narrowest possible `Path`.',
     attr: 'This is an attribute lookup, not a login. The response is cached and becomes claims, headers or an authorisation decision.',
     internal,
@@ -976,6 +993,16 @@ function channelRule(step, topic = 'onegate') {
 
 function channelChecks(step, topic = 'onegate') {
   const ch = step.channel || 'front';
+  if (topic === 'haproxy' && ch === 'front') return [
+    'Confirm the frontend bind, port, TLS/certificate and SNI/Host matching rules.',
+    'ACL order matters: an earlier rule wins. Check `http-request` returns before `use_backend`.',
+    'Inspect the response status/headers and HAProxy logs; a 503 can mean no backend, no healthy server or an ACL miss.',
+  ];
+  if (topic === 'haproxy' && ch === 'back') return [
+    'Verify the selected backend, server addresses/ports and health state.',
+    'Check connect/read timeouts and retry/redispatch behavior before blaming the application.',
+    'Confirm which Host/SNI/forwarded headers the backend receives; HAProxy does not invent trust.',
+  ];
   if (ch === 'back') return [
     'Client authentication: `client_secret_basic`, `private_key_jwt`, certificate — match what the server expects.',
     'Issuer, audience, signature and `exp`/`nbf` on the returned token.',
@@ -1001,6 +1028,11 @@ function channelChecks(step, topic = 'onegate') {
       'Check `git status -sb`, the current branch and the staged diff.',
       'Inspect the reflog and safety refs before any reset or history-changing command.',
       'Repository-local config overrides global settings; validate identity and signing here.',
+    ];
+    if (topic === 'haproxy') return [
+      'Check the frontend/backend section and the exact ACL/rule order.',
+      'Run `haproxy -c -f <file>` with the same version before reloading.',
+      'Use logs/stats/runtime socket for live state; do not guess from the config alone.',
     ];
     return [
       'Which component is doing the work? Check its own logs and configuration, not only the final error page.',

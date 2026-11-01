@@ -217,12 +217,73 @@ const GIT_DOCS = [
   },
 ];
 
+
+const HAPROXY_DOCS = [
+  {
+    slug: 'haproxy-01-mental-model',
+    title: 'HAProxy mental model: proxies, frontends, backends and rules',
+    blurb: 'One process, one config and a request that is matched, routed and forwarded. Learn how global, defaults, frontend, backend and listen sections fit together.',
+    chapter: 'HAProxy foundations',
+    minutes: 14,
+  },
+  {
+    slug: 'haproxy-02-routing-acls',
+    title: 'Routing and ACLs: which backend wins?',
+    blurb: 'Host, path, method, SNI and source conditions; use_backend order, http-request returns, default_backend and the 503 path.',
+    chapter: 'HAProxy foundations',
+    minutes: 14,
+  },
+  {
+    slug: 'haproxy-03-tls-and-sni',
+    title: 'TLS architectures: termination, passthrough and SNI',
+    blurb: 'TLS termination, TCP/SNI edge routing, loopback TLS hand-off, certificate loading, SNI matching, HSTS and forwarded headers.',
+    chapter: 'HAProxy TLS',
+    minutes: 16,
+  },
+  {
+    slug: 'haproxy-04-health-balancing',
+    title: 'Health checks, balancing and failure behaviour',
+    blurb: 'check/rise/fall, backup servers, roundrobin versus leastconn, retries, redispatch, stick tables and what a 503 actually means.',
+    chapter: 'HAProxy operations',
+    minutes: 16,
+  },
+  {
+    slug: 'haproxy-05-timeouts-logging',
+    title: 'Timeouts, logging and request diagnosis',
+    blurb: 'client/server/connect/queue timeouts, error responses, log fields, stats and how to distinguish a routing miss from a slow upstream.',
+    chapter: 'HAProxy operations',
+    minutes: 14,
+  },
+  {
+    slug: 'haproxy-06-security',
+    title: 'HAProxy security: TLS, headers, client certificates and exposure',
+    blurb: 'TLS minimums, cipher policy, certificate handling, trusted forwarded headers, client-certificate caveats, stats socket isolation and config hygiene.',
+    chapter: 'HAProxy operations',
+    minutes: 16,
+  },
+  {
+    slug: 'haproxy-07-operations-upgrades',
+    title: 'Operations and upgrades: validate before reload',
+    blurb: 'Run haproxy -c with the real binary, reload safely, watch errors and queues, understand 2.8 → 3.x changes and avoid config-editor shortcuts.',
+    chapter: 'HAProxy operations',
+    minutes: 14,
+  },
+  {
+    slug: 'haproxy-glossary',
+    title: 'HAProxy glossary',
+    blurb: 'Frontend, backend, listen, ACL, bind, SNI, server, check, rise/fall, stick table, runtime socket and every other HAProxy term used in the track.',
+    chapter: 'Reference',
+    minutes: 8,
+  },
+];
+
 const withTopic = (docs, topic) => docs.map((doc) => ({ ...doc, topic }));
 
 export const DOCS = [
   ...withTopic(ONEGATE_DOCS, 'onegate'),
   ...withTopic(DOCKER_DOCS, 'docker'),
   ...withTopic(GIT_DOCS, 'git'),
+  ...withTopic(HAPROXY_DOCS, 'haproxy'),
 ];
 
 export const CHAPTERS = [
@@ -238,6 +299,9 @@ export const CHAPTERS = [
   'Git collaboration',
   'Git security',
   'Git delivery',
+  'HAProxy foundations',
+  'HAProxy TLS',
+  'HAProxy operations',
   'Deep dives',
   'Reference',
 ];
@@ -326,9 +390,35 @@ export const TOPICS = {
       'git-08-tags-releases-ghcr',
     ],
   },
+
+  haproxy: {
+    id: 'haproxy',
+    title: 'HAProxy',
+    shortTitle: 'HAProxy',
+    eyebrow: 'Proxying, TLS & traffic control',
+    icon: 'proxy',
+    accent: 'violet',
+    summary: 'Learn how HAProxy receives a connection, applies ACLs, chooses a backend, balances servers and survives TLS, timeouts and failures — without an editor or live debug console.',
+    description: 'A traffic-control track built around the request path: bind/TLS → ACL order → backend → server → response. The lab teaches the model and simulations; use the official HAProxy manual and haproxy -c for real deployments.',
+    outcomes: [
+      'Explain frontend, backend, listen and defaults sections',
+      'Trace ACL and use_backend ordering to a backend or 503',
+      'Choose TLS termination versus SNI passthrough',
+      'Read health state, timeouts, logs and version-upgrade risks',
+    ],
+    path: [
+      'haproxy-01-mental-model',
+      'haproxy-02-routing-acls',
+      'haproxy-03-tls-and-sni',
+      'haproxy-04-health-balancing',
+      'haproxy-05-timeouts-logging',
+      'haproxy-06-security',
+      'haproxy-07-operations-upgrades',
+    ],
+  },
 };
 
-export const TOPIC_ORDER = ['onegate', 'docker', 'git'];
+export const TOPIC_ORDER = ['onegate', 'docker', 'git', 'haproxy'];
 
 export const CATEGORIES = {
   foundation: { label: 'Foundations', blurb: 'The primitives, with no browser in the way.' },
@@ -348,6 +438,9 @@ export const CATEGORIES = {
   'git-workflow': { label: 'Git workflow', blurb: 'Daily staging, merge, rebase and recovery.' },
   'git-security': { label: 'Git security', blurb: 'Permissions, signing, secrets and safe defaults.' },
   'git-delivery': { label: 'Git delivery', blurb: 'Remotes, tags, Actions and GHCR.' },
+  haproxy: { label: 'HAProxy foundations', blurb: 'Frontends, backends, ACLs and routing.' },
+  'haproxy-tls': { label: 'HAProxy TLS', blurb: 'Termination, passthrough and SNI.' },
+  'haproxy-ops': { label: 'HAProxy operations', blurb: 'Health, timeouts, logs, security and upgrades.' },
 };
 
 export const LEARNING_PATH = TOPICS.onegate.path;

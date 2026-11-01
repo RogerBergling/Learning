@@ -34,6 +34,14 @@ export const ITEM = {
   workflow: (o = {}) => ({ id: 'workflow', kind: 'workflow', name: 'GitHub Actions workflow', meta: 'CI · publish', ...o }),
   network: (o = {}) => ({ id: 'network', kind: 'network', name: 'Container network', meta: 'service DNS · isolation', ...o }),
   file: (o = {}) => ({ id: 'file', kind: 'file', name: 'Project file', meta: 'tracked or ignored', ...o }),
+  request: (o = {}) => ({ id: 'request', kind: 'request', name: 'HTTP request', meta: 'method · host · headers', ...o }),
+  response: (o = {}) => ({ id: 'response', kind: 'response', name: 'HTTP response', meta: 'status · headers · body', ...o }),
+  certificate: (o = {}) => ({ id: 'cert', kind: 'certificate', name: 'TLS certificate', meta: 'hostname · chain · expiry', ...o }),
+  acl: (o = {}) => ({ id: 'acl', kind: 'acl', name: 'HAProxy ACL', meta: 'condition · order', ...o }),
+  backend: (o = {}) => ({ id: 'backend', kind: 'backend', name: 'HAProxy backend', meta: 'servers · balance · checks', ...o }),
+  server: (o = {}) => ({ id: 'server', kind: 'server', name: 'Backend server', meta: 'address · health', ...o }),
+  metric: (o = {}) => ({ id: 'metric', kind: 'metric', name: 'HAProxy metric', meta: 'rate · errors · latency', ...o }),
+  log: (o = {}) => ({ id: 'log', kind: 'log', name: 'HAProxy log line', meta: 'request · status · timers', ...o }),
 };
 
 /** Config checklist block. */

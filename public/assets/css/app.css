@@ -206,6 +206,7 @@ code, kbd, pre { font-family: var(--mono); font-size: .88em; }
 .topic-card { display: flex; flex-direction: column; gap: .55rem; border-top: 3px solid var(--accent); }
 .topic-card.ok { border-top-color: var(--ok); }
 .topic-card.orange { border-top-color: var(--orange); }
+.topic-card.violet { border-top-color: var(--accent-2); }
 .topic-card-head { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
 .topic-card h3 { font-size: 1.08rem; margin: .1rem 0 0; }
 .topic-card p { margin: 0; }
@@ -213,15 +214,17 @@ code, kbd, pre { font-family: var(--mono); font-size: .88em; }
 .topic-icon { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent); flex: 0 0 auto; }
 .topic-card.ok .topic-icon { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); border-color: color-mix(in srgb, var(--ok) 28%, transparent); }
 .topic-card.orange .topic-icon { color: var(--orange); background: color-mix(in srgb, var(--orange) 12%, transparent); border-color: color-mix(in srgb, var(--orange) 28%, transparent); }
+.topic-card.violet .topic-icon { color: var(--accent-2); background: color-mix(in srgb, var(--accent-2) 12%, transparent); border-color: color-mix(in srgb, var(--accent-2) 28%, transparent); }
 
 .lab-hero { align-items: center; }
 .lab-art { min-height: 290px; display: grid; place-items: center; position: relative; }
 .lab-art::before { content: ""; position: absolute; inset: 0; background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 16%, transparent), transparent 72%); filter: blur(20px); z-index: 0; }
-.lab-art-orbit { position: relative; z-index: 1; display: flex; gap: .8rem; flex-wrap: wrap; justify-content: center; max-width: 430px; }
+.lab-art-orbit { position: relative; z-index: 1; display: flex; gap: .8rem; flex-wrap: wrap; justify-content: center; max-width: 560px; }
 .lab-art-topic { display: flex; flex-direction: column; align-items: center; gap: .3rem; width: 128px; padding: .9rem .6rem; border: 1px solid var(--line-strong); border-radius: 14px; background: color-mix(in srgb, var(--bg-elev) 85%, transparent); box-shadow: var(--shadow); }
 .lab-art-topic span { color: var(--accent); }
 .lab-art-topic.ok span { color: var(--ok); }
 .lab-art-topic.orange span { color: var(--orange); }
+.lab-art-topic.violet span { color: var(--accent-2); }
 .lab-art-topic strong { font-size: .88rem; }
 .lab-art-topic small { color: var(--dim); font-size: .68rem; }
 .lab-art > p { position: relative; z-index: 1; margin: 1rem 0 0; color: var(--dim); font-size: .72rem; text-align: center; }
@@ -229,6 +232,7 @@ code, kbd, pre { font-family: var(--mono); font-size: .88em; }
 .topic-hero { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 2rem; align-items: start; padding: 1rem 0 2rem; border-top: 3px solid var(--accent); }
 .topic-hero.ok { border-top-color: var(--ok); }
 .topic-hero.orange { border-top-color: var(--orange); }
+.topic-hero.violet { border-top-color: var(--accent-2); }
 .topic-hero-copy h1 { font-size: clamp(1.8rem, 3.4vw, 2.7rem); margin: .2rem 0 .6rem; }
 .topic-hero .topic-icon { margin-bottom: .8rem; }
 .topic-hero-copy .page-lede { max-width: 70ch; }
@@ -252,6 +256,7 @@ code, kbd, pre { font-family: var(--mono); font-size: .88em; }
 .topic-mini-icon { width: 28px; height: 28px; display: inline-grid; place-items: center; border-radius: 8px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .topic-mini-icon.ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
 .topic-mini-icon.orange { color: var(--orange); background: color-mix(in srgb, var(--orange) 12%, transparent); }
+.topic-mini-icon.violet { color: var(--accent-2); background: color-mix(in srgb, var(--accent-2) 12%, transparent); }
 
 
 /* ---------- cards ---------- */
@@ -559,6 +564,14 @@ select.control, .control-select {
 .k-tag { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); background: color-mix(in srgb, var(--warn) 10%, transparent); }
 .k-workflow { color: var(--pink); border-color: color-mix(in srgb, var(--pink) 40%, transparent); background: color-mix(in srgb, var(--pink) 10%, transparent); }
 .k-network { color: var(--teal); border-color: color-mix(in srgb, var(--teal) 40%, transparent); background: color-mix(in srgb, var(--teal) 10%, transparent); }
+.k-request { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.k-response { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); background: color-mix(in srgb, var(--ok) 10%, transparent); }
+.k-cert { color: var(--accent-2); border-color: color-mix(in srgb, var(--accent-2) 40%, transparent); background: color-mix(in srgb, var(--accent-2) 10%, transparent); }
+.k-acl { color: var(--orange); border-color: color-mix(in srgb, var(--orange) 40%, transparent); background: color-mix(in srgb, var(--orange) 10%, transparent); }
+.k-backend { color: var(--teal); border-color: color-mix(in srgb, var(--teal) 40%, transparent); background: color-mix(in srgb, var(--teal) 10%, transparent); }
+.k-server { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); background: color-mix(in srgb, var(--ok) 10%, transparent); }
+.k-metric { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); background: color-mix(in srgb, var(--warn) 10%, transparent); }
+.k-log { color: var(--muted); border-color: var(--line-strong); background: var(--panel-2); }
 
 .steplist { max-height: calc(100vh - 400px); min-height: 200px; overflow: auto; padding: .3rem; }
 .step-item {

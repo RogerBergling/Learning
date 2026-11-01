@@ -134,6 +134,36 @@ export const GIT_NODES = {
   },
 };
 
+/* ------------------------------------------------------------------- HAProxy */
+
+export const HAPROXY_NODES = {
+  client: {
+    name: 'Client', sub: 'browser · TLS client', icon: 'browser',
+    rect: { x: 100, y: 300, w: 184, h: 122 },
+  },
+  web1: {
+    name: 'Web server 1', sub: 'backend · healthy', icon: 'server',
+    rect: { x: 846, y: 206, w: 190, h: 112 },
+  },
+  web2: {
+    name: 'Web server 2', sub: 'backend · backup', icon: 'server',
+    rect: { x: 846, y: 352, w: 190, h: 112 },
+  },
+  monitor: {
+    name: 'Logs & stats', sub: 'errors · metrics · audit', icon: 'eye',
+    rect: { x: 846, y: 520, w: 190, h: 92 },
+  },
+};
+
+export const HAPROXY_SUBNODES = {
+  'haproxy.fe': { name: 'Frontend', sub: 'bind · TLS', x: 400, y: 210 },
+  'haproxy.acl': { name: 'ACL router', sub: 'use_backend order', x: 500, y: 210 },
+  'haproxy.be': { name: 'Backend', sub: 'servers · checks', x: 600, y: 210 },
+  'haproxy.tls': { name: 'TLS terminator', sub: 'loopback / SNI', x: 400, y: 330 },
+  'haproxy.health': { name: 'Health checks', sub: 'rise · fall · backup', x: 500, y: 330 },
+  'haproxy.logs': { name: 'Logs & stats', sub: 'timeouts · errors', x: 600, y: 330 },
+};
+
 /* --------------------------------------------------------------- layouts */
 
 const onegateNodes = Object.fromEntries(
@@ -163,6 +193,20 @@ export const LAYOUTS = {
     label: 'Git & GitHub',
     nodes: GIT_NODES,
     groups: [],
+  },
+  haproxy: {
+    id: 'haproxy',
+    label: 'HAProxy',
+    nodes: HAPROXY_NODES,
+    groups: [{
+      id: 'haproxy',
+      name: 'HAProxy',
+      sub: 'frontend · ACL · backend · TLS',
+      icon: 'proxy',
+      rect: { x: 500, y: 300, w: 400, h: 360 },
+      footer: 'config · certificates · runtime state',
+      subnodes: HAPROXY_SUBNODES,
+    }],
   },
 };
 

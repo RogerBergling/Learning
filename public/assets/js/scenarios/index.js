@@ -13,6 +13,9 @@ import {
 import {
   gitFirstPush, gitBranchMerge, gitRebase, gitUndo, gitSecrets, gitRemotesAuth, gitReleaseGhcr,
 } from './git.js';
+import {
+  haproxyHttpsRequest, haproxyAclRouting, haproxyTlsSni, haproxyHealth, haproxyTimeouts, haproxySecurity, haproxyUpgrade,
+} from './haproxy.js';
 
 const FLOW = {
   'client-credentials': 'Service → token endpoint → API',
@@ -46,6 +49,13 @@ const FLOW = {
   'git-secrets': 'stage → scan → ignore → rotate → history decision',
   'git-remotes-auth': 'SSH → fetch → pull/push → upstream',
   'git-release-ghcr': 'tag → Actions → GHCR → pull → verify',
+  'haproxy-https-request': 'Client → TLS frontend → ACL → backend → server',
+  'haproxy-acl-routing': 'Host/path ACLs → backend or 503',
+  'haproxy-tls-sni': 'TCP/SNI edge ⇄ TLS termination',
+  'haproxy-health': 'Health checks → balance → failover',
+  'haproxy-timeouts': 'Queue/connect/response → 504 → logs',
+  'haproxy-security': 'TLS + headers + trust boundaries',
+  'haproxy-upgrade': 'Validate → reload → observe',
 };
 
 const ALL = [
@@ -80,11 +90,19 @@ const ALL = [
   gitSecrets,
   gitRemotesAuth,
   gitReleaseGhcr,
+  haproxyHttpsRequest,
+  haproxyAclRouting,
+  haproxyTlsSni,
+  haproxyHealth,
+  haproxyTimeouts,
+  haproxySecurity,
+  haproxyUpgrade,
 ];
 
 const FEATURED = new Set([
   'bff-login', 'token-formats', 'webapp-confidential', 'attr-rest', 'openid-federation',
   'docker-run', 'docker-build', 'docker-compose', 'git-first-push', 'git-release-ghcr',
+  'haproxy-https-request', 'haproxy-tls-sni',
 ]);
 
 export const SCENARIOS = ALL.map((s, i) => {

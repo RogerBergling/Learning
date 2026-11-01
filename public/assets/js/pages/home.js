@@ -22,7 +22,7 @@ function topicCard(topic) {
 export function renderHome(view) {
   const summary = progressSummary(DOCS.length);
   const quiz = summary.quiz;
-  const featured = ['bff-login', 'docker-run', 'git-first-push', 'docker-build', 'git-release-ghcr', 'openid-federation']
+  const featured = ['bff-login', 'docker-run', 'git-first-push', 'haproxy-https-request', 'docker-build', 'git-release-ghcr']
     .map(scenarioById)
     .filter(Boolean);
 
@@ -40,6 +40,7 @@ export function renderHome(view) {
           <a class="btn btn-primary" href="#/topic/onegate">${icon('gate', 16)} OneGate federation</a>
           <a class="btn" href="#/topic/docker">${icon('box', 16)} Docker on Linux</a>
           <a class="btn" href="#/topic/git">${icon('branch', 16)} Git &amp; GHCR</a>
+          <a class="btn" href="#/topic/haproxy">${icon('proxy', 16)} HAProxy</a>
         </div>
         <div class="hero-stats">
           <div class="hero-stat"><strong>${TOPIC_ORDER.length}</strong><span>learning tracks</span></div>
@@ -72,7 +73,7 @@ export function renderHome(view) {
     <section class="section-head">
       <div>
         <h2>Choose your track</h2>
-        <p>Three independent curricula. Each one has chapters, simulations, a glossary and production checklists.</p>
+        <p>Four independent curricula. Each one has chapters, simulations, a glossary and production checklists.</p>
       </div>
     </section>
     <div class="topic-grid">

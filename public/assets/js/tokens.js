@@ -84,6 +84,14 @@ export const KINDS = {
   workflow: { label: 'GitHub Actions workflow', chip: 'workflow', cls: 'k-workflow' },
   network: { label: 'Container network',         chip: 'network',  cls: 'k-network' },
   file:   { label: 'Project file',               chip: 'file',     cls: 'k-config' },
+  request: { label: 'HTTP request',              chip: 'request',  cls: 'k-request' },
+  response: { label: 'HTTP response',            chip: 'response', cls: 'k-response' },
+  certificate: { label: 'TLS certificate',       chip: 'cert',     cls: 'k-cert' },
+  acl:    { label: 'HAProxy ACL',                chip: 'ACL',      cls: 'k-acl' },
+  backend: { label: 'HAProxy backend',           chip: 'backend',  cls: 'k-backend' },
+  server: { label: 'Backend server',             chip: 'server',   cls: 'k-server' },
+  metric: { label: 'HAProxy metric',             chip: 'metric',   cls: 'k-metric' },
+  log:    { label: 'HAProxy log line',           chip: 'log',      cls: 'k-log' },
 };
 
 export const STORES = {
@@ -105,6 +113,10 @@ export const STORES = {
   github:   { label: 'GitHub / Actions',     hint: 'repository metadata, workflow runs and package access' },
   registry: { label: 'Container registry',   hint: 'GHCR tags, digests and package visibility' },
   deployment: { label: 'Deployment host',    hint: 'the machine or platform that pulls and runs the image' },
+  haproxy:  { label: 'HAProxy',              hint: 'frontends, backends, ACLs, TLS and runtime state' },
+  servers:  { label: 'Backend servers',      hint: 'upstream app servers and health state' },
+  logs:     { label: 'HAProxy logs',         hint: 'request logs, errors and metrics' },
+  certs:    { label: 'TLS certificates',     hint: 'certificate files, chains and trust' },
 };
 
 /** Turn a scenario token definition into a concrete, displayable token. */
@@ -233,6 +245,30 @@ export function materialize(item, ctx = {}) {
       break;
     case 'file':
       out.value = item.value || '.env\n.env.*\n!.env.example\n';
+      break;
+    case 'request':
+      out.value = item.value || 'GET / HTTP/1.1\nHost: example.com\nUser-Agent: browser\n';
+      break;
+    case 'response':
+      out.value = item.value || 'HTTP/1.1 200 OK\nContent-Type: text/html\n';
+      break;
+    case 'certificate':
+      out.value = item.value || 'CN=example.com · Let\'s Encrypt / internal CA · chain + key reference';
+      break;
+    case 'acl':
+      out.value = item.value || 'acl is_api path_beg /api';
+      break;
+    case 'backend':
+      out.value = item.value || 'backend app_servers\n  balance roundrobin\n  server web1 10.0.0.11:8080 check';
+      break;
+    case 'server':
+      out.value = item.value || 'web1 10.0.0.11:8080 check';
+      break;
+    case 'metric':
+      out.value = item.value || 'requests/sec · errors · queue · response time';
+      break;
+    case 'log':
+      out.value = item.value || 'client:port [date] frontend backend/server status timers';
       break;
     default:
       out.value = String(item.value ?? pseudo(seed, 32));

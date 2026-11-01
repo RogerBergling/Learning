@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/RogerBergling/Learning/actions/workflows/ci.yml/badge.svg)](https://github.com/RogerBergling/Learning/actions/workflows/ci.yml)
 
-An interactive, offline learning platform for **OneGate federation, Docker on Linux and Git & GHCR**. Choose a track, read the chapters, run the animated simulations and verify each flow step by step.
+An interactive, offline learning platform for **OneGate federation, Docker on Linux, Git & GHCR and HAProxy**. Choose a track, read the chapters, run the animated simulations and verify each flow step by step.
 
-**Three learning tracks. Thirty written chapters. Thirty-one animated simulations. A 24-question quiz with local progress.** No build step, no runtime dependencies, no network calls.
+**Four learning tracks. Thirty-eight written chapters. Thirty-eight animated simulations. A 31-question quiz with local progress.** No build step, no runtime dependencies, no network calls.
 
 ```text
 Topics → chapters → simulations → live artifact vault → quiz
@@ -19,6 +19,10 @@ Topics → chapters → simulations → live artifact vault → quiz
 | Docker simulator | Git & GHCR simulator |
 |---|---|
 | ![Docker run simulation](docs/screenshots/docker-simulator.png) | ![Git release to GHCR simulation](docs/screenshots/git-simulator.png) |
+
+| HAProxy track | HAProxy simulator |
+|---|---|
+| ![HAProxy learning track](docs/screenshots/haproxy-topic.png) | ![HAProxy HTTPS request simulation](docs/screenshots/haproxy-simulator.png) |
 
 More screenshots: [Git & GHCR track](docs/screenshots/git-topic.png) · [Docker quiz](docs/screenshots/docker-quiz.png).
 
@@ -189,7 +193,7 @@ Local development serves the committed fallback:
 
 ```json
 {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "imageTag": "local",
   "commit": "local",
   "buildDate": null
@@ -217,7 +221,7 @@ For a manual Docker build, stamp it explicitly:
 
 ```bash
 docker build \
-  --build-arg APP_VERSION=2.0.0 \
+  --build-arg APP_VERSION=2.1.0 \
   --build-arg IMAGE_TAG=manual \
   --build-arg GIT_SHA="$(git rev-parse --short HEAD)" \
   --build-arg BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -230,14 +234,14 @@ docker build \
 
 | Page | What it does |
 |---|---|
-| **Topics** (`#/`) | Choose OneGate federation, Docker on Linux or Git & GHCR |
+| **Topics** (`#/`) | Choose OneGate federation, Docker on Linux, Git & GHCR or HAProxy |
 | **Topic pages** (`#/topic/{id}`) | A guided path, chapter groups, simulations, progress and glossary for one track |
-| **Learn** (`#/learn`) | Thirty chapters across three tracks, full-text search, TOC and completion tracking |
-| **Simulations** (`#/scenarios`) | Filter/search all 31 flows by topic, category, level, tag or keyword |
+| **Learn** (`#/learn`) | Thirty-eight chapters across four tracks, full-text search, TOC and completion tracking |
+| **Simulations** (`#/scenarios`) | Filter/search all 38 flows by topic, category, level, tag or keyword |
 | **Simulator** (`#/sim/{id}`) | Animated stage, live artifact vault, HTTP/CLI wire view, config and pitfalls |
 | **Compare** (`#/compare`) | JWT vs opaque, the storage matrix and a decision helper |
 | **Glossary** (`#/glossary`) | OneGate terms; Docker and Git tracks have their own glossaries |
-| **Quiz** (`#/quiz`) | A 24-question knowledge check across the tracks, with saved progress |
+| **Quiz** (`#/quiz`) | A 31-question knowledge check across the tracks, with saved progress |
 | **Self-check** (`#/selftest`) | Runtime validation of topics, scenarios, tokens, quizzes and all docs |
 
 Every scenario has five tabs:
@@ -322,7 +326,19 @@ Keyboard: `Space` play/pause, `←` `→` step, `R` restart. Click any vault chi
 | 30 | Remotes and auth | Core | 7 | SSH, `gh auth`, fetch, fast-forward, rejected push and upstream |
 | 31 | Release to GHCR | Advanced | 8 | Tag, Actions, image digest, deployment pull and `/version.json` |
 
-Every scenario is reachable from the Simulations page and from the written chapters. The OneGate catalog with “start here if…” guidance is in [chapter 9](public/docs/09-scenario-catalog.md).
+### HAProxy
+
+| # | Scenario | Level | Steps | Teaches |
+|---|---|---|---|---|
+| 32 | HTTPS request | Core | 6 | Frontend bind/TLS, ACL, backend selection, server and logs |
+| 33 | ACL routing | Core | 7 | First-match order, default backend and the 503 path |
+| 34 | TLS termination and SNI | Advanced | 9 | Termination vs passthrough, loopback terminator and forwarded headers |
+| 35 | Health checks and balancing | Core | 7 | check/rise/fall, backup servers, 502/503/504 |
+| 36 | Timeouts and logs | Advanced | 7 | queue/connect/server timeouts, 504 and timer diagnosis |
+| 37 | Security | Advanced | 7 | TLS, headers, client certificates, admin socket and trust boundaries |
+| 38 | Operations and upgrades | Advanced | 7 | `haproxy -c`, reload, rollback and 2.8 → 3.x changes |
+
+Every scenario is reachable from the Simulations page and from the written chapters. The OneGate catalog with “start here if…” guidance is in [chapter 9](public/docs/09-scenario-catalog.md). The HAProxy track is a learning path only — there is no config editor or active debug console.
 
 ---
 
@@ -446,6 +462,19 @@ All in [`public/docs/`](public/docs/), rendered by the site and readable on GitH
 | [Tags, releases and GHCR](public/docs/git-08-tags-releases-ghcr.md) | Tags, releases, GitHub Actions, image digests and verification |
 | [Git glossary](public/docs/git-glossary.md) | Every Git/GHCR term used in the track |
 
+### HAProxy track
+
+| Chapter | What it covers |
+|---|---|
+| [Mental model](public/docs/haproxy-01-mental-model.md) | Frontend, backend, listen, global/defaults, request pipeline and modes |
+| [Routing and ACLs](public/docs/haproxy-02-routing-acls.md) | ACL order, use_backend, default backend, 503 and negative tests |
+| [TLS and SNI](public/docs/haproxy-03-tls-and-sni.md) | Termination, passthrough, loopback terminator and forwarded headers |
+| [Health and balancing](public/docs/haproxy-04-health-balancing.md) | check/rise/fall, algorithms, backups and 502/503/504 |
+| [Timeouts and logging](public/docs/haproxy-05-timeouts-logging.md) | Queue/connect/server timers, logs, stats and diagnosis |
+| [Security](public/docs/haproxy-06-security.md) | TLS policy, headers, client certificates and admin-plane exposure |
+| [Operations and upgrades](public/docs/haproxy-07-operations-upgrades.md) | `haproxy -c`, reload, rollback, 2.8 → 3.x and observability |
+| [HAProxy glossary](public/docs/haproxy-glossary.md) | Every HAProxy term used in the track |
+
 The Markdown is the single source of truth: the site fetches and renders the same files you read on GitHub.
 
 ---
@@ -473,10 +502,10 @@ Learning/
 │   │       ├── ui.js             Icons, toast, helpers
 │   │       ├── version.js        Build metadata + local clock formatting
 │   │       ├── pages/            Home, topic, learn, list, simulator, quiz, compare, selftest
-│   │       ├── scenarios/        Thirty-one scenario definitions + helpers
+│   │       ├── scenarios/        Thirty-eight scenario definitions + helpers
 │   │       └── sim/              Layout geometry + the animation player
 │   ├── version.json              Local fallback; overwritten by Docker build
-│   └── docs/                     Thirty Markdown chapters across three tracks
+│   └── docs/                     Thirty-eight Markdown chapters across four tracks
 ├── scripts/
 │   ├── verify.py                 Dependency-free static registry/link checks
 │   └── smoke.py                  Starts start.py and checks real HTTP responses
@@ -500,7 +529,7 @@ No bundler, no framework, no runtime dependency. The browser loads ES modules di
 
 ## How the simulation works
 
-- A fixed **1000 × 600** virtual topology per scenario layout (`onegate`, `docker`, `git`). Nodes are HTML positioned in percentages; wires are SVG paths in the same coordinate space.
+- A fixed **1000 × 600** virtual topology per scenario layout (`onegate`, `docker`, `git`, `haproxy`). Nodes are HTML positioned in percentages; wires are SVG paths in the same coordinate space.
 - A scenario is plain data: `{ id, topic, layout, title, category, level, minutes, summary, nodes, nodeLabels, initial, variants, steps, notes, config, pitfalls }`.
 - A step is `{ from, to, badge, detail, channel, http, vault, tags }`.
 - The vault is recomputed from `initial` plus every step's `vault` operations (`add`, `del`, `clearStore`), so it is always consistent with the current step.
@@ -517,7 +546,7 @@ To add a scenario, create a file in `public/assets/js/scenarios/`, export the ob
 - **Smoke test** (`python3 scripts/smoke.py`) starts the real `start.py` launcher on a free port and checks the app shell, ES modules, Markdown, SPA fallback, 404 handling, `HEAD` and security headers.
 - **Self-check** (`#/selftest`) validates scenario shape, actor IDs, channels, vault operations, token kinds, Markdown rendering and every doc fetch at runtime. It should report 100%.
 - **curl** the routes: `/`, `/assets/js/app.js`, `/docs/01-architecture.md`, `/version.json` should be 200.
-- Browser check: open `#/`, `#/topic/onegate`, `#/topic/docker`, `#/topic/git`, `#/learn/docker-05-compose`, `#/learn/git-08-tags-releases-ghcr`, `#/sim/docker-compose`, `#/sim/git-release-ghcr`, `#/compare`, `#/quiz/docker`, `#/glossary`, `#/selftest`.
+- Browser check: open `#/`, `#/topic/onegate`, `#/topic/docker`, `#/topic/git`, `#/topic/haproxy`, `#/learn/haproxy-07-operations-upgrades`, `#/sim/haproxy-https-request`, `#/sim/haproxy-tls-sni`, `#/compare`, `#/quiz/haproxy`, `#/glossary`, `#/selftest`.
 
 Both checks use only the Python standard library and run in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) on every push and pull request. The optional Node launcher is syntax-checked and smoke-tested separately.
 
@@ -536,6 +565,8 @@ If a chapter 404s, make sure you are serving `public/` (the launcher does) rathe
 - **The manual is authoritative; generic OIDC is background.** The manual does not document the client-credentials grant, a token introspection endpoint, token revocation, OIDC back-channel logout, a public-client `none` auth method, a consent screen/policy, or a “PKCE required” switch. Where the lab uses one of these, it is labelled as generic OAuth/OIDC and marked “verify in your deployment”.
 - **Earlier versions of this lab used “JVAP”.** That term does not appear in the manual. The feature is **Attribute Sources**; a REST source calls the **User Attribute API** contract. The lab now uses the manual’s terminology.
 - **Checked against the vendor manual.** This edition was reviewed against the **OneGate Administration Manual**; the PDF is kept locally for reference and is not redistributed in the repository.
+- **The HAProxy track scope is informed by [`RogerBergling/haproxy-gui`](https://github.com/RogerBergling/haproxy-gui)**, a local-first HAProxy configuration workbench. This lab teaches and simulates the concepts; it deliberately excludes the workbench editor and active debug console.
+- **HAProxy is a registered trademark of HAProxy Technologies.** This lab is unofficial and is not affiliated with or endorsed by HAProxy Technologies. The HAProxy track is a teaching model, not a config editor, live debugger, deployment tool or replacement for `haproxy -c` and the official configuration manual.
 - The lab is an unofficial study aid, not affiliated with the vendor. It is not a substitute for the product documentation or a security review.
 - No analytics, no external fonts, no CDN, no cookies. Chapter and quiz progress is stored in this browser's `localStorage` and never leaves the machine.
 
