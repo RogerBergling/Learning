@@ -80,24 +80,3 @@ jobs:
           cache-to: type=gha,mode=max
           provenance: true
           sbom: true
-
-      # GHCR packages are private by default even when the repository is public.
-      # Try to make the package publicly pullable for the one-command Compose
-      # workflow. If the token cannot change package visibility, the README
-      # documents the one-time GitHub UI step.
-      - name: Make the GHCR package public
-        if: github.ref == 'refs/heads/main'
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          package="${GITHUB_REPOSITORY#*/}"
-          for name in "${package,,}" "$package"; do
-            if gh api --method PATCH "/user/packages/container/$name" -f visibility=public; then
-              echo "Package $name is public"
-              exit 0
-            fi
-          done
-          echo "Could not change package visibility automatically."
-          gh api '/user/packages?package_type=container' --jq '.[].name' || true
-          exit 1

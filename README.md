@@ -39,6 +39,8 @@ docker compose up -d
 
 Open **<http://localhost:8003>**. No Python, Node or clone is required.
 
+If the first `docker compose up` gets an authentication error, the GHCR package is still private. Make it public once in **Packages → learning → Package settings → Change visibility → Public**, or authenticate the host with `docker login ghcr.io`.
+
 Update to the newest published image:
 
 ```bash
@@ -118,7 +120,7 @@ Users only need [`compose.yaml`](compose.yaml); the quick start above downloads 
 
 Stop it with `docker compose down`.
 
-The GHCR package must be public for anonymous pulls, or the user must run `docker login ghcr.io` first. The publish workflow attempts to make the package public on `main`; if your organization blocks that, open the package → **Package settings** → **Change visibility** → **Public** (or grant `read:packages` to the server).
+The GHCR package must be public for anonymous pulls, or the user must run `docker login ghcr.io` first. A new GHCR package is private by default even when the repository is public; make it public once under **Packages → learning → Package settings → Change visibility → Public**, or grant `read:packages` to the server.
 
 To keep the running container updated automatically, opt in to the Watchtower profile:
 
