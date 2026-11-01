@@ -191,6 +191,14 @@ code, kbd, pre { font-family: var(--mono); font-size: .88em; }
 .hero-stat strong { display: block; font-size: 1.4rem; letter-spacing: -.03em; }
 .hero-stat span { font-size: .76rem; color: var(--dim); text-transform: uppercase; letter-spacing: .1em; }
 
+/* ---------- deployment stamp ---------- */
+.deploy-status { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; margin: -.3rem 0 1.8rem; }
+.deploy-status .pill { text-transform: none; letter-spacing: .02em; font-weight: 500; gap: .25rem; }
+.deploy-status .pill strong,
+.deploy-status .pill time { color: var(--text); font-family: var(--mono); font-weight: 600; font-size: .72rem; }
+.deploy-status .pill a { color: inherit; }
+.build-stamp { word-break: break-word; }
+
 /* ---------- cards ---------- */
 .cards { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
 .card {

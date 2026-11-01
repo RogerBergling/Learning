@@ -1,6 +1,7 @@
 import { DOCS, LEARNING_PATH, docBySlug } from '../content.js';
 import { SCENARIOS, featuredScenarios, categoryCounts } from '../scenarios/index.js';
 import { STORES } from '../tokens.js';
+import { formatLocalClock } from '../version.js';
 import { scenarioCard, docCard } from './cards.js';
 import { icon, esc } from '../ui.js';
 
@@ -185,6 +186,15 @@ export function renderHome(view) {
       <div class="hero-art">${heroArt()}</div>
     </section>
 
+    <section class="deploy-status" aria-label="Deployment and clock information">
+      <span class="pill">Version <strong data-app-version>dev</strong></span>
+      <span class="pill">Image <strong data-image-tag>local</strong></span>
+      <span class="pill">Commit <strong data-commit>local</strong></span>
+      <span class="pill">Built <span data-build-date>local build</span></span>
+      <span class="pill deploy-clock">Local time <time data-clock>—</time></span>
+      <a class="pill accent" href="/version.json">version.json</a>
+    </section>
+
     <section class="section-head">
       <div>
         <h2>Five jobs, one product</h2>
@@ -275,4 +285,20 @@ export function renderHome(view) {
         <a href="#/selftest">Run the self-check</a> if something looks broken.</p>
     </div>
   `;
+
+  const clock = view.querySelector('[data-clock]');
+  if (clock) {
+    let timer = null;
+    const tick = () => {
+      if (!document.body.contains(clock)) {
+        clearInterval(timer);
+        return;
+      }
+      const now = new Date();
+      clock.textContent = formatLocalClock(now);
+      clock.dateTime = now.toISOString();
+    };
+    tick();
+    timer = setInterval(tick, 1000);
+  }
 }

@@ -3,6 +3,20 @@
 # The lab is a static site served by the dependency-free Python launcher.
 FROM python:3.12-alpine
 
+# Build metadata is baked into public/version.json and shown on the home page.
+ARG APP_VERSION=dev
+ARG IMAGE_TAG=local
+ARG GIT_SHA=local
+ARG BUILD_DATE=
+
+LABEL org.opencontainers.image.title="OneGate Learning Lab" \
+      org.opencontainers.image.version="$APP_VERSION" \
+      org.opencontainers.image.revision="$GIT_SHA" \
+      io.onegate.build.version="$APP_VERSION" \
+      io.onegate.build.image-tag="$IMAGE_TAG" \
+      io.onegate.build.revision="$GIT_SHA" \
+      io.onegate.build.date="$BUILD_DATE"
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
@@ -13,6 +27,10 @@ RUN addgroup -S app && adduser -S -G app app
 
 COPY --chown=app:app start.py ./start.py
 COPY --chown=app:app public ./public
+
+RUN APP_VERSION="$APP_VERSION" IMAGE_TAG="$IMAGE_TAG" GIT_SHA="$GIT_SHA" BUILD_DATE="$BUILD_DATE" \
+    python3 -c "import json, os; data = {'version': os.environ['APP_VERSION'], 'imageTag': os.environ['IMAGE_TAG'], 'commit': os.environ['GIT_SHA'], 'buildDate': os.environ.get('BUILD_DATE') or None}; open('public/version.json', 'w', encoding='utf-8').write(json.dumps(data, indent=2) + '\n')" \
+    && chown app:app public/version.json
 
 USER app
 

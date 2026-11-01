@@ -129,6 +129,61 @@ docker run --rm -p 8080:8080 ghcr.io/rogerbergling/learning:latest
 
 If you meant Docker Hub rather than GHCR, the same workflow can also push there after adding `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` secrets and a Docker Hub login step.
 
+### Version and deployment status
+
+The home page shows a deployment stamp:
+
+- **Version** — the application version from `package.json`
+- **Image** — the Docker tag/ref produced by the publish workflow
+- **Commit** — the short Git SHA baked into the image
+- **Built** — the UTC build timestamp
+- **Local time** — a live clock in the visitor's browser
+
+The same version, image tag, commit and build date appear in the footer of every page. The raw metadata is available at:
+
+```text
+/version.json
+```
+
+Local development serves the committed fallback:
+
+```json
+{
+  "version": "1.1.0",
+  "imageTag": "local",
+  "commit": "local",
+  "buildDate": null
+}
+```
+
+The Docker build overwrites that file with real build metadata. The publish workflow passes `APP_VERSION` from `package.json`, `IMAGE_TAG` from the generated image metadata, `GIT_SHA`, and a UTC `BUILD_DATE` as Docker build arguments.
+
+To verify that a web server has pulled the newest image:
+
+```bash
+curl -s http://YOUR_HOST:8080/version.json | python3 -m json.tool
+```
+
+Compare that output with the image labels:
+
+```bash
+docker inspect ghcr.io/rogerbergling/learning:latest \
+  --format '{{index .Config.Labels "io.onegate.build.version"}} {{index .Config.Labels "io.onegate.build.image-tag"}} {{index .Config.Labels "io.onegate.build.revision"}} {{index .Config.Labels "io.onegate.build.date"}}'
+```
+
+If the page still shows an old commit or build date, the host is still running an old container image or the browser is serving a cached page. The launchers send `Cache-Control: no-store`; the version fetch also uses `no-store`.
+
+For a manual Docker build, stamp it explicitly:
+
+```bash
+docker build \
+  --build-arg APP_VERSION=1.1.0 \
+  --build-arg IMAGE_TAG=manual \
+  --build-arg GIT_SHA="$(git rev-parse --short HEAD)" \
+  --build-arg BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  -t onegate-learning-lab .
+```
+
 ---
 
 ## What is in the lab
@@ -325,9 +380,11 @@ Learning/
 │   │       ├── search.js         Full-text chapter index and snippets
 │   │       ├── tokens.js         Simulated JWTs, stores, token kinds
 │   │       ├── ui.js             Icons, toast, helpers
+│   │       ├── version.js        Build metadata + local clock formatting
 │   │       ├── pages/            Home, learn, list, simulator, quiz, compare, selftest
 │   │       ├── scenarios/        Eighteen scenario definitions + helpers
 │   │       └── sim/              Layout geometry + the animation player
+│   ├── version.json              Local fallback; overwritten by Docker build
 │   └── docs/                     Thirteen Markdown chapters
 ├── scripts/
 │   ├── verify.py                 Dependency-free static registry/link checks
@@ -367,7 +424,7 @@ To add a scenario, create a file in `public/assets/js/scenarios/`, export the ob
 - **Static checks** (`python3 scripts/verify.py`) validate the document and scenario registries, quiz data, internal links, actors, token stores, assets, packaging metadata and server headers without a browser.
 - **Smoke test** (`python3 scripts/smoke.py`) starts the real `start.py` launcher on a free port and checks the app shell, ES modules, Markdown, SPA fallback, 404 handling, `HEAD` and security headers.
 - **Self-check** (`#/selftest`) validates scenario shape, actor IDs, channels, vault operations, token kinds, Markdown rendering and every doc fetch at runtime. It should report 100%.
-- **curl** the routes: `/`, `/assets/js/app.js`, `/docs/01-architecture.md` should be 200.
+- **curl** the routes: `/`, `/assets/js/app.js`, `/docs/01-architecture.md`, `/version.json` should be 200.
 - Browser check: open `#/`, `#/learn/01-architecture`, `#/learn/12-openid-federation`, `#/sim/bff-login`, `#/sim/openid-federation`, `#/compare`, `#/quiz`, `#/glossary`, `#/selftest`.
 
 Both checks use only the Python standard library and run in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) on every push and pull request. The optional Node launcher is syntax-checked and smoke-tested separately.

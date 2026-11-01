@@ -10,6 +10,7 @@ then shuts the server down. No dependencies beyond the stdlib.
 
 from __future__ import annotations
 
+import json
 import socket
 import subprocess
 import sys
@@ -113,6 +114,18 @@ def main() -> int:
         check("markdown" in header(headers, "Content-Type"), "Markdown MIME type",
               header(headers, "Content-Type"))
         check(b"# The big picture" in body, "Markdown chapter has its heading")
+
+        status, headers, body = fetch(f"{base}/version.json")
+        check(status == 200, "version.json returns 200", str(status))
+        check("json" in header(headers, "Content-Type"), "version.json MIME type",
+              header(headers, "Content-Type"))
+        try:
+            version_info = json.loads(body)
+            check(bool(version_info.get("version")), "version.json has a version", str(version_info.get("version")))
+            check("imageTag" in version_info and "commit" in version_info and "buildDate" in version_info,
+                  "version.json has deployment metadata")
+        except json.JSONDecodeError as exc:
+            check(False, "version.json is valid JSON", str(exc))
 
         status, _, body = fetch(f"{base}/sim/bff-login")
         check(status == 200, "SPA fallback route returns the app shell", str(status))

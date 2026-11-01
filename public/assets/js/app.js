@@ -1,5 +1,6 @@
 import { esc } from './markdown.js';
 import { toast } from './ui.js';
+import { loadBuildInfo, applyBuildInfo } from './version.js';
 
 let activePlayer = null;
 let cleanupDocListeners = null;
@@ -44,6 +45,10 @@ function teardown() {
 
 function showLoading() {
   view.innerHTML = '<div class="loading" role="status"><span class="spinner"></span> Loading…</div>';
+}
+
+function hydrateBuildInfo() {
+  loadBuildInfo().then((info) => applyBuildInfo(document, info));
 }
 
 async function render() {
@@ -127,6 +132,7 @@ async function render() {
     }
     if (!isCurrent()) return;
     view.focus({ preventScroll: true });
+    hydrateBuildInfo();
   } catch (err) {
     if (!isCurrent()) return;
     console.error(err);
@@ -186,6 +192,7 @@ export async function loadDoc(slug, { fresh = false } = {}) {
 /* -------------------------------------------------------------------- boot */
 
 initTheme();
+hydrateBuildInfo();
 window.addEventListener('hashchange', render);
 if (document.readyState === 'loading') {
   window.addEventListener('DOMContentLoaded', render, { once: true });

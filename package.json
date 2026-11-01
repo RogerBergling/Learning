@@ -1,8 +1,9 @@
 {
   "name": "onegate-learning-lab",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
+  "license": "MIT",
   "description": "Interactive, animated explanations of OneGate as reverse proxy, OpenID Provider, Relying Party, BFF, OpenID Federation, SAML and attribute sources.",
   "scripts": {
     "start": "node server.mjs"

@@ -71,6 +71,7 @@ jobs:
           curl -fsS http://127.0.0.1:8099/ > /dev/null
           curl -fsS http://127.0.0.1:8099/assets/js/app.js > /dev/null
           curl -fsS http://127.0.0.1:8099/docs/01-architecture.md > /dev/null
+          curl -fsS http://127.0.0.1:8099/version.json > /dev/null
           curl -fsSI http://127.0.0.1:8099/ | grep -qi 'content-security-policy'
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8099/missing.js)" = "404"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8099/sim/bff-login)" = "200"

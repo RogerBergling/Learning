@@ -66,6 +66,17 @@ scenario notes for the wording.
   `og-progress-v1` by `progress.js`. Never add server-side or third-party
   tracking.
 
+## Versioning
+
+`public/version.json` is the local-development fallback and must match the
+`version` in `package.json`. The Docker build replaces it with the image
+version, tag, commit SHA and UTC build timestamp. Keep the fallback's
+`imageTag: "local"` and `commit: "local"`; do not commit generated build
+metadata.
+
+The home page and footer display the result. To verify a deployment, compare
+the page or `/version.json` with the image labels.
+
 ## Security and the launchers
 
 Both launchers must keep the same security headers (CSP, `nosniff`,

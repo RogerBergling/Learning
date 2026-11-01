@@ -76,7 +76,9 @@ REQUIRED = [
     "public/assets/js/quiz-data.js",
     "public/assets/js/search.js",
     "public/assets/js/tokens.js",
+    "public/assets/js/version.js",
     "public/assets/js/pages/quiz.js",
+    "public/version.json",
     ".github/workflows/docker-publish.yml",
     ".github/workflows/ci.yml",
     ".github/dependabot.yml",
@@ -329,6 +331,19 @@ check("MIT License" in license, "LICENSE is MIT")
 package = json.loads(read(ROOT / "package.json"))
 check(package.get("type") == "module", "package.json uses ES modules")
 check("start" in package.get("scripts", {}), "package.json has a start script")
+check(package.get("license") == "MIT", "package.json declares the MIT license")
+
+version_info = json.loads(read(PUBLIC / "version.json"))
+check(version_info.get("version") == package.get("version"), "version.json matches package.json",
+      f"{version_info.get('version')} vs {package.get('version')}")
+check("imageTag" in version_info and "commit" in version_info and "buildDate" in version_info,
+      "version.json has build metadata fields")
+check(version_info.get("imageTag") == "local" and version_info.get("buildDate") is None,
+      "version.json is a clean local fallback")
+dockerfile = read(ROOT / "Dockerfile")
+check("APP_VERSION" in dockerfile, "Dockerfile accepts build version metadata")
+check("io.onegate.build.version" in dockerfile and "io.onegate.build.date" in dockerfile,
+      "Dockerfile exposes deployment labels")
 
 readme = read(ROOT / "README.md")
 compose = read(ROOT / "compose.yaml")
@@ -340,6 +355,8 @@ check(image in readme, "README image matches the repository", image)
 check("OIDC-OAUTH-BFF" not in readme and "OIDC-OAUTH-BFF" not in compose,
       "no stale repository name in README/compose")
 check("IMAGE_NAME: ${{ github.repository }}" in workflow, "workflow publishes the current repository")
+check("build-args:" in workflow, "publish workflow passes build metadata")
+check("GIT_SHA=" in workflow and "BUILD_DATE=" in workflow, "publish workflow stamps commit and build time")
 
 for command in ("scripts/verify.py", "scripts/smoke.py"):
     check(command in readme, f"README documents {command}")

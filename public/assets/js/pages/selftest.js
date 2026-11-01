@@ -125,6 +125,15 @@ async function runTests() {
   add('JWT round-trip decodes', Boolean(decoded && decoded.payload.sub === 'selftest'), decoded?.payload?.sub || 'decode failed');
   add('JWT has three parts', jwt.split('.').length === 3);
 
+  try {
+    const versionResponse = await fetch('/version.json', { cache: 'no-store' });
+    const versionInfo = await versionResponse.json();
+    add('version metadata loads', versionResponse.ok && Boolean(versionInfo.version),
+      versionInfo.version ? `version ${versionInfo.version}` : 'missing version');
+  } catch (err) {
+    add('version metadata loads', false, String(err.message || err));
+  }
+
   for (const [kind, def] of Object.entries({
     jwt: { id: 'at', kind: 'jwt' },
     opaque: { id: 'at', kind: 'opaque' },
