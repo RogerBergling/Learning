@@ -119,9 +119,6 @@ services:
     image: ghcr.io/rogerbergling/learning:latest
     pull_policy: always
     restart: unless-stopped
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      - "com.centurylinklabs.watchtower.scope=learning"
 ```
 
 `pull_policy: always` pulls before create/start. It does not replace a currently running container just because the registry has a new digest.
@@ -134,16 +131,11 @@ docker compose up -d --force-recreate
 curl -fsS http://127.0.0.1:8003/version.json
 ```
 
-## Watchtower
+## No automatic updater or Docker socket
 
-Watchtower polls the registry on an interval, compares the remote tag/digest with the running container and recreates when it changes. It is convenient but requires:
+This project intentionally does not include a container that mounts `/var/run/docker.sock`. Socket access gives an updater control over every container and is effectively root-equivalent on the Docker host.
 
-- the Docker socket (host-level privilege)
-- registry credentials for a private package
-- a correctly scoped label/scope
-- a rollback plan when an automatic update breaks the service
-
-It is deliberately opt-in here via a Compose profile. In a regulated environment, prefer a CI/CD deployment with approval and immutable digests.
+Updates are explicit: pull, review the digest, recreate, then verify `/version.json`. For automation, use a CI/CD pipeline with approval and immutable digests rather than an in-place updater.
 
 ## The update loop, end to end
 
@@ -173,7 +165,7 @@ If the version stamp did not change:
 
 ## Simulate it
 
-- [GHCR delivery and Watchtower](#/sim/docker-ghcr)
+- [GHCR delivery and explicit update](#/sim/docker-ghcr)
 - [Release tag to verified deployment](#/sim/git-release-ghcr)
 
 Next: [Docker glossary](#/learn/docker-glossary).

@@ -38,7 +38,7 @@ All screenshots are captured from the running site with simulated data.
 
 ### Docker — the fastest path if you already run Docker
 
-The repository includes a ready-to-use [`compose.yaml`](compose.yaml). It pulls the published multi-arch image, publishes the lab on port **8003**, keeps the version stamp visible, and makes Watchtower opt-in.
+The repository includes a ready-to-use [`compose.yaml`](compose.yaml). It pulls the published multi-arch image, publishes the lab on port **8003**, keeps the version stamp visible, and uses explicit pull/recreate updates.
 
 ```bash
 curl -O https://raw.githubusercontent.com/RogerBergling/Learning/main/compose.yaml
@@ -58,14 +58,6 @@ curl -s http://localhost:8003/version.json | python3 -m json.tool
 ```
 
 If the version, commit or build date does not change, the host is still running the old container or the image was not pulled.
-
-To include the optional automatic updater:
-
-```bash
-docker compose --profile auto-update up -d
-```
-
-Watchtower mounts the Docker socket, which is host-level privilege. It is deliberately not started by default; use it only on a host you trust.
 
 ### Linux / macOS
 
@@ -124,19 +116,20 @@ Open <http://localhost:8080>. The container runs as an unprivileged user and lis
 
 ### Docker Compose details
 
-Users only need [`compose.yaml`](compose.yaml); the quick start above downloads and starts it. The file defines the published image, port `8003:8080`, read-only/capability hardening, resource limits, restart policy and the optional Watchtower profile.
+Users only need [`compose.yaml`](compose.yaml); the quick start above downloads and starts it. The file defines the published image, port `8003:8080`, read-only/capability hardening, resource limits and restart policy. It deliberately does **not** mount the Docker socket.
 
 Stop it with `docker compose down`.
 
 The GHCR package must be public for anonymous pulls, or the user must run `docker login ghcr.io` first. A new GHCR package is private by default even when the repository is public; make it public once under **Packages → learning → Package settings → Change visibility → Public**, or grant `read:packages` to the server.
 
-To keep the running container updated automatically, opt in to the Watchtower profile:
+Updates are explicit:
 
 ```bash
-docker compose --profile auto-update up -d
+docker compose pull
+docker compose up -d --force-recreate
 ```
 
-That starts a pinned, maintained Watchtower fork that checks hourly and updates only this container. It mounts the Docker socket, which gives Watchtower control over the Docker host, so it is deliberately **not** started by default. If the GHCR package is private, uncomment the `config.json` volume in `compose.yaml` after logging in.
+This avoids mounting `/var/run/docker.sock` into an updater. Socket access is effectively root-equivalent control of the Docker host, so the Compose file intentionally has no automatic in-place updater. Verify the image digest and `/version.json` after each update.
 
 ### Automatic publishing to GitHub Container Registry
 
@@ -313,10 +306,10 @@ Keyboard: `Space` play/pause, `←` `→` step, `R` restart. Click any vault chi
 |---|---|---|---|---|
 | 19 | Docker run — image to container | Core | 10 | CLI → Engine, registry pull, ports, bridge network, volume, logs, exec, stop/remove |
 | 20 | Docker build | Core | 8 | Dockerfile, build context, `.dockerignore`, layers/cache, push and deploy |
-| 21 | Docker Compose | Core | 9 | Services, network, volume, resource limits, profiles and Watchtower |
+| 21 | Docker Compose | Core | 9 | Services, network, volume, resource limits and explicit updates |
 | 22 | Docker operations | Advanced | 9 | Logs, exec, inspect, stats, events, disk use and safe cleanup |
 | 23 | Docker security | Advanced | 8 | Non-root, read-only, capabilities, limits and runtime verification |
-| 24 | GHCR delivery | Advanced | 9 | Tags, digests, package access, Watchtower and the version stamp |
+| 24 | GHCR delivery | Advanced | 7 | Tags, digests, package access, explicit pull/recreate and the version stamp |
 
 ### Git & GHCR
 
@@ -460,7 +453,7 @@ All in [`public/docs/`](public/docs/), rendered by the site and readable on GitH
 | [Images and builds](public/docs/docker-02-images-and-builds.md) | Dockerfile, context, `.dockerignore`, layers, cache, multi-stage, GHCR |
 | [Container lifecycle](public/docs/docker-03-containers-lifecycle.md) | run/ps/logs/exec/inspect/stop/rm, ports, restart policy, healthchecks |
 | [Storage and networking](public/docs/docker-04-storage-networking.md) | Named volumes, bind mounts, bridge networks, DNS, published ports |
-| [Compose](public/docs/docker-05-compose.md) | Every line of the provided `compose.yaml`, profiles, resources, Watchtower |
+| [Compose](public/docs/docker-05-compose.md) | Every line of the provided `compose.yaml`, resources and explicit updates |
 | [Operations and security](public/docs/docker-06-operations-security.md) | Debugging, cleanup, daemon settings, rootless, capabilities, secrets |
 | [GHCR and updates](public/docs/docker-07-ghcr-and-updates.md) | Tags, digests, package visibility, pull/recreate, version verification |
 | [Docker glossary](public/docs/docker-glossary.md) | Every Docker term used in the track |
@@ -545,7 +538,7 @@ Learning/
 ├── docs/screenshots/             README screenshots from the running site
 ├── Dockerfile                    Container image (Python static server)
 ├── .dockerignore                 Keeps the build context small
-├── compose.yaml                  Compose stack with optional auto-update profile
+├── compose.yaml                  Compose stack with explicit pull/recreate updates
 ├── start.py                     Python stdlib server (primary launcher)
 ├── start.sh                     Linux/macOS launcher
 ├── start.bat                    Windows launcher

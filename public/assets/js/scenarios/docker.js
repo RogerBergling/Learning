@@ -275,10 +275,10 @@ export const dockerCompose = {
   category: 'compose',
   level: 'core',
   minutes: 12,
-  tags: ['compose.yaml', 'services', 'ports', 'volumes', 'networks', 'profiles', 'watchtower', 'healthcheck'],
+  tags: ['compose.yaml', 'services', 'ports', 'volumes', 'networks', 'pull', 'recreate', 'security'],
   summary:
-    'Read one real compose.yaml file line by line. See how Compose creates services, a shared network, a named volume, resource limits and an optional Watchtower profile, then inspect what actually exists.',
-  nodes: ['developer', 'project', 'daemon', 'container', 'network', 'volume', 'watchtower', 'deployment'],
+    'Read one real compose.yaml file line by line. See how Compose creates services, a shared network, a named volume and resource limits, then update explicitly without mounting the Docker socket.',
+  nodes: ['developer', 'project', 'daemon', 'container', 'network', 'volume', 'deployment'],
   stores: ['local', 'docker', 'container', 'network', 'volume', 'deployment'],
   nodeLabels: {
     project: { name: 'compose.yaml', sub: 'declarative desired state' },
@@ -306,17 +306,6 @@ services:
       - "8003:8080"
     restart: unless-stopped
     pull_policy: always
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      - "com.centurylinklabs.watchtower.scope=learning"
-
-  watchtower:
-    image: nickfedor/watchtower:1.23.2
-    profiles: ["auto-update"]
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 3600 --label-enable --scope learning --cleanup
 `,
       }))],
       tags: ['compose project', 'declarative', 'name'],
@@ -353,28 +342,23 @@ services:
       tags: ['ports', 'memory limits', 'container_name'],
     },
     {
-      from: 'daemon', to: 'watchtower', badge: 'optional auto-update profile', channel: 'deploy',
+      from: 'developer', to: 'registry', badge: 'docker compose pull', channel: 'registry',
       detail:
-        'The `watchtower` service has `profiles: ["auto-update"]`, so it is not started by a plain `docker compose up`. Start it with `docker compose --profile auto-update up -d`.\n\nWatchtower gets the Docker socket, which is effectively root-equivalent control of the host. That is why it is opt-in and why it belongs only on a host you trust.',
-      vault: [add('local', ITEM.workflow({
-        id: 'watchtower',
-        name: 'Watchtower profile',
-        meta: 'opt-in · hourly · docker.sock',
-        value: 'watchtower --interval 3600 --label-enable --scope learning --cleanup',
-      }))],
-      tags: ['profiles', 'opt-in', 'docker socket'],
+        'The update is explicit: `docker compose pull` asks the registry for the manifest and layers referenced by the image tag. It does not replace the running container yet.\n\nThis project deliberately does not mount the Docker socket into an updater. Socket access is root-equivalent on the Docker host; a controlled pull is safer and auditable.',
+      vault: [add('deployment', ITEM.image({ id: 'pulled', name: 'Pulled image', meta: 'new tag/digest · not running yet' }))],
+      tags: ['pull', 'registry', 'no Docker socket'],
     },
     {
-      from: 'watchtower', to: 'registry', badge: 'poll newest image', channel: 'registry',
+      from: 'registry', to: 'daemon', badge: 'new digest stored locally', channel: 'registry',
       detail:
-        'Watchtower checks the registry on its interval and only manages containers with the matching label and scope. When it sees a new digest for the tag, it pulls and recreates the container.\n\nA mutable tag is the trigger. If the workflow did not publish a new image, Watchtower has nothing to update. If the server cannot authenticate, it will keep the old container.',
-      tags: ['poll', 'digest', 'tag', 'scope'],
+        'The Engine stores the new image content by digest. The old container is still running the old digest until it is recreated.\n\nRecord the registry digest and compare it with `docker inspect` after recreation. A tag is a moving pointer; the digest is the evidence.',
+      tags: ['digest', 'local image', 'verification'],
     },
     {
-      from: 'watchtower', to: 'container', badge: 'recreate with new image', channel: 'deploy',
+      from: 'daemon', to: 'container', badge: 'up -d --force-recreate', channel: 'deploy',
       detail:
-        'Recreation is not an in-place upgrade: Watchtower stops the old container and creates a new one from the new image. Named volumes and the network are preserved, but the old writable layer is discarded.\n\nAfter recreation, verify `/version.json`, health status and logs. The version stamp is the fastest way to prove the new image is actually running.',
-      tags: ['recreate', 'volumes', 'verification'],
+        '`docker compose up -d --force-recreate` replaces the container from the new image. Named volumes and the network are preserved, but the old writable layer is discarded.\n\nAfter recreation, verify `/version.json`, health status, logs and the running image digest. “Running” is not proof that the intended build is live.',
+      tags: ['recreate', 'volumes', 'version stamp'],
     },
     {
       from: 'developer', to: 'daemon', badge: 'docker compose ps / logs', channel: 'cli',

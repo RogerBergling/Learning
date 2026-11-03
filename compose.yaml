@@ -1,5 +1,9 @@
 name: learning-lab
 
+# Automatic in-place updates are intentionally not included.
+# Use `docker compose pull` and `docker compose up -d --force-recreate`
+# after reviewing the new image and digest.
+
 services:
   learning-lab:
     image: ghcr.io/rogerbergling/learning:latest
@@ -16,17 +20,3 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      - "com.centurylinklabs.watchtower.scope=learning"
-
-  watchtower:
-    image: nickfedor/watchtower:1.23.2
-    container_name: watchtower
-    profiles: ["auto-update"]
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      # Uncomment only for a private GHCR image, after `docker login ghcr.io`:
-      # - ${HOME}/.docker/config.json:/config.json:ro
-    command: --interval 3600 --label-enable --scope learning --cleanup

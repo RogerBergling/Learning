@@ -18,20 +18,6 @@ services:
       - "8003:8080"
     restart: unless-stopped
     pull_policy: always
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      - "com.centurylinklabs.watchtower.scope=learning"
-
-  watchtower:
-    image: nickfedor/watchtower:1.23.2
-    container_name: watchtower
-    profiles: ["auto-update"]
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      # Uncomment only for a private GHCR image, after `docker login ghcr.io`:
-      # - ${HOME}/.docker/config.json:/config.json:ro
-    command: --interval 3600 --label-enable --scope learning --cleanup
 ```
 
 ## Top-level keys
@@ -186,39 +172,39 @@ These are runtime hardening controls. They belong in Compose if the deployment u
 
 ```yaml
 labels:
-  - "com.centurylinklabs.watchtower.enable=true"
-  - "com.centurylinklabs.watchtower.scope=learning"
+  - "com.example.component=learning-lab"
 ```
 
-Metadata for tools. Docker itself does not assign meaning to Watchtower labels. Watchtower uses them to select containers.
+Metadata for tools and operators. Docker itself does not assign meaning to labels; they are for discovery, ownership, policy and inventory.
 
 ### `profiles`
 
 ```yaml
-profiles: ["auto-update"]
+profiles: ["debug"]
 ```
 
-Profiles make a service opt-in. `docker compose up -d` starts only services without a profile (plus explicitly selected profiles). `docker compose --profile auto-update up -d` includes Watchtower.
+Profiles make a service opt-in. `docker compose up -d` starts only services without a profile (plus explicitly selected profiles). `docker compose --profile debug up -d` includes the debug service.
 
-Profiles are excellent for optional debug tools, admin interfaces, or dangerous helpers that should not start by default.
+Profiles are useful for optional debug tools or admin interfaces. They are not a security boundary on their own.
 
-### Watchtower and the Docker socket
+### Why no Docker socket or automatic updater
 
-```yaml
-volumes:
-  - /var/run/docker.sock:/var/run/docker.sock
+This project intentionally does **not** mount `/var/run/docker.sock` and does not include an automatic in-place updater. Socket access gives a process control over every container and is effectively root-equivalent on the Docker host.
+
+Updates are explicit:
+
+```bash
+docker compose pull
+docker compose up -d --force-recreate
 ```
 
-Mounting the socket gives Watchtower control over the Docker daemon, which is effectively root on the host. It can inspect, stop and replace every container. That is why the profile is opt-in here. In enterprise environments, prefer CI/CD with explicit approval and immutable digests.
-
-For a private GHCR image, Watchtower also needs registry credentials. The commented config mount is one option; another is a credential helper or a dedicated pull token. Never commit the credential file.
+Review the new image/digest and verify `/version.json`. If you need automation, use a CI/CD pipeline with explicit approval and a pinned digest, not a container that can control the Docker daemon.
 
 ## Commands
 
 ```bash
 docker compose config              # validate and print resolved config
-docker compose up -d               # default profile
-docker compose --profile auto-update up -d
+docker compose up -d               # start services
 docker compose ps
 docker compose logs -f learning-lab
 docker compose exec learning-lab sh
@@ -240,13 +226,10 @@ docker compose down -v             # delete named volumes: destructive
 | Restart policy | `unless-stopped` | Keep running across crashes/boot |
 | Pull policy | `always` | Pull before create/start |
 | Published port | `8003:8080` | Host 8003 → container 8080 |
-| Watchtower interval | `3600` | Check hourly |
-| Watchtower scope | `learning` | Only labeled containers in this scope |
-| Watchtower cleanup | `--cleanup` | Remove old images after update |
 
 ## Simulate it
 
-- [Compose services, network, volume and Watchtower](#/sim/docker-compose)
+- [Compose services, network, volume and explicit updates](#/sim/docker-compose)
 - [GHCR update flow](#/sim/docker-ghcr)
 
 Next: [Operations, debugging and security](#/learn/docker-06-operations-security).
