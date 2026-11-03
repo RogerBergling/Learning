@@ -38,6 +38,15 @@ const RELATED = {
   'git-07-settings-files-secrets': ['git-secrets', 'git-remotes-auth'],
   'git-08-tags-releases-ghcr': ['git-release-ghcr', 'docker-ghcr'],
   'git-glossary': ['git-first-push'],
+  'esxtop-01-mental-model': ['esxtop-batch-capture', 'esxtop-focused-rc'],
+  'esxtop-02-capture-modes': ['esxtop-batch-capture', 'esxtop-focused-rc'],
+  'esxtop-03-cpu-scheduling': ['esxtop-cpu-ready', 'esxtop-triage-report'],
+  'esxtop-04-memory-numa': ['esxtop-memory-reclaim', 'esxtop-triage-report'],
+  'esxtop-05-storage-latency': ['esxtop-storage-latency', 'esxtop-storage-queue'],
+  'esxtop-06-network-vsan': ['esxtop-network-drops', 'esxtop-triage-report'],
+  'esxtop-07-focused-capture': ['esxtop-focused-rc', 'esxtop-batch-capture'],
+  'esxtop-08-triage-reporting': ['esxtop-triage-report', 'esxtop-cpu-ready'],
+  'esxtop-glossary': ['esxtop-batch-capture'],
 };
 
 export function renderLearnIndex(view) {
@@ -50,8 +59,7 @@ export function renderLearnIndex(view) {
       <p class="eyebrow">Written track</p>
       <h1>Learn the whole machine</h1>
       <p class="page-lede">
-        ${DOCS.length} chapters across ${TOPIC_ORDER.length} tracks. Start with OneGate federation, Docker on Linux
-        or Git &amp; GHCR — each track has its own path, but search and progress work across all of them.
+        ${DOCS.length} chapters across ${TOPIC_ORDER.length} tracks. Start with OneGate federation, Docker on Linux, Git &amp; GHCR, HAProxy or ESXi performance — each track has its own path, but search and progress work across all of them.
       </p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="#/learn/01-architecture">${icon('book', 15)} Start with the big picture</a>

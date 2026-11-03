@@ -164,6 +164,39 @@ export const HAPROXY_SUBNODES = {
   'haproxy.logs': { name: 'Logs & stats', sub: 'timeouts · errors', x: 600, y: 330 },
 };
 
+/* ----------------------------------------------------------------- ESXtop */
+
+export const ESXTOP_NODES = {
+  admin: {
+    name: 'Support engineer', sub: 'SSH · esxtop CLI', icon: 'terminal',
+    rect: { x: 100, y: 300, w: 184, h: 112 },
+  },
+  vm: {
+    name: 'Virtual machine', sub: 'guest · vCPUs · disk · NIC', icon: 'box',
+    rect: { x: 100, y: 82, w: 184, h: 104 },
+  },
+  storage: {
+    name: 'Datastore / array', sub: 'LUN · path · DAVG', icon: 'database',
+    rect: { x: 848, y: 486, w: 164, h: 92 },
+  },
+  network: {
+    name: 'Physical network', sub: 'switch · NIC · link', icon: 'cloud',
+    rect: { x: 848, y: 90, w: 164, h: 92 },
+  },
+  report: {
+    name: 'Capture analysis', sub: 'findings · action plan · report', icon: 'eye',
+    rect: { x: 100, y: 500, w: 184, h: 90 },
+  },
+};
+
+export const ESXTOP_SUBNODES = {
+  'esxi.esxtop': { name: 'esxtop', sub: 'interactive · batch · replay', x: 410, y: 220 },
+  'esxi.vmkernel': { name: 'VMkernel', sub: 'CPU + memory scheduler', x: 550, y: 220 },
+  'esxi.vscsi': { name: 'vSCSI / NMP', sub: 'queues · paths · latency', x: 690, y: 220 },
+  'esxi.vswitch': { name: 'vSwitch / DVS', sub: 'ports · uplinks · drops', x: 550, y: 340 },
+  'esxi.metrics': { name: 'PDH counters', sub: 'per-world samples', x: 690, y: 340 },
+};
+
 /* --------------------------------------------------------------- layouts */
 
 const onegateNodes = Object.fromEntries(
@@ -206,6 +239,20 @@ export const LAYOUTS = {
       rect: { x: 500, y: 300, w: 400, h: 360 },
       footer: 'config · certificates · runtime state',
       subnodes: HAPROXY_SUBNODES,
+    }],
+  },
+  esxtop: {
+    id: 'esxtop',
+    label: 'ESXtop',
+    nodes: ESXTOP_NODES,
+    groups: [{
+      id: 'esxi',
+      name: 'ESXi host',
+      sub: 'VMkernel · esxtop · storage · network',
+      icon: 'server',
+      rect: { x: 550, y: 280, w: 430, h: 240 },
+      footer: 'CPU scheduler · memory · vSCSI/NMP · vSwitch',
+      subnodes: ESXTOP_SUBNODES,
     }],
   },
 };

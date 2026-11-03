@@ -17,6 +17,10 @@ const CHANNELS = {
   git: 'Git transport',
   ci: 'CI runner',
   deploy: 'deployment',
+  host: 'ESXi host',
+  storage: 'storage path',
+  guest: 'guest I/O',
+  report: 'analysis',
 };
 
 const CHANNEL_META = {
@@ -33,6 +37,10 @@ const CHANNEL_META = {
   git: { label: 'Git transport', color: 'var(--orange)' },
   ci: { label: 'CI runner', color: 'var(--pink)' },
   deploy: { label: 'deployment', color: 'var(--warn)' },
+  host: { label: 'ESXi host', color: 'var(--warn)' },
+  storage: { label: 'storage path', color: 'var(--accent-2)' },
+  guest: { label: 'guest I/O', color: 'var(--teal)' },
+  report: { label: 'analysis', color: 'var(--ok)' },
 };
 
 const STORE_ICONS = {
@@ -42,12 +50,15 @@ const STORE_ICONS = {
   volume: 'database', network: 'network',
   gitrepo: 'database', gitremote: 'cloud', reflog: 'clock', github: 'server', deployment: 'server',
   haproxy: 'proxy', servers: 'server', logs: 'eye', certs: 'lock',
+  esxi: 'server', esxtop: 'terminal', capture: 'table', vmguest: 'box',
+  datastore: 'database', vswitch: 'network', physical: 'cloud',
 };
 
 const STORE_ORDER = [
   'browser', 'local', 'onegate', 'docker', 'container', 'volume', 'network',
   'gitrepo', 'gitremote', 'reflog', 'github', 'registry', 'deployment',
   'haproxy', 'servers', 'certs', 'logs',
+  'esxi', 'esxtop', 'capture', 'vmguest', 'datastore', 'vswitch', 'physical',
   'frontend', 'backend', 'idp', 'sp', 'attr',
 ];
 
@@ -646,7 +657,7 @@ export class SimPlayer {
   }
 
   renderWire(step, animate) {
-    const channelClasses = ['front', 'back', 'cookie', 'attr', 'internal', 'saml', 'cli', 'engine', 'network', 'registry', 'git', 'ci', 'deploy'].map((c) => `ch-${c}`);
+    const channelClasses = ['front', 'back', 'cookie', 'attr', 'internal', 'saml', 'cli', 'engine', 'network', 'registry', 'git', 'ci', 'deploy', 'host', 'storage', 'guest', 'report'].map((c) => `ch-${c}`);
     // fade everything, then bring the current hop to the front
     for (const p of this.wireEls.values()) {
       p.classList.remove('is-active', ...channelClasses);
@@ -955,6 +966,14 @@ function explainKind(kind) {
     server: 'A backend server is an address/port with health state, weight and optional backup role. A server marked down is skipped until checks recover.',
     metric: 'HAProxy metrics expose request rate, errors, queues, response times and server health. They are aggregated at the proxy, not a substitute for application tracing.',
     log: 'A request log records client, frontend, backend/server, status and timers. Use it to distinguish a routing miss, a timeout and an upstream error.',
+    capture: 'A PDH-CSV capture is a wide table: one timestamp column and one column per counter path. The path encodes host, group/instance and counter. Keep the raw file; the analysis is reproducible from it.',
+    rc: 'An esxtop rc file is a version-specific positional layout: panel lines contain field letters, uppercase means selected and lowercase hidden, and the last line holds options. Create it with W; do not hand-edit it.',
+    stat: 'A counter series is one metric over the capture window. P95 and P05 describe sustained behaviour; max is useful for hard errors but noisy for latency and CPU.',
+    finding: 'A finding is a rule result, not a root cause. It records the entity, metric, observed percentile, guardrail and recommendation; confirm it against the raw series and the workload.',
+    report: 'The report is a triage document: executive summary, prioritized actions, findings, technical reference and capture details. HTML is standalone; PDF is produced by the browser print dialog.',
+    vm: 'A VM is a group of worlds. Its vCPUs, vmx, mks and device worlds share the guest memory and virtual devices; group totals can hide a single starved vCPU.',
+    lun: 'A datastore is a logical filesystem layer; the LUN/device is the backing storage. A datastore can span extents, so map it to its devices before reading DAVG, KAVG or GAVG.',
+    host: 'The ESXi host runs the VMkernel, CPU scheduler, memory scheduler, vSCSI/NMP stack and virtual switch. esxtop reads the same VMkernel counters that vCenter surfaces differently.',
   };
   return map[kind] || 'Simulated credential.';
 }
@@ -967,6 +986,18 @@ function channelRule(step, topic = 'onegate') {
     git: 'This happens inside the repository, index or local refs. Check the current branch, staged diff, reflog and repository-local config before changing anything.',
     haproxy: 'This happens inside HAProxy: ACL evaluation, backend selection, health-state decisions or TLS handling. Check the exact matching rule, order and state, not only the final status code.',
   }[topic] || 'This happens inside the selected component. Check its own state, logs and configuration rather than only the final error.';
+  if (topic === 'esxtop') {
+    const rules = {
+      cli: 'You are on the ESXi Shell. Confirm the host, the esxtop version, the exact command and whether `-a` or `-c` changes the field set. The capture is only as good as the command that produced it.',
+      internal: 'This happens inside the ESXi host or the esxtop process: counter collection, parser state or rule evaluation. Check the actual sample window and the raw counter, not only the final status.',
+      host: 'This is host-level VMkernel behaviour. CPU scheduling, memory reclaim, queueing and vSCSI/NMP decisions happen here; one host can look healthy on average while one world or device is starved.',
+      storage: 'This is the storage path. Split GAVG into DAVG (device/array) and KAVG (VMkernel/vSCSI), then check the queue (QUED, ACTV, %USD) and path state.',
+      guest: 'This is guest-visible behaviour. The VM sees the vCPU, memory and virtual devices configured for it; group aggregates can hide a single starved vCPU or virtual disk.',
+      network: 'This is the virtual or physical network path. Drops and throughput must be read with link speed, packet size, teaming and the physical switch counters.',
+      report: 'This is analysis, not a live sample. Confirm that the finding was produced from the correct capture, the right percentile and the real VM scope; system worlds are excluded from VM-scoped findings.',
+    };
+    return rules[ch] || rules.host;
+  }
   const front = topic === 'haproxy'
     ? 'The client-facing side. TLS, SNI, Host and request headers are visible here; do not assume the backend sees the same values unless HAProxy forwards them.'
     : 'Front-channel data is visible to the browser. Codes, `state`, `nonce` and cookies belong here; access tokens, refresh tokens and secrets do not.';
@@ -993,6 +1024,46 @@ function channelRule(step, topic = 'onegate') {
 
 function channelChecks(step, topic = 'onegate') {
   const ch = step.channel || 'front';
+  if (topic === 'esxtop') {
+    const rules = {
+      cli: [
+        'Confirm the ESXi host, esxtop version and exact command line.',
+        'For batch, verify `-b`, `-d`, `-n` and the output path; `-a` overrides an rc file.',
+        'For a focused capture, validate the rc header with `-n 2` before the long run.',
+      ],
+      internal: [
+        'Confirm the capture window and sample count before comparing percentiles.',
+        'Check whether the counter exists in this ESXi release and whether it is numeric or categorical.',
+        'Treat the finding as a prompt: inspect the raw series and the workload context.',
+      ],
+      host: [
+        'Separate CPU ready from CPU limit: `%MLMTD` is part of `%RDY`, not an additional signal.',
+        'Check host PCPU utilisation, load average and the worst pCPU, not only the host average.',
+        'For memory, separate ballooning (`MCTLSZ`) from VMkernel swap (`SWCUR`) and swap-in (`SWR/s`).',
+      ],
+      storage: [
+        'Split `GAVG = DAVG + KAVG` before blaming the array or the host.',
+        'Check `QUED`, `ACTV`, `%USD`, `DQLEN`/`AQLEN` and path state for queue saturation.',
+        'Any sustained `ABRTS/s`, `RESETS/s` or `CONS/s` is an incident signal; check vmkernel.log and array health.',
+      ],
+      guest: [
+        'Read `%RDY` per vCPU, not only at VM-group level.',
+        'Compare configured memory (`MEMSZ`) with `GRANT`, `MCTLSZ`, `SWCUR` and `%ACTV`.',
+        'For storage, compare virtual-disk `LAT/rd`/`LAT/wr` with `GAVG`, `DAVG` and `KAVG`.',
+      ],
+      network: [
+        'Check `%DRPTX`/`%DRPRX` with packet rate, throughput and link speed.',
+        'Confirm whether the drop is on the VM port, the uplink or the physical switch.',
+        'Correlate with host CPU readiness; packet processing can be CPU-bound.',
+      ],
+      report: [
+        'Confirm the finding is based on the intended capture and percentile.',
+        'Check that the entity is a real VM, not an ESXi system world.',
+        'Use the action plan; change one thing, then re-capture and compare the same percentile.',
+      ],
+    };
+    return rules[ch] || rules.host;
+  }
   if (topic === 'haproxy' && ch === 'front') return [
     'Confirm the frontend bind, port, TLS/certificate and SNI/Host matching rules.',
     'ACL order matters: an earlier rule wins. Check `http-request` returns before `use_backend`.',

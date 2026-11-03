@@ -1,10 +1,10 @@
 {
   "name": "learning-lab",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Interactive, animated learning lab for OneGate federation, Docker on Linux and Git & GHCR.",
+  "description": "Interactive, animated learning lab for OneGate federation, Docker on Linux, Git & GHCR, HAProxy and ESXi performance.",
   "scripts": {
     "start": "node server.mjs"
   },

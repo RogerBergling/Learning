@@ -101,7 +101,7 @@ doc_files = {p.stem for p in DOCS.glob("*.md")}
 check(len(doc_slugs) == len(set(doc_slugs)), "documentation slugs are unique")
 check(set(doc_slugs) == doc_files, "DOCS and public/docs/*.md agree",
       f"DOCS-only={sorted(set(doc_slugs) - doc_files)} files-only={sorted(doc_files - set(doc_slugs))}")
-check(len(doc_slugs) == 38, "documentation chapter count", f"{len(doc_slugs)} chapters")
+check(len(doc_slugs) == 47, "documentation chapter count", f"{len(doc_slugs)} chapters")
 
 for slug in doc_slugs:
     path = DOCS / f"{slug}.md"
@@ -160,11 +160,12 @@ check(bool(categories), "CATEGORIES are declared")
 topics_block = section(content, "export const TOPICS = {", "\n};")
 topic_ids = set(re.findall(r"^  (\w+): \{", topics_block, re.M))
 topic_order = quoted(section(content, "export const TOPIC_ORDER = [", "];"))
-check({"onegate", "docker", "git", "haproxy"} <= topic_ids, "core topics are declared", ", ".join(sorted(topic_ids)))
+check({"onegate", "docker", "git", "haproxy", "esxtop"} <= topic_ids, "core topics are declared", ", ".join(sorted(topic_ids)))
 check(set(topic_order) == topic_ids, "TOPIC_ORDER covers TOPICS", f"order={topic_order}")
 check(sum(1 for slug in doc_slugs if slug.startswith("docker-")) >= 7, "Docker track has chapters")
 check(sum(1 for slug in doc_slugs if slug.startswith("git-")) >= 8, "Git track has chapters")
 check(sum(1 for slug in doc_slugs if slug.startswith("haproxy-")) >= 7, "HAProxy track has chapters")
+check(sum(1 for slug in doc_slugs if slug.startswith("esxtop-")) >= 8, "ESXtop track has chapters")
 
 # ------------------------------------------------------------------- scenarios
 
@@ -189,7 +190,7 @@ for path in scenario_files:
 
 check(len(scenario_ids) == len(set(scenario_ids)), "scenario ids are unique",
       f"duplicates={sorted({x for x in scenario_ids if scenario_ids.count(x) > 1})}")
-check(len(scenario_ids) == 38, "scenario count", f"{len(scenario_ids)} scenarios")
+check(len(scenario_ids) == 46, "scenario count", f"{len(scenario_ids)} scenarios")
 
 for sid, block in scenario_blocks.items():
     tag_match = re.search(r"\n  tags: \[([^\]]*)\]", block)
@@ -201,7 +202,7 @@ for sid, block in scenario_blocks.items():
     check(scenario_topic in topic_ids, f"scenario topic exists: {sid}", scenario_topic)
     layout_match = re.search(r"\n  layout: '([^']+)'", block)
     scenario_layout = layout_match.group(1) if layout_match else "onegate"
-    check(scenario_layout in {"onegate", "docker", "git", "haproxy"}, f"scenario layout exists: {sid}", scenario_layout)
+    check(scenario_layout in {"onegate", "docker", "git", "haproxy", "esxtop"}, f"scenario layout exists: {sid}", scenario_layout)
 
 index_text = read(SCENARIOS / "index.js")
 imports: dict[str, str] = {}
@@ -242,19 +243,23 @@ nodes_block = section(layout, "export const NODES = {", "export const SUBNODES")
 subnodes_block = section(layout, "export const SUBNODES = {", "export const SUBNODE_SIZE")
 docker_block = section(layout, "export const DOCKER_NODES = {", "/* -------------------------------------------------------------------- Git */")
 git_block = section(layout, "export const GIT_NODES = {", "/* ------------------------------------------------------------------- HAProxy */")
-haproxy_block = section(layout, "export const HAPROXY_NODES = {", "/* --------------------------------------------------------------- layouts */")
+haproxy_block = section(layout, "export const HAPROXY_NODES = {", "/* ----------------------------------------------------------------- ESXtop */")
+esxtop_block = section(layout, "export const ESXTOP_NODES = {", "/* --------------------------------------------------------------- layouts */")
 node_ids = set(re.findall(r"^  (\w+): \{", nodes_block, re.M))
 subnode_ids = set(re.findall(r"^  '([^']+)':", subnodes_block, re.M))
 docker_ids = set(re.findall(r"^  (\w+): \{", docker_block, re.M))
 git_ids = set(re.findall(r"^  (\w+): \{", git_block, re.M))
 haproxy_ids = set(re.findall(r"^  (\w+): \{", haproxy_block, re.M))
 haproxy_sub_ids = set(re.findall(r"^  '([^']+)':", haproxy_block, re.M))
-actors = node_ids | subnode_ids | docker_ids | git_ids | haproxy_ids | haproxy_sub_ids | {"onegate", "haproxy"}
+esxtop_ids = set(re.findall(r"^  (\w+): \{", esxtop_block, re.M))
+esxtop_sub_ids = set(re.findall(r"^  '([^']+)':", esxtop_block, re.M))
+actors = node_ids | subnode_ids | docker_ids | git_ids | haproxy_ids | haproxy_sub_ids | esxtop_ids | esxtop_sub_ids | {"onegate", "haproxy", "esxi"}
 
 check({"user", "onegate"} <= actors, "core layout actors exist")
 check({"developer", "daemon", "container"} <= docker_ids, "Docker layout actors exist")
 check({"working", "local", "remote", "actions"} <= git_ids, "Git layout actors exist")
 check({"client", "web1", "web2"} <= haproxy_ids, "HAProxy layout actors exist")
+check({"admin", "vm", "storage", "network", "report"} <= esxtop_ids, "ESXtop layout actors exist")
 for actor in sorted(set(re.findall(r"\b(?:from|to):\s*'([^']+)'", scenario_text))):
     check(actor in actors, f"step actor exists in layout: {actor}")
 

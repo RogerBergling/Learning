@@ -22,7 +22,7 @@ function topicCard(topic) {
 export function renderHome(view) {
   const summary = progressSummary(DOCS.length);
   const quiz = summary.quiz;
-  const featured = ['bff-login', 'docker-run', 'git-first-push', 'haproxy-https-request', 'docker-build', 'git-release-ghcr']
+  const featured = ['bff-login', 'docker-run', 'git-first-push', 'haproxy-https-request', 'esxtop-batch-capture', 'docker-build', 'git-release-ghcr']
     .map(scenarioById)
     .filter(Boolean);
 
@@ -41,6 +41,7 @@ export function renderHome(view) {
           <a class="btn" href="#/topic/docker">${icon('box', 16)} Docker on Linux</a>
           <a class="btn" href="#/topic/git">${icon('branch', 16)} Git &amp; GHCR</a>
           <a class="btn" href="#/topic/haproxy">${icon('proxy', 16)} HAProxy</a>
+          <a class="btn" href="#/topic/esxtop">${icon('activity', 16)} ESXtop</a>
         </div>
         <div class="hero-stats">
           <div class="hero-stat"><strong>${TOPIC_ORDER.length}</strong><span>learning tracks</span></div>
@@ -73,7 +74,7 @@ export function renderHome(view) {
     <section class="section-head">
       <div>
         <h2>Choose your track</h2>
-        <p>Four independent curricula. Each one has chapters, simulations, a glossary and production checklists.</p>
+        <p>Five independent curricula. Each one has chapters, simulations, a glossary and production checklists.</p>
       </div>
     </section>
     <div class="topic-grid">

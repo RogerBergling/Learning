@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/RogerBergling/Learning/actions/workflows/ci.yml/badge.svg)](https://github.com/RogerBergling/Learning/actions/workflows/ci.yml)
 
-An interactive, offline learning platform for **OneGate federation, Docker on Linux, Git & GHCR and HAProxy**. Choose a track, read the chapters, run the animated simulations and verify each flow step by step.
+An interactive, offline learning platform for **OneGate federation, Docker on Linux, Git & GHCR, HAProxy and ESXi performance**. Choose a track, read the chapters, run the animated simulations and verify each flow step by step.
 
-**Four learning tracks. Thirty-eight written chapters. Thirty-eight animated simulations. A 31-question quiz with local progress.** No build step, no runtime dependencies, no network calls.
+**Five learning tracks. Forty-seven written chapters. Forty-six animated simulations. A 39-question quiz with local progress.** No build step, no runtime dependencies, no network calls.
 
 ```text
 Topics → chapters → simulations → live artifact vault → quiz
@@ -23,6 +23,10 @@ Topics → chapters → simulations → live artifact vault → quiz
 | HAProxy track | HAProxy simulator |
 |---|---|
 | ![HAProxy learning track](docs/screenshots/haproxy-topic.png) | ![HAProxy HTTPS request simulation](docs/screenshots/haproxy-simulator.png) |
+
+| ESXtop track | ESXtop simulator |
+|---|---|
+| ![ESXtop learning track](docs/screenshots/esxtop-topic.png) | ![ESXtop batch capture simulation](docs/screenshots/esxtop-simulator.png) |
 
 More screenshots: [Git & GHCR track](docs/screenshots/git-topic.png) · [Docker quiz](docs/screenshots/docker-quiz.png).
 
@@ -193,7 +197,7 @@ Local development serves the committed fallback:
 
 ```json
 {
-  "version": "2.1.0",
+  "version": "2.2.0",
   "imageTag": "local",
   "commit": "local",
   "buildDate": null
@@ -221,7 +225,7 @@ For a manual Docker build, stamp it explicitly:
 
 ```bash
 docker build \
-  --build-arg APP_VERSION=2.1.0 \
+  --build-arg APP_VERSION=2.2.0 \
   --build-arg IMAGE_TAG=manual \
   --build-arg GIT_SHA="$(git rev-parse --short HEAD)" \
   --build-arg BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -234,14 +238,14 @@ docker build \
 
 | Page | What it does |
 |---|---|
-| **Topics** (`#/`) | Choose OneGate federation, Docker on Linux, Git & GHCR or HAProxy |
+| **Topics** (`#/`) | Choose OneGate federation, Docker on Linux, Git & GHCR, HAProxy or ESXtop |
 | **Topic pages** (`#/topic/{id}`) | A guided path, chapter groups, simulations, progress and glossary for one track |
-| **Learn** (`#/learn`) | Thirty-eight chapters across four tracks, full-text search, TOC and completion tracking |
-| **Simulations** (`#/scenarios`) | Filter/search all 38 flows by topic, category, level, tag or keyword |
+| **Learn** (`#/learn`) | Forty-seven chapters across five tracks, full-text search, TOC and completion tracking |
+| **Simulations** (`#/scenarios`) | Filter/search all 46 flows by topic, category, level, tag or keyword |
 | **Simulator** (`#/sim/{id}`) | Animated stage, live artifact vault, HTTP/CLI wire view, config and pitfalls |
 | **Compare** (`#/compare`) | JWT vs opaque, the storage matrix and a decision helper |
-| **Glossary** (`#/glossary`) | OneGate terms; Docker and Git tracks have their own glossaries |
-| **Quiz** (`#/quiz`) | A 31-question knowledge check across the tracks, with saved progress |
+| **Glossary** (`#/glossary`) | OneGate terms; Docker, Git, HAProxy and ESXtop tracks have their own glossaries |
+| **Quiz** (`#/quiz`) | A 39-question knowledge check across the tracks, with saved progress |
 | **Self-check** (`#/selftest`) | Runtime validation of topics, scenarios, tokens, quizzes and all docs |
 
 Every scenario has five tabs:
@@ -338,7 +342,20 @@ Keyboard: `Space` play/pause, `←` `→` step, `R` restart. Click any vault chi
 | 37 | Security | Advanced | 7 | TLS, headers, client certificates, admin socket and trust boundaries |
 | 38 | Operations and upgrades | Advanced | 7 | `haproxy -c`, reload, rollback and 2.8 → 3.x changes |
 
-Every scenario is reachable from the Simulations page and from the written chapters. The OneGate catalog with “start here if…” guidance is in [chapter 9](public/docs/09-scenario-catalog.md). The HAProxy track is a learning path only — there is no config editor or active debug console.
+### ESXtop & ESXi performance
+
+| # | Scenario | Level | Steps | Teaches |
+|---|---|---|---|---|
+| 39 | Batch capture | Core | 5 | SSH → `-b -a -d -n` → gzip → PDH-CSV → findings |
+| 40 | CPU ready | Core | 5 | `%RDY`, `%MLMTD`, `%CSTP`, monster VM and the limit-vs-contention decision |
+| 41 | Memory reclaim | Core | 5 | `MCTLSZ`, `SWCUR`, swap rates, overcommit and `N%L` |
+| 42 | Storage latency | Advanced | 5 | vSCSI → NMP → HBA/LUN, `DAVG`, `KAVG`, `GAVG`, queues |
+| 43 | Storage queue | Advanced | 4 | `QUED`, `ACTV`, `%USD`, `DQLEN`/`AQLEN`, aborts/resets |
+| 44 | Network drops | Core | 4 | `%DRPTX`/`%DRPRX`, uplink, physical switch, host CPU |
+| 45 | Focused rc | Advanced | 4 | `W`, `-c`, panel letters, no Datastore panel, large-sample sizing |
+| 46 | Triage and report | Advanced | 5 | System worlds, P95/P05, action plan, HTML/PDF hand-off |
+
+Every scenario is reachable from the Simulations page and from the written chapters. The OneGate catalog with “start here if…” guidance is in [chapter 9](public/docs/09-scenario-catalog.md). The HAProxy track is a learning path only — there is no config editor or active debug console. The ESXtop track is simulation-only: it does not connect to an ESXi host, run esxtop, or change a real VM.
 
 ---
 
@@ -475,6 +492,22 @@ All in [`public/docs/`](public/docs/), rendered by the site and readable on GitH
 | [Operations and upgrades](public/docs/haproxy-07-operations-upgrades.md) | `haproxy -c`, reload, rollback, 2.8 → 3.x and observability |
 | [HAProxy glossary](public/docs/haproxy-glossary.md) | Every HAProxy term used in the track |
 
+### ESXtop & ESXi performance track
+
+| Chapter | What it covers |
+|---|---|
+| [Mental model](public/docs/esxtop-01-mental-model.md) | Worlds, groups, panels, PDH-CSV, interactive/batch/replay and the counter path |
+| [Capture modes](public/docs/esxtop-02-capture-modes.md) | `-b`, `-a`, `-c`, `-d`, `-n`, `-l`, `-u`, `-R`, gzip and capture quality |
+| [CPU scheduling](public/docs/esxtop-03-cpu-scheduling.md) | `%RDY`, `%MLMTD`, `%CSTP`, `%SWPWT`, monster VMs and the decision tree |
+| [Memory and NUMA](public/docs/esxtop-04-memory-numa.md) | Ballooning, VMkernel swap, compression, overcommit, `N%L`, `NRMEM` |
+| [Storage latency](public/docs/esxtop-05-storage-latency.md) | `DAVG`, `KAVG`, `GAVG`, `QAVG`, queues, paths, aborts/resets and datastore mapping |
+| [Network and vSAN](public/docs/esxtop-06-network-vsan.md) | TX/RX drops, packet size, throughput, uplinks, vSAN and power/interrupt context |
+| [Focused captures](public/docs/esxtop-07-focused-capture.md) | `W`, rc file format, panels, storage bundles, large-sample sizing and limits |
+| [Triage and reporting](public/docs/esxtop-08-triage-reporting.md) | P95/P05, system worlds vs VMs, action plans, change control and HTML/PDF reports |
+| [ESXtop glossary](public/docs/esxtop-glossary.md) | Every ESXi performance term used in the track |
+
+Primary sources: [Yellow Bricks — ESXTOP](https://www.yellow-bricks.com/esxtop/) · [Broadcom 344099 — storage performance](https://knowledge.broadcom.com/external/article/344099) · [Broadcom 1008205](https://knowledge.broadcom.com/external/article?legacyId=1008205) · [Broadcom 326309 — exporting esxtop data](https://knowledge.broadcom.com/external/article/326309/exporting-esxtop-performance-data-as-a-c.html) · [vSphere 8.0 monitoring and performance](https://techdocs.broadcom.com/us/en/vmware-cis/vsphere/vsphere/8-0/vsphere-monitoring-and-performance.html).
+
 The Markdown is the single source of truth: the site fetches and renders the same files you read on GitHub.
 
 ---
@@ -502,10 +535,10 @@ Learning/
 │   │       ├── ui.js             Icons, toast, helpers
 │   │       ├── version.js        Build metadata + local clock formatting
 │   │       ├── pages/            Home, topic, learn, list, simulator, quiz, compare, selftest
-│   │       ├── scenarios/        Thirty-eight scenario definitions + helpers
+│   │       ├── scenarios/        Forty-six scenario definitions + helpers
 │   │       └── sim/              Layout geometry + the animation player
 │   ├── version.json              Local fallback; overwritten by Docker build
-│   └── docs/                     Thirty-eight Markdown chapters across four tracks
+│   └── docs/                     Forty-seven Markdown chapters across five tracks
 ├── scripts/
 │   ├── verify.py                 Dependency-free static registry/link checks
 │   └── smoke.py                  Starts start.py and checks real HTTP responses
@@ -529,7 +562,7 @@ No bundler, no framework, no runtime dependency. The browser loads ES modules di
 
 ## How the simulation works
 
-- A fixed **1000 × 600** virtual topology per scenario layout (`onegate`, `docker`, `git`, `haproxy`). Nodes are HTML positioned in percentages; wires are SVG paths in the same coordinate space.
+- A fixed **1000 × 600** virtual topology per scenario layout (`onegate`, `docker`, `git`, `haproxy`, `esxtop`). Nodes are HTML positioned in percentages; wires are SVG paths in the same coordinate space.
 - A scenario is plain data: `{ id, topic, layout, title, category, level, minutes, summary, nodes, nodeLabels, initial, variants, steps, notes, config, pitfalls }`.
 - A step is `{ from, to, badge, detail, channel, http, vault, tags }`.
 - The vault is recomputed from `initial` plus every step's `vault` operations (`add`, `del`, `clearStore`), so it is always consistent with the current step.
@@ -546,7 +579,7 @@ To add a scenario, create a file in `public/assets/js/scenarios/`, export the ob
 - **Smoke test** (`python3 scripts/smoke.py`) starts the real `start.py` launcher on a free port and checks the app shell, ES modules, Markdown, SPA fallback, 404 handling, `HEAD` and security headers.
 - **Self-check** (`#/selftest`) validates scenario shape, actor IDs, channels, vault operations, token kinds, Markdown rendering and every doc fetch at runtime. It should report 100%.
 - **curl** the routes: `/`, `/assets/js/app.js`, `/docs/01-architecture.md`, `/version.json` should be 200.
-- Browser check: open `#/`, `#/topic/onegate`, `#/topic/docker`, `#/topic/git`, `#/topic/haproxy`, `#/learn/haproxy-07-operations-upgrades`, `#/sim/haproxy-https-request`, `#/sim/haproxy-tls-sni`, `#/compare`, `#/quiz/haproxy`, `#/glossary`, `#/selftest`.
+- Browser check: open `#/`, `#/topic/onegate`, `#/topic/docker`, `#/topic/git`, `#/topic/haproxy`, `#/topic/esxtop`, `#/learn/haproxy-07-operations-upgrades`, `#/learn/esxtop-08-triage-reporting`, `#/sim/haproxy-https-request`, `#/sim/esxtop-batch-capture`, `#/sim/esxtop-storage-latency`, `#/compare`, `#/quiz/haproxy`, `#/quiz/esxtop`, `#/glossary`, `#/selftest`.
 
 Both checks use only the Python standard library and run in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) on every push and pull request. The optional Node launcher is syntax-checked and smoke-tested separately.
 
@@ -556,8 +589,8 @@ If a chapter 404s, make sure you are serving `public/` (the launcher does) rathe
 
 ## Notes and disclaimers
 
-- **Everything is simulated.** Tokens, images, commits, container IDs and registry digests are illustrative. No request leaves your browser and no real infrastructure is touched.
-- **Docker and Git examples are teaching paths.** Container names, ports, images, commits and workflow snippets are deliberately simple. Verify commands against your Docker/Compose and Git versions before running them on a real host.
+- **Everything is simulated.** Tokens, images, commits, container IDs, registry digests, hosts, captures and performance counters are illustrative. No request leaves your browser and no real infrastructure is touched.
+- **Docker, Git and ESXtop examples are teaching paths.** Container names, ports, images, commits, hosts, captures and counter values are deliberately simple. Verify commands against your Docker/Compose, Git and ESXi versions before running them on a real host.
 - **The Git track scope is informed by [`RogerBergling/git-create`](https://github.com/RogerBergling/git-create)**, a safe menu-driven Git/GitHub assistant. This lab teaches the concepts and safety decisions; the tool itself is not required.
 - **Endpoint paths are illustrative.** Examples use `/mg-local/portal/...`, `/bff/login`, `/rp/callback`, `ONEGATE_BFF` and `X-CSRFTOKEN`. The Administration Manual names only `/mg-local/(realm)/bff/logout` and `/mg-local/(realm)/bff/accessToken`; the rest are examples. Real deployments generate their own paths, cookie names and menu labels; confirm them in your environment.
 - **Menu names follow the OneGate Administration Manual.** The core objects are Local Providers, Realm Settings, Remote Clients, Remote Providers, RP Authentication, Backend For Frontend, Attribute Sources, Remote/Local Service Providers, Remote IDPs, Attribute Profiles, Access Control Lists (ACL), the Virtual Host Selector and Activate Changes. Labels can differ slightly between versions.
@@ -567,6 +600,7 @@ If a chapter 404s, make sure you are serving `public/` (the launcher does) rathe
 - **Checked against the vendor manual.** This edition was reviewed against the **OneGate Administration Manual**; the PDF is kept locally for reference and is not redistributed in the repository.
 - **The HAProxy track scope is informed by [`RogerBergling/haproxy-gui`](https://github.com/RogerBergling/haproxy-gui)**, a local-first HAProxy configuration workbench. This lab teaches and simulates the concepts; it deliberately excludes the workbench editor and active debug console.
 - **HAProxy is a registered trademark of HAProxy Technologies.** This lab is unofficial and is not affiliated with or endorsed by HAProxy Technologies. The HAProxy track is a teaching model, not a config editor, live debugger, deployment tool or replacement for `haproxy -c` and the official configuration manual.
+- **The ESXtop track is simulation-only.** It does not connect to an ESXi host, run esxtop, collect a real capture, or change a VM. Every host, world, capture and counter is modeled. Counter semantics and thresholds are based on Broadcom/VMware documentation and Yellow Bricks field guidance; verify against your exact ESXi build. ESXi, ESXtop and VMware are trademarks of Broadcom. This lab is unofficial and not affiliated with Broadcom.
 - The lab is an unofficial study aid, not affiliated with the vendor. It is not a substitute for the product documentation or a security review.
 - No analytics, no external fonts, no CDN, no cookies. Chapter and quiz progress is stored in this browser's `localStorage` and never leaves the machine.
 

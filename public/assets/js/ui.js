@@ -32,6 +32,7 @@ const PATHS = {
   box: '<path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/>',
   branch: '<circle cx="6" cy="5" r="2.2"/><circle cx="6" cy="19" r="2.2"/><circle cx="18" cy="9" r="2.2"/><path d="M6 7.2v9.6M8.2 19h3.3A4.5 4.5 0 0 0 16 14.5V11.2M18 11.2V9"/>',
   network: '<rect x="3" y="4" width="6" height="5" rx="1.5"/><rect x="15" y="4" width="6" height="5" rx="1.5"/><rect x="9" y="15" width="6" height="5" rx="1.5"/><path d="M6 9v3h12V9M12 12v3"/>',
+  activity: '<path d="M3 12h4l2.5-6 4 12 2.5-6H21"/>',
 };
 
 export function icon(name, size = 18, cls = '') {

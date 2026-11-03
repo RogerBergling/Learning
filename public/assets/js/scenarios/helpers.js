@@ -42,6 +42,14 @@ export const ITEM = {
   server: (o = {}) => ({ id: 'server', kind: 'server', name: 'Backend server', meta: 'address · health', ...o }),
   metric: (o = {}) => ({ id: 'metric', kind: 'metric', name: 'HAProxy metric', meta: 'rate · errors · latency', ...o }),
   log: (o = {}) => ({ id: 'log', kind: 'log', name: 'HAProxy log line', meta: 'request · status · timers', ...o }),
+  capture: (o = {}) => ({ id: 'capture', kind: 'capture', name: 'PDH-CSV capture', meta: 'samples · columns · interval', ...o }),
+  rc: (o = {}) => ({ id: 'rc', kind: 'rc', name: 'esxtop rc file', meta: 'panels · fields · order', ...o }),
+  stat: (o = {}) => ({ id: 'stat', kind: 'stat', name: 'Counter series', meta: 'P95 · P05 · max', ...o }),
+  finding: (o = {}) => ({ id: 'finding', kind: 'finding', name: 'Analysis finding', meta: 'severity · entity · guardrail', ...o }),
+  report: (o = {}) => ({ id: 'report', kind: 'report', name: 'Capture report', meta: 'action plan · technical reference', ...o }),
+  vm: (o = {}) => ({ id: 'vm', kind: 'vm', name: 'Virtual machine', meta: 'vCPUs · guest workload', ...o }),
+  lun: (o = {}) => ({ id: 'lun', kind: 'lun', name: 'Datastore / LUN', meta: 'device · queue · latency', ...o }),
+  host: (o = {}) => ({ id: 'host', kind: 'host', name: 'ESXi host', meta: 'VMkernel · pCPU · memory', ...o }),
 };
 
 /** Config checklist block. */

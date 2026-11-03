@@ -16,6 +16,10 @@ import {
 import {
   haproxyHttpsRequest, haproxyAclRouting, haproxyTlsSni, haproxyHealth, haproxyTimeouts, haproxySecurity, haproxyUpgrade,
 } from './haproxy.js';
+import {
+  esxtopBatchCapture, esxtopCpuReady, esxtopMemoryReclaim, esxtopStorageLatency,
+  esxtopStorageQueue, esxtopNetworkDrops, esxtopFocusedRc, esxtopTriageReport,
+} from './esxtop.js';
 
 const FLOW = {
   'client-credentials': 'Service → token endpoint → API',
@@ -56,6 +60,14 @@ const FLOW = {
   'haproxy-timeouts': 'Queue/connect/response → 504 → logs',
   'haproxy-security': 'TLS + headers + trust boundaries',
   'haproxy-upgrade': 'Validate → reload → observe',
+  'esxtop-batch-capture': 'SSH → batch CSV → parser → findings',
+  'esxtop-cpu-ready': 'vCPU ready → limit/co-stop/contention → action',
+  'esxtop-memory-reclaim': 'Guest memory → balloon/swap → NUMA',
+  'esxtop-storage-latency': 'VM disk → vSCSI → HBA/LUN → DAVG/KAVG',
+  'esxtop-storage-queue': 'Queue depth → latency → aborts/resets',
+  'esxtop-network-drops': 'VM NIC → vSwitch → uplink → physical switch',
+  'esxtop-focused-rc': 'Interactive → W rc → -c → large-capture sizing',
+  'esxtop-triage-report': 'Findings → action plan → re-capture → report',
 };
 
 const ALL = [
@@ -97,12 +109,21 @@ const ALL = [
   haproxyTimeouts,
   haproxySecurity,
   haproxyUpgrade,
+  esxtopBatchCapture,
+  esxtopCpuReady,
+  esxtopMemoryReclaim,
+  esxtopStorageLatency,
+  esxtopStorageQueue,
+  esxtopNetworkDrops,
+  esxtopFocusedRc,
+  esxtopTriageReport,
 ];
 
 const FEATURED = new Set([
   'bff-login', 'token-formats', 'webapp-confidential', 'attr-rest', 'openid-federation',
   'docker-run', 'docker-build', 'docker-compose', 'git-first-push', 'git-release-ghcr',
   'haproxy-https-request', 'haproxy-tls-sni',
+  'esxtop-batch-capture', 'esxtop-cpu-ready', 'esxtop-storage-latency',
 ]);
 
 export const SCENARIOS = ALL.map((s, i) => {

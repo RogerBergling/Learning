@@ -46,7 +46,7 @@ export function renderScenarioList(view) {
         </div>
         <label class="search">
           <span class="sr-only">Search simulations</span>
-          <input type="search" placeholder="Search: Docker, Git, BFF, SAML…" data-search autocomplete="off">
+          <input type="search" placeholder="Search: Docker, Git, BFF, HAProxy, ESXtop…" data-search autocomplete="off">
         </label>
       </div>
     </div>

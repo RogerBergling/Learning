@@ -58,7 +58,7 @@ export function renderQuiz(view, topicId = 'all') {
       <p class="eyebrow">Knowledge check</p>
       <h1>${topic ? `${esc(topic.shortTitle)} quiz` : 'Quiz: can you spot the boundary?'}</h1>
       <p class="page-lede">
-        ${questions.length} questions${topic ? ` from the ${esc(topic.title)} track` : ' across tokens, BFF, Docker, Git, SAML and more'}.
+        ${questions.length} questions${topic ? ` from the ${esc(topic.title)} track` : ' across tokens, BFF, Docker, Git, HAProxy, ESXtop, SAML and more'}.
         Answer them in one sitting; every answer links back to the chapter or simulation that explains it.
       </p>
       <div class="hero-actions">

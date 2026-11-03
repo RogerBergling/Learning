@@ -277,6 +277,72 @@ const HAPROXY_DOCS = [
   },
 ];
 
+const ESXTOP_DOCS = [
+  {
+    slug: 'esxtop-01-mental-model',
+    title: 'ESXtop mental model: worlds, panels and the counter path',
+    blurb: 'What esxtop actually reads: VMkernel worlds, groups, panels, PDH-CSV paths, interactive vs batch vs replay, and how one capture becomes an analysis.',
+    chapter: 'ESXtop foundations',
+    minutes: 15,
+  },
+  {
+    slug: 'esxtop-02-capture-modes',
+    title: 'Capture modes: interactive, batch, replay and focused -c',
+    blurb: 'Every command-line option: -b, -a, -c, -d, -n, -l, -u, -R, -export-entity, -import-entity, gzip, PDH-CSV and the traps in batch field selection.',
+    chapter: 'ESXtop foundations',
+    minutes: 15,
+  },
+  {
+    slug: 'esxtop-03-cpu-scheduling',
+    title: 'CPU scheduling: %RDY, %MLMTD, %CSTP and the monster VM',
+    blurb: 'How vCPUs become ready and get scheduled, why %RDY includes %MLMTD and %CSTP, what a high vCPU count does, and how to separate a limit from host contention.',
+    chapter: 'ESXtop CPU & memory',
+    minutes: 20,
+  },
+  {
+    slug: 'esxtop-04-memory-numa',
+    title: 'Memory pressure: ballooning, VMkernel swap and NUMA locality',
+    blurb: 'MEMSZ, GRANT, MCTLSZ, SWCUR, swap rates, compression, overcommit, N%L, NRMEM and the order in which ESXi reclaims guest memory.',
+    chapter: 'ESXtop CPU & memory',
+    minutes: 18,
+  },
+  {
+    slug: 'esxtop-05-storage-latency',
+    title: 'Storage stack: DAVG, KAVG, GAVG and the queue',
+    blurb: 'Follow a vSCSI command from guest to array: DAVG, KAVG, GAVG, QAVG, QUED, ACTV, %USD, DQLEN/AQLEN, aborts, resets and read/write latency.',
+    chapter: 'ESXtop storage & network',
+    minutes: 20,
+  },
+  {
+    slug: 'esxtop-06-network-vsan',
+    title: 'Network drops, vSAN and the rest of the host',
+    blurb: 'TX/RX drops, packet size, throughput, link speed, vSAN panel x, power panel p, interrupts and host-versus-VM visibility.',
+    chapter: 'ESXtop storage & network',
+    minutes: 15,
+  },
+  {
+    slug: 'esxtop-07-focused-capture',
+    title: 'Focused captures with -c and large-sample sizing',
+    blurb: 'The rc file format, W, panel letters, d/u/v/c/m/n/i/p, storage bundles, no native Datastore panel, gzip, ESXTOP_MAX_* limits, memory maths and /tmp sizing.',
+    chapter: 'ESXtop operations',
+    minutes: 18,
+  },
+  {
+    slug: 'esxtop-08-triage-reporting',
+    title: 'From counters to findings: P95, thresholds and action plans',
+    blurb: 'The rule engine, P95/P05 comparisons, system worlds versus VMs, false positives, decision trees, change control, HTML/PDF reports and the support hand-off.',
+    chapter: 'ESXtop operations',
+    minutes: 18,
+  },
+  {
+    slug: 'esxtop-glossary',
+    title: 'ESXtop & ESXi performance glossary',
+    blurb: 'World, group, pCPU, vCPU, %RDY, GAVG, DAVG, KAVG, QAVG, ballooning, swap, NUMA, PDH-CSV, rc, batch, replay and every other term used in the track.',
+    chapter: 'Reference',
+    minutes: 8,
+  },
+];
+
 const withTopic = (docs, topic) => docs.map((doc) => ({ ...doc, topic }));
 
 export const DOCS = [
@@ -284,6 +350,7 @@ export const DOCS = [
   ...withTopic(DOCKER_DOCS, 'docker'),
   ...withTopic(GIT_DOCS, 'git'),
   ...withTopic(HAPROXY_DOCS, 'haproxy'),
+  ...withTopic(ESXTOP_DOCS, 'esxtop'),
 ];
 
 export const CHAPTERS = [
@@ -302,6 +369,10 @@ export const CHAPTERS = [
   'HAProxy foundations',
   'HAProxy TLS',
   'HAProxy operations',
+  'ESXtop foundations',
+  'ESXtop CPU & memory',
+  'ESXtop storage & network',
+  'ESXtop operations',
   'Deep dives',
   'Reference',
 ];
@@ -416,9 +487,36 @@ export const TOPICS = {
       'haproxy-07-operations-upgrades',
     ],
   },
+  esxtop: {
+    id: 'esxtop',
+    title: 'ESXtop & ESXi Performance',
+    shortTitle: 'ESXtop',
+    eyebrow: 'ESXi performance & support triage',
+    icon: 'activity',
+    accent: 'teal',
+    summary: 'Read esxtop like a level-3 support engineer: capture the right counters, separate CPU ready from limits, follow storage latency through DAVG/KAVG/GAVG, inspect memory reclaim and NUMA, then turn findings into a verified action plan.',
+    description: 'A simulation-only ESXi performance track built around the counter path. Every host, VM, datastore and packet is modeled — no real ESXi host or credentials are required. Covers interactive, batch, replay and focused -c captures, CPU/memory/storage/network counters, thresholds, false positives, large-sample sizing and reporting.',
+    outcomes: [
+      'Choose interactive, batch, replay or focused -c capture',
+      'Explain %RDY, %MLMTD, %CSTP, %SWPWT and the monster-VM effect',
+      'Trace storage latency through DAVG, KAVG, GAVG, QAVG and queues',
+      'Read ballooning, swapping, overcommit and NUMA locality',
+      'Turn findings into a prioritized action plan and re-capture',
+    ],
+    path: [
+      'esxtop-01-mental-model',
+      'esxtop-02-capture-modes',
+      'esxtop-03-cpu-scheduling',
+      'esxtop-04-memory-numa',
+      'esxtop-05-storage-latency',
+      'esxtop-06-network-vsan',
+      'esxtop-07-focused-capture',
+      'esxtop-08-triage-reporting',
+    ],
+  },
 };
 
-export const TOPIC_ORDER = ['onegate', 'docker', 'git', 'haproxy'];
+export const TOPIC_ORDER = ['onegate', 'docker', 'git', 'haproxy', 'esxtop'];
 
 export const CATEGORIES = {
   foundation: { label: 'Foundations', blurb: 'The primitives, with no browser in the way.' },
@@ -441,6 +539,12 @@ export const CATEGORIES = {
   haproxy: { label: 'HAProxy foundations', blurb: 'Frontends, backends, ACLs and routing.' },
   'haproxy-tls': { label: 'HAProxy TLS', blurb: 'Termination, passthrough and SNI.' },
   'haproxy-ops': { label: 'HAProxy operations', blurb: 'Health, timeouts, logs, security and upgrades.' },
+  'esxtop-capture': { label: 'ESXtop capture', blurb: 'Interactive, batch, replay, PDH-CSV and focused rc files.' },
+  'esxtop-cpu': { label: 'CPU scheduling', blurb: 'Ready time, limits, co-stop, monsters and host capacity.' },
+  'esxtop-memory': { label: 'Memory & NUMA', blurb: 'Reclaim, ballooning, swap, overcommit and locality.' },
+  'esxtop-storage': { label: 'Storage stack', blurb: 'DAVG, KAVG, GAVG, queues, paths and array latency.' },
+  'esxtop-network': { label: 'Network & vSAN', blurb: 'Drops, throughput, uplinks, vSAN and power panels.' },
+  'esxtop-ops': { label: 'Triage & reporting', blurb: 'Thresholds, false positives, action plans and reports.' },
 };
 
 export const LEARNING_PATH = TOPICS.onegate.path;

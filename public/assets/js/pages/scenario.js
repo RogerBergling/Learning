@@ -21,6 +21,12 @@ const DOCS_FOR = {
   'git-workflow': ['git-03-everyday-workflow', 'git-04-branches-merge-rebase', 'git-05-undo-recovery'],
   'git-security': ['git-07-settings-files-secrets'],
   'git-delivery': ['git-08-tags-releases-ghcr'],
+  'esxtop-capture': ['esxtop-02-capture-modes', 'esxtop-01-mental-model'],
+  'esxtop-cpu': ['esxtop-03-cpu-scheduling'],
+  'esxtop-memory': ['esxtop-04-memory-numa'],
+  'esxtop-storage': ['esxtop-05-storage-latency'],
+  'esxtop-network': ['esxtop-06-network-vsan'],
+  'esxtop-ops': ['esxtop-07-focused-capture', 'esxtop-08-triage-reporting'],
 };
 
 const DOC_TITLES = {
@@ -48,6 +54,14 @@ const DOC_TITLES = {
   'git-06-remotes-github': 'Remotes and GitHub',
   'git-07-settings-files-secrets': 'Settings, files and secrets',
   'git-08-tags-releases-ghcr': 'Tags, releases and GHCR',
+  'esxtop-01-mental-model': 'ESXtop mental model',
+  'esxtop-02-capture-modes': 'Capture modes',
+  'esxtop-03-cpu-scheduling': 'CPU scheduling',
+  'esxtop-04-memory-numa': 'Memory and NUMA',
+  'esxtop-05-storage-latency': 'Storage latency',
+  'esxtop-06-network-vsan': 'Network and vSAN',
+  'esxtop-07-focused-capture': 'Focused captures',
+  'esxtop-08-triage-reporting': 'Triage and reporting',
 };
 
 export async function renderScenarioPage(view, id) {

@@ -92,6 +92,14 @@ export const KINDS = {
   server: { label: 'Backend server',             chip: 'server',   cls: 'k-server' },
   metric: { label: 'HAProxy metric',             chip: 'metric',   cls: 'k-metric' },
   log:    { label: 'HAProxy log line',           chip: 'log',      cls: 'k-log' },
+  capture: { label: 'esxtop capture',             chip: 'CSV',      cls: 'k-capture' },
+  rc:     { label: 'esxtop rc file',              chip: 'rc',       cls: 'k-config' },
+  stat:   { label: 'Counter series',              chip: 'stat',     cls: 'k-stat' },
+  finding: { label: 'Analysis finding',           chip: 'finding',  cls: 'k-finding' },
+  report: { label: 'Capture report',              chip: 'report',   cls: 'k-report' },
+  vm:     { label: 'Virtual machine',             chip: 'VM',       cls: 'k-vm' },
+  lun:    { label: 'Datastore / LUN',              chip: 'LUN',      cls: 'k-lun' },
+  host:   { label: 'ESXi host',                   chip: 'host',     cls: 'k-host' },
 };
 
 export const STORES = {
@@ -115,8 +123,15 @@ export const STORES = {
   deployment: { label: 'Deployment host',    hint: 'the machine or platform that pulls and runs the image' },
   haproxy:  { label: 'HAProxy',              hint: 'frontends, backends, ACLs, TLS and runtime state' },
   servers:  { label: 'Backend servers',      hint: 'upstream app servers and health state' },
-  logs:     { label: 'HAProxy logs',         hint: 'request logs, errors and metrics' },
+  logs:     { label: 'Logs & events',        hint: 'request logs, metric events and errors' },
   certs:    { label: 'TLS certificates',     hint: 'certificate files, chains and trust' },
+  esxi:     { label: 'ESXi host',            hint: 'VMkernel, pCPUs, memory and storage/network stack' },
+  esxtop:   { label: 'esxtop',              hint: 'interactive panels, batch process and replay' },
+  capture:  { label: 'Capture / session',    hint: 'PDH-CSV, gzip, parser session and report' },
+  vmguest:  { label: 'Virtual machine',      hint: 'guest workload, vCPUs, memory and virtual disk' },
+  datastore:{ label: 'Datastore / array',    hint: 'VMFS/NFS datastore, LUN, path and array' },
+  vswitch:  { label: 'Virtual switch',       hint: 'vSwitch/DVS port, uplink and teaming' },
+  physical: { label: 'Physical network',     hint: 'physical switch, NIC and link' },
 };
 
 /** Turn a scenario token definition into a concrete, displayable token. */
@@ -269,6 +284,30 @@ export function materialize(item, ctx = {}) {
       break;
     case 'log':
       out.value = item.value || 'client:port [date] frontend backend/server status timers';
+      break;
+    case 'capture':
+      out.value = item.value || '"(PDH-CSV 4.0) (UTC)(0)","\\\\esxi01\\Group Cpu(...)\\% Used",…\n"11/03/2026 09:00:00","12.4",…';
+      break;
+    case 'rc':
+      out.value = item.value || 'abcdefghij\nabcdefghijklmnopq\nABCDEfGHIJkl\nABcdeFGhIJKLmnop\naBCDEfghIJKl\nabcdefghijklmnopq\nabcdef\nabcdef\nAbcDEFGHijKlmN\nABCdEf\n5p\n';
+      break;
+    case 'stat':
+      out.value = item.value || 'P95 13.4% · P05 2.1% · max 19.8%\nseries: Vcpu(WEB-01:...:vmx-vcpu-0)\\% Ready';
+      break;
+    case 'finding':
+      out.value = item.value || 'CRITICAL · vCPU ready time is elevated\nentity: WEB-01 · metric: %RDY\nP95 13.4% vs guardrail 10%';
+      break;
+    case 'report':
+      out.value = item.value || 'ESXtop Lens capture report\nexecutive summary · action plan · findings · technical reference';
+      break;
+    case 'vm':
+      out.value = item.value || 'VM: WEB-01 · 4 vCPU · 16 GB\nworlds: vmx, vcpu0-3, mks';
+      break;
+    case 'lun':
+      out.value = item.value || 'naa.6001405a… · VMFS datastore\nDAVG 16.6 ms · KAVG 2.1 ms · GAVG 18.7 ms';
+      break;
+    case 'host':
+      out.value = item.value || 'esxi01 · 2 sockets · 24 pCPUs · 512 GB\nVMkernel · vSwitch · vSCSI · NMP';
       break;
     default:
       out.value = String(item.value ?? pseudo(seed, 32));
