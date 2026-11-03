@@ -75,6 +75,11 @@ jobs:
           curl -fsSI http://127.0.0.1:8099/ | grep -qi 'content-security-policy'
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8099/missing.js)" = "404"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8099/sim/bff-login)" = "200"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8099/learn/esxtop-01-mental-model)" = "200"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8099/.git/config)" = "404"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8099/admin)" = "404"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8099/server)" = "404"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8099/learners)" = "404"
 
   docker:
     name: Docker image builds

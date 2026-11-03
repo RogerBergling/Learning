@@ -407,6 +407,20 @@ for server_name in ("start.py", "server.mjs"):
     check("X-Content-Type-Options" in server_text, f"{server_name} sets nosniff")
     check("X-Frame-Options" in server_text, f"{server_name} sets frame protection")
 
+py_server = read(ROOT / "start.py")
+js_server = read(ROOT / "server.mjs")
+py_routes = set(re.findall(r'"(/[a-z-]+)"', section(py_server, "APP_ROUTE_PREFIXES = (", ")")))
+js_routes = set(re.findall(r"'(/[a-z-]+)'", section(js_server, "APP_ROUTE_PREFIXES = [", "]")))
+check(py_routes == js_routes, "launchers share one SPA route allowlist",
+      f"python-only={sorted(py_routes - js_routes)} node-only={sorted(js_routes - py_routes)}")
+check(len(py_routes) >= 8, "SPA route allowlist is populated", str(sorted(py_routes)))
+check(re.search(r'server_version\s*=\s*"LearningLab"', py_server) is not None,
+      "Python launcher uses a generic server identity")
+check(re.search(r"def version_string\(self\).*?return self\.server_version", py_server, re.S) is not None,
+      "Python launcher does not append the runtime version")
+check("## Public internet exposure" in readme,
+      "README documents public-internet exposure guidance")
+
 # ------------------------------------------------------------------------ report
 
 if failures:

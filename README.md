@@ -250,6 +250,55 @@ docker build \
 
 ---
 
+## Public internet exposure
+
+This lab ships **without authentication** and has no user data, database or upload endpoint. That lowers the data-loss risk, but it does **not** make direct public exposure safe: anyone who can reach the port can use the site, consume bandwidth and verify which content version is running.
+
+The default Compose file publishes port **8003 on every host interface**. Use it for local evaluation only. For any shared, LAN or public deployment, put a reverse proxy in front and do not publish the container port directly.
+
+### Recommended public deployment
+
+1. **Terminate TLS at a reverse proxy** (HAProxy, nginx, Caddy or your ingress) and redirect HTTP to HTTPS. Send **HSTS** on the HTTPS response, for example `Strict-Transport-Security: max-age=31536000; includeSubDomains`.
+2. **Require authentication for the whole site.** Use OIDC, SAML, an identity-aware proxy or at least HTTP Basic Auth over TLS. The lab has no login of its own; authentication must be enforced at the proxy, not by hiding links.
+3. **Bind the container to loopback** and let only the proxy reach it. Override the Compose port mapping, or use a separate override file:
+
+   ```yaml
+   services:
+     learning-lab:
+       ports:
+         - "127.0.0.1:8003:8080"
+   ```
+
+4. **Add per-IP rate limiting and request limits** at the proxy: connections and requests per second, maximum request body size, header size and read/idle timeouts. The app serves static GET/HEAD content only, so a small body limit is sufficient.
+5. **Restrict egress and ingress with firewall rules.** Allow inbound only to the proxy on 443. Do not allow inbound to `8003`. The container itself needs no outbound network access at runtime.
+6. **Pin the production image** to a reviewed version tag or, preferably, a digest:
+
+   ```yaml
+   image: ghcr.io/rogerbergling/learning@sha256:<digest>
+   ```
+
+   Verify the digest and the deployed metadata after every update:
+
+   ```bash
+   docker inspect ghcr.io/rogerbergling/learning:latest \
+     --format '{{index .Config.Labels "io.onegate.build.revision"}} {{index .Config.Labels "io.onegate.build.date"}}'
+   curl -fsS https://YOUR_HOST/version.json
+   ```
+
+   Do not track `latest` on a public host without a deliberate review step.
+7. **Keep automatic updaters and the Docker socket out of the deployment.** The Compose file intentionally has no automatic in-place updater and does not mount `/var/run/docker.sock`. Socket access is effectively root-equivalent control of the Docker host.
+
+### Repository and package controls
+
+- Protect `main`: require pull requests and reviews, block force pushes, and require CI to pass.
+- Protect release tags and the GHCR package. Limit who can publish and approve package versions.
+- Review Dependabot updates for the base image and GitHub Actions instead of accepting them blindly.
+- Treat a compromised maintainer account as a supply-chain incident: the published image is what users run.
+
+These controls complement the application hardening already present: read-only container, non-root user, all capabilities dropped, `no-new-privileges`, no Docker socket, no runtime dependencies, strict CSP and a generic `Server` header.
+
+---
+
 ## What is in the lab
 
 | Page | What it does |
@@ -593,9 +642,9 @@ To add a scenario, create a file in `public/assets/js/scenarios/`, export the ob
 ## Verification
 
 - **Static checks** (`python3 scripts/verify.py`) validate the document and scenario registries, quiz data, internal links, actors, token stores, assets, packaging metadata and server headers without a browser.
-- **Smoke test** (`python3 scripts/smoke.py`) starts the real `start.py` launcher on a free port and checks the app shell, ES modules, Markdown, SPA fallback, 404 handling, `HEAD` and security headers.
+- **Smoke test** (`python3 scripts/smoke.py`) starts the real `start.py` launcher on a free port and checks the app shell, ES modules, Markdown, known SPA routes, unknown-path 404s, `HEAD`, the `Server` header and security headers.
 - **Self-check** (`#/selftest`) validates scenario shape, actor IDs, channels, vault operations, token kinds, Markdown rendering and every doc fetch at runtime. It should report 100%.
-- **curl** the routes: `/`, `/assets/js/app.js`, `/docs/01-architecture.md`, `/version.json` should be 200.
+- **curl** the routes: `/`, `/assets/js/app.js`, `/docs/01-architecture.md`, `/version.json`, `/sim/bff-login` should be 200; `/.git/config`, `/admin` and `/server` should be 404.
 - Browser check: open `#/`, `#/topic/onegate`, `#/topic/docker`, `#/topic/git`, `#/topic/haproxy`, `#/topic/esxtop`, `#/learn/haproxy-07-operations-upgrades`, `#/learn/esxtop-08-triage-reporting`, `#/sim/haproxy-https-request`, `#/sim/esxtop-batch-capture`, `#/sim/esxtop-storage-latency`, `#/compare`, `#/quiz/haproxy`, `#/quiz/esxtop`, `#/glossary`, `#/selftest`.
 
 Both checks use only the Python standard library and run in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) on every push and pull request. The optional Node launcher is syntax-checked and smoke-tested separately.

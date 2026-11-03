@@ -39,6 +39,23 @@ const MIME = {
 
 const NO_CACHE = 'no-store, no-cache, must-revalidate, max-age=0';
 
+// Only these hash-router entry points may fall back to the app shell. Unknown
+// extension-less paths (/.git/config, /admin, /server, ...) must stay 404s.
+// Keep in sync with APP_ROUTE_PREFIXES in start.py.
+const APP_ROUTE_PREFIXES = [
+  '/learn',
+  '/topic',
+  '/sim',
+  '/scenarios',
+  '/compare',
+  '/glossary',
+  '/quiz',
+  '/selftest',
+];
+
+const isAppRoute = (pathname) =>
+  APP_ROUTE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+
 // Keep these in sync with SECURITY_HEADERS in start.py.
 const SECURITY_HEADERS = {
   'Content-Security-Policy': [
@@ -141,7 +158,7 @@ async function handle(req, res) {
     file = path.join(file, 'index.html');
     info = await stat(file).catch(() => null);
   }
-  if (!directory && !info && !path.extname(pathname)) {
+  if (!directory && !info && !path.extname(pathname) && isAppRoute(pathname)) {
     file = path.join(ROOT, 'index.html');
     info = await stat(file).catch(() => null);
   }

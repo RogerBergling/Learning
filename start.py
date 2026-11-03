@@ -29,6 +29,19 @@ WEB_ROOT = ROOT / "public"
 WEB_ROOT_REAL = WEB_ROOT.resolve()
 PORT_RANGE = range(8080, 8100)
 
+# Only these hash-router entry points may fall back to the app shell. Unknown
+# extension-less paths (/.git/config, /admin, /server, ...) must stay 404s.
+APP_ROUTE_PREFIXES = (
+    "/learn",
+    "/topic",
+    "/sim",
+    "/scenarios",
+    "/compare",
+    "/glossary",
+    "/quiz",
+    "/selftest",
+)
+
 NO_CACHE = "no-store, no-cache, must-revalidate, max-age=0"
 
 # The site has no inline scripts and no forms. Inline *styles* are used by the
@@ -54,8 +67,20 @@ SECURITY_HEADERS = {
 }
 
 
+def _is_app_route(path: str) -> bool:
+    """True only for the exact SPA entry prefixes, not lookalike names."""
+    return any(path == prefix or path.startswith(prefix + "/") for prefix in APP_ROUTE_PREFIXES)
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     """Static handler with sane MIME types and no caching (this is a lab)."""
+
+    # Do not disclose the Python runtime version in the Server response header.
+    server_version = "LearningLab"
+    sys_version = ""
+
+    def version_string(self) -> str:  # noqa: N802 (stdlib naming)
+        return self.server_version
 
     extensions_map = {
         **http.server.SimpleHTTPRequestHandler.extensions_map,
@@ -93,13 +118,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         return translated
 
     def _resolve_route(self) -> None:
-        # Hash routing means every app route is "/"; for convenience, send
-        # unknown extension-less paths to the app shell instead of a 404.
+        # Hash routing means the app is served from "/". For convenience, send
+        # known extension-less app routes to the app shell. Anything else keeps
+        # its normal 404 so scanners and users are not told that a missing path
+        # exists.
         path = self.path.split("?", 1)[0].split("#", 1)[0]
-        if path not in ("/", "") and not Path(path).suffix:
-            candidate = (WEB_ROOT / path.lstrip("/")).resolve()
-            if not candidate.exists() and (candidate == WEB_ROOT_REAL or WEB_ROOT_REAL in candidate.parents):
-                self.path = "/"
+        if path in ("/", "") or Path(path).suffix:
+            return
+        if not _is_app_route(path):
+            return
+        candidate = (WEB_ROOT / path.lstrip("/")).resolve()
+        if not candidate.exists() and (candidate == WEB_ROOT_REAL or WEB_ROOT_REAL in candidate.parents):
+            self.path = "/"
 
     def do_GET(self) -> None:  # noqa: N802 (stdlib naming)
         self._resolve_route()

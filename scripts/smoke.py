@@ -131,6 +131,21 @@ def main() -> int:
         check(status == 200, "SPA fallback route returns the app shell", str(status))
         check(b"<main id=\"view\"" in body, "SPA fallback serves index.html")
 
+        status, _, body = fetch(f"{base}/learn/esxtop-01-mental-model")
+        check(status == 200, "SPA fallback serves nested app routes", str(status))
+        check(b"<main id=\"view\"" in body, "nested app route serves index.html")
+
+        for path in ("/learners", "/admin", "/server", "/.git/config"):
+            status, _, body = fetch(f"{base}{path}")
+            check(status == 404, f"non-app extension-less path returns 404: {path}", str(status))
+            check(b"<main id=\"view\"" not in body,
+                  f"non-app extension-less path does not serve the app shell: {path}")
+
+        _, headers, _ = fetch(f"{base}/")
+        server_header = header(headers, "Server")
+        check("Python/" not in server_header, "Server header does not disclose Python", server_header)
+        check(server_header == "LearningLab", "Server header uses the generic identity", server_header)
+
         status, _, _ = fetch(f"{base}/missing-file.js")
         check(status == 404, "unknown file returns 404", str(status))
 
