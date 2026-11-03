@@ -32,16 +32,22 @@ Check whether the port is a VM port or an uplink. `Uplink?` and `Link Up?` are c
 
 Some ESXi releases expose a vSAN panel. It is separate from the generic storage panels and is not a general Datastore panel.
 
+- vSAN counters are emitted only when vSAN is enabled and the panel is included. `VSAN\Enabled? = 0` means no vSAN data; do not invent it.
 - vSAN latency and congestion are cluster-level behaviours.
 - A vSAN datastore can be backed by many devices across hosts.
-- Check `vsantop` and vSAN health for cluster-level analysis.
+- `SDLAT` measures latency variation; Yellow Bricks flags >5 ms.
+- Check `vsantop`, vSAN health and Skyline for disk-group, component, resync and network analysis.
 - Do not treat a vSAN panel as a replacement for DAVG/KAVG on a physical LUN.
 
 ## CPU power (`p`) and interrupts (`i`)
 
 - The power panel shows C/P states and frequency behaviour. It can explain performance changes after BIOS or power-policy changes.
-- The interrupt panel shows interrupt vector distribution. A single CPU taking most interrupts can cause latency even when average CPU looks fine.
+- `Power Usage Now Watts` and `Power Usage Cap Watts` describe host power. Sustained operation at the cap can mean the host is power-limited.
+- The interrupt panel shows interrupt vector distribution. Interrupt Cookie instances can be numerous; a high rate with high processing time is more significant than either alone.
+- A single CPU taking most interrupts can cause latency even when average CPU looks fine.
 - Neither panel replaces the scheduler view; use them as context.
+
+The full reference is in [Counter reference](#/learn/esxtop-09-counter-reference).
 
 ## Host versus VM visibility
 

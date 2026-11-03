@@ -335,6 +335,13 @@ const ESXTOP_DOCS = [
     minutes: 18,
   },
   {
+    slug: 'esxtop-09-counter-reference',
+    title: 'Counter reference, thresholds and status semantics',
+    blurb: 'The full counter map: CPU scheduling, host/per-VM memory, storage queues and errors, network drops, vSAN, power, interrupts, threshold matrix, status semantics, field coverage and report scope.',
+    chapter: 'Reference',
+    minutes: 22,
+  },
+  {
     slug: 'esxtop-glossary',
     title: 'ESXtop & ESXi performance glossary',
     blurb: 'World, group, pCPU, vCPU, %RDY, GAVG, DAVG, KAVG, QAVG, ballooning, swap, NUMA, PDH-CSV, rc, batch, replay and every other term used in the track.',
@@ -512,6 +519,7 @@ export const TOPICS = {
       'esxtop-06-network-vsan',
       'esxtop-07-focused-capture',
       'esxtop-08-triage-reporting',
+      'esxtop-09-counter-reference',
     ],
   },
 };

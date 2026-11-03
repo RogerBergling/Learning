@@ -587,4 +587,35 @@ export const QUIZ = [
     link: { label: 'Focused captures', href: '#/learn/esxtop-07-focused-capture' },
   },
 
+  {
+    id: 'esxtop-no-rule',
+    track: 'esxtop',
+    area: 'Analysis semantics',
+    question: 'A captured series has status “No rule”. What does that mean?',
+    options: [
+      'The counter is zero',
+      'The counter was captured, but no curated threshold applies to that metric/scope/group',
+      'The capture is missing the field',
+      'The host is healthy',
+    ],
+    answer: 1,
+    explanation: 'No rule means the series is present and displayed but has no verdict. It is not zero, missing or healthy. Inspect the value and its relationships manually.',
+    link: { label: 'Counter reference', href: '#/learn/esxtop-09-counter-reference' },
+  },
+  {
+    id: 'esxtop-field-absence',
+    track: 'esxtop',
+    area: 'Field coverage',
+    question: 'A field is absent from the PDH-CSV header. How should the analysis represent it?',
+    options: [
+      'As a zero value',
+      'As a healthy metric',
+      'Omit it entirely; do not invent a zero, row or filter',
+      'As a critical finding',
+    ],
+    answer: 2,
+    explanation: 'Present and zero is a real measurement. Present but empty for an entity is entity-level absence. Absent from the header means the field was not captured and must be omitted, not fabricated.',
+    link: { label: 'Counter reference', href: '#/learn/esxtop-09-counter-reference' },
+  },
+
 ];

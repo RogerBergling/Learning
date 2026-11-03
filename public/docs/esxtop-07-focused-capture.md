@@ -48,6 +48,18 @@ The `.esxtop60rc` filename is historical and is still used on newer releases, in
 
 You can configure `d` (Disk Adapter), `u` (Disk Device) and `v` (VM Disk) in one session and save them with a single `W`. There is **no separate Datastore panel**; use `u` for the backing device and `v` for per-VM I/O. If you want a storage-only capture, clear the fields in `c`, `m`, `n`, `i` and `p` first.
 
+## What the other panels contain
+
+| Key | Panel | What it contains | Storage-only action |
+|---|---|---|---|
+| `c` | CPU | Host PCPU and per-world/group scheduling: `%USED`, `%RUN`, `%SYS`, `%WAIT`, `%RDY`, `%MLMTD`, `%CSTP`, `%SWPWT` | Clear all, or keep `%RDY`, `%MLMTD`, `%CSTP` for mixed CPU incidents |
+| `m` | Memory | Host free/overcommit, ballooning, VMkernel swap, compression, NUMA locality | Clear all, or keep `MCTLSZ`, `SWCUR`, `SWR/s`, `SWW/s`, `N%L` |
+| `n` | Network | Ports, uplinks, packet/bit rates, packet size, link state, drops | Clear all, or keep drops/throughput for iSCSI/NFS |
+| `i` | Interrupts | Per-CPU interrupt activity and vector data | Clear unless investigating a driver/NIC/HBA interrupt storm |
+| `p` | CPU Power | Power state, frequency, `%A/MPERF`, power data | Clear for normal storage captures |
+
+The exact field letters and panel availability vary by ESXi release. Use the interactive `f` screen as the source of truth.
+
 ## Large captures
 
 The app has independent safety limits:

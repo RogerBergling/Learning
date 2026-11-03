@@ -4,7 +4,7 @@
 
 An interactive, offline learning platform for **OneGate federation, Docker on Linux, Git & GHCR, HAProxy and ESXi performance**. Choose a track, read the chapters, run the animated simulations and verify each flow step by step.
 
-**Five learning tracks. Forty-seven written chapters. Forty-six animated simulations. A 39-question quiz with local progress.** No build step, no runtime dependencies, no network calls.
+**Five learning tracks. Forty-eight written chapters. Forty-six animated simulations. A 41-question quiz with local progress.** No build step, no runtime dependencies, no network calls.
 
 ```text
 Topics → chapters → simulations → live artifact vault → quiz
@@ -233,12 +233,12 @@ docker build \
 |---|---|
 | **Topics** (`#/`) | Choose OneGate federation, Docker on Linux, Git & GHCR, HAProxy or ESXtop |
 | **Topic pages** (`#/topic/{id}`) | A guided path, chapter groups, simulations, progress and glossary for one track |
-| **Learn** (`#/learn`) | Forty-seven chapters across five tracks, full-text search, TOC and completion tracking |
+| **Learn** (`#/learn`) | Forty-eight chapters across five tracks, full-text search, TOC and completion tracking |
 | **Simulations** (`#/scenarios`) | Filter/search all 46 flows by topic, category, level, tag or keyword |
 | **Simulator** (`#/sim/{id}`) | Animated stage, live artifact vault, HTTP/CLI wire view, config and pitfalls |
 | **Compare** (`#/compare`) | JWT vs opaque, the storage matrix and a decision helper |
 | **Glossary** (`#/glossary`) | OneGate terms; Docker, Git, HAProxy and ESXtop tracks have their own glossaries |
-| **Quiz** (`#/quiz`) | A 39-question knowledge check across the tracks, with saved progress |
+| **Quiz** (`#/quiz`) | A 41-question knowledge check across the tracks, with saved progress |
 | **Self-check** (`#/selftest`) | Runtime validation of topics, scenarios, tokens, quizzes and all docs |
 
 Every scenario has five tabs:
@@ -497,6 +497,7 @@ All in [`public/docs/`](public/docs/), rendered by the site and readable on GitH
 | [Network and vSAN](public/docs/esxtop-06-network-vsan.md) | TX/RX drops, packet size, throughput, uplinks, vSAN and power/interrupt context |
 | [Focused captures](public/docs/esxtop-07-focused-capture.md) | `W`, rc file format, panels, storage bundles, large-sample sizing and limits |
 | [Triage and reporting](public/docs/esxtop-08-triage-reporting.md) | P95/P05, system worlds vs VMs, action plans, change control and HTML/PDF reports |
+| [Counter reference](public/docs/esxtop-09-counter-reference.md) | Full CPU/memory/storage/network/vSAN counter map, thresholds, status semantics, field coverage and report scope |
 | [ESXtop glossary](public/docs/esxtop-glossary.md) | Every ESXi performance term used in the track |
 
 Primary sources: [Yellow Bricks — ESXTOP](https://www.yellow-bricks.com/esxtop/) · [Broadcom 344099 — storage performance](https://knowledge.broadcom.com/external/article/344099) · [Broadcom 1008205](https://knowledge.broadcom.com/external/article?legacyId=1008205) · [Broadcom 326309 — exporting esxtop data](https://knowledge.broadcom.com/external/article/326309/exporting-esxtop-performance-data-as-a-c.html) · [vSphere 8.0 monitoring and performance](https://techdocs.broadcom.com/us/en/vmware-cis/vsphere/vsphere/8-0/vsphere-monitoring-and-performance.html).
@@ -531,7 +532,7 @@ Learning/
 │   │       ├── scenarios/        Forty-six scenario definitions + helpers
 │   │       └── sim/              Layout geometry + the animation player
 │   ├── version.json              Local fallback; overwritten by Docker build
-│   └── docs/                     Forty-seven Markdown chapters across five tracks
+│   └── docs/                     Forty-eight Markdown chapters across five tracks
 ├── scripts/
 │   ├── verify.py                 Dependency-free static registry/link checks
 │   └── smoke.py                  Starts start.py and checks real HTTP responses

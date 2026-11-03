@@ -84,6 +84,12 @@ Batch mode locks the entity list at the first sample. A VM created or migrated o
 4. Is the entity a real VM or an ESXi system world?
 5. What is the smallest change that could move the counter, and how will you prove it?
 
+## Field coverage and multi-host captures
+
+A capture does not have to contain every panel. Every non-empty PDH-CSV column becomes a series; known fields get a stable name/unit/category, while unknown vendor fields are preserved as raw fields. The UI must show what is present, show `—` for entity-level absence, and omit a field entirely when it is absent from the header. A focused storage capture intentionally has no CPU or memory panel.
+
+A single PDH-CSV can contain more than one host. Detect hosts from the counter paths, keep host and VM entities separate, and scope reports deliberately: all capture, hosts + VMs, hosts only, or selected VMs only. The complete counter reference is in [Counter reference](#/learn/esxtop-09-counter-reference).
+
 ## Simulate it
 
 - [Batch capture to analysis](#/sim/esxtop-batch-capture)

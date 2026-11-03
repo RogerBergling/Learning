@@ -38,6 +38,18 @@ Useful relationships:
 %WAIT includes %IDLE and %SWPWT
 ```
 
+Additional CPU counters:
+
+| Counter | Meaning | Use |
+|---|---|---|
+| `%LAT_C` | CPU contention latency | Resource-pool CPU contention |
+| `%LAT_M` | Memory contention latency | Resource-pool memory contention |
+| `%DMD` | Active CPU demand over the previous minute | Compare demand with entitlement |
+| `% Processor Time` on `Physical Cpu(n)` | Per-pCPU utilisation | Warning 80%, critical 90% |
+| `Cpu Load (1/5/15 Minute Avg)` | Run-queue load average | Warn 1.0, critical 2.0 |
+
+The full per-counter reference is in [Counter reference](#/learn/esxtop-09-counter-reference).
+
 ## The monster VM
 
 A VM with many vCPUs can show high `%RDY` for three different reasons:

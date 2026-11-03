@@ -26,6 +26,47 @@ A P95 is not a maximum. It means 95% of samples are at or below the value. It re
 
 Thresholds are triage guardrails, not vSphere alarms. Confirm them against the workload, array vendor, guest and physical network.
 
+## Status semantics
+
+| Status | Meaning | Caveat |
+|---|---|---|
+| **Healthy** (`ok`) | Rule evaluated; inside guardrail | Not proof the host is healthy |
+| **Warning** (`warn`) | Rule evaluated; warning threshold crossed | Triage prompt, not root cause |
+| **Critical** (`critical`) | Rule evaluated; critical threshold or hard error | Act after confirmation |
+| **Info** (`info`) | Informational rule matched | Context; excluded from score denominator |
+| **No rule** (`neutral`) | Captured, but no curated threshold/scope/group | No verdict; not zero, healthy or missing |
+
+The signal score is:
+
+```text
+healthy / (healthy + warning + critical)
+```
+
+Info and No rule are excluded. If nothing was rule-evaluated, the score is `—`, not 0% or 100%.
+
+## Field coverage
+
+Every non-empty PDH-CSV column becomes a series. Known fields get a stable ID/name/unit/category; unknown vendor fields are preserved as `RAW:<family>:<counter>`.
+
+- **Present and zero:** show it; zero is a real measurement.
+- **Present but empty for an entity:** show the series and available samples; `—` is entity-level absence.
+- **Absent from the header:** omit it; do not invent a zero, row or filter checkbox.
+
+A focused storage capture intentionally shows storage fields and hides CPU/memory/network panels. The metric explorer and report appendix still contain every captured series.
+
+## Report scope
+
+A multi-host capture can be filtered for reports:
+
+- **All capture** — every host and VM.
+- **Hosts + VMs** — selected hosts and VMs; no VM selected means all VMs on those hosts.
+- **Hosts only** — host snapshots and host detail; no VM detail.
+- **Selected VMs only** — selected VMs; host snapshots omitted.
+
+Metric-category filters — CPU, Memory, Storage, Network, Power, Interrupts, Other — apply to summary counts, signal score, findings, action plan, technical reference, categories, VM/host detail, appendix and filtered CSV. A field absent from the capture is omitted, not shown as zero.
+
+The full reference is in [Counter reference](#/learn/esxtop-09-counter-reference).
+
 ## System worlds are not VMs
 
 ESXi system worlds such as `system1`, `hostd.20994601`, `python.20979311` and `vmkeventd.2097949` can appear in `Group Cpu`, `Group Memory` and `Vcpu` data. They are not guest VMs.
@@ -104,3 +145,5 @@ A report without the capture and command is not reproducible.
 - [Triage and reporting](#/sim/esxtop-triage-report)
 - [CPU ready and limits](#/sim/esxtop-cpu-ready)
 - [Storage latency](#/sim/esxtop-storage-latency)
+
+Next: [Counter reference](#/learn/esxtop-09-counter-reference).

@@ -37,6 +37,31 @@ Ballooning asks the guest to release pages voluntarily. Swap-in is synchronous a
 MEMSZ ≈ GRANT + MCTLSZ + SWCUR + untouched
 ```
 
+## Host memory counters
+
+| Counter | Meaning | How to use |
+|---|---|---|
+| `Memory Overcommit (1/5/15 Minute Avg)` | Requested / managed memory − 1 | Planning signal, not proof of reclaim |
+| `Machine MBytes` / `Free MBytes` | Managed/free physical memory | Low free can be healthy without reclaim |
+| `Kernel MBytes` / `NonKernel MBytes` | VMkernel/non-kernel memory | Capacity context |
+| `Kernel MinFree MBytes` | Free-memory floor | Reclaim rises as free approaches it |
+| `Memctl Current/Target/Max MBytes` | Host ballooning | Non-zero means reclaim |
+| `Swap Used/Target MBytes` | Host VMkernel swap | Persistent swap is serious |
+| `Swap MBytes Read/sec` / `Write/sec` | Host swap I/O | Swap-in is synchronous and urgent |
+| `Total Compressed MBytes` | Compression cache | Cheaper than swap, still pressure |
+
+Additional per-VM counters:
+
+| Counter | Meaning |
+|---|---|
+| `CNSM` | Consumed memory, net of sharing/compression |
+| `TCHD` | Touched/working-set estimate |
+| `%ACTV` | Active guest memory estimate |
+| `CACHEUSD` | Compression cache use |
+| `ZIP/s` / `UNZIP/s` | Compression/decompression rates |
+
+The full table is in [Counter reference](#/learn/esxtop-09-counter-reference).
+
 - `MCTLSZ` is ballooned memory, not guest swap.
 - `SWCUR` is VMkernel swap, not guest OS paging.
 - `SWR/s` and `SWW/s` are rates; they show whether the swap is active now.

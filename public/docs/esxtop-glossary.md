@@ -74,6 +74,30 @@
 
 **World** — A schedulable VMkernel entity, roughly a thread. A VM is a group of worlds.
 
+## Analysis terms
+
+**Healthy / Warning / Critical** — Curated rule outcomes. Healthy means the rule was evaluated and inside its guardrail; Warning/Critical mean it was crossed. They are not a general host health score.
+
+**Info** — An informational rule matched. It is context, not a pass or an alarm.
+
+**No rule** — The series was captured but no curated threshold applies. It is not zero, missing or healthy.
+
+**Signal score** — Healthy divided by evaluated healthy + warning + critical series. Info and No rule are excluded.
+
+**P95 / P05** — Percentile used for sustained conditions. P95 is used for “higher is worse”; P05 for “lower is worse” such as `N%L`.
+
+**Field coverage** — The analysis represents every captured column and omits fields absent from the header; it never invents a zero for a field that was not captured.
+
+**Report scope** — All capture, hosts + VMs, hosts only, or selected VMs only. Category filters apply across the report.
+
+**Multi-host capture** — A single PDH-CSV containing counters from more than one ESXi host; hosts are detected from the counter paths.
+
+**PDH-CSV** — The wide CSV format written by batch esxtop; each counter is a column and each row is a sample.
+
+**Interrupt Cookie** — Per-cookie/per-CPU interrupt series; part of the Interrupts category, not CPU scheduler.
+
+**vSAN `SDLAT`** — Standard-deviation latency for vSAN. Requires vSAN enabled and the vSAN panel included; absence of the field is not a parser defect.
+
 ## See also
 
 - [Mental model](#/learn/esxtop-01-mental-model)

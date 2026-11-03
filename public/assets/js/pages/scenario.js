@@ -26,7 +26,7 @@ const DOCS_FOR = {
   'esxtop-memory': ['esxtop-04-memory-numa'],
   'esxtop-storage': ['esxtop-05-storage-latency'],
   'esxtop-network': ['esxtop-06-network-vsan'],
-  'esxtop-ops': ['esxtop-07-focused-capture', 'esxtop-08-triage-reporting'],
+  'esxtop-ops': ['esxtop-07-focused-capture', 'esxtop-08-triage-reporting', 'esxtop-09-counter-reference'],
 };
 
 const DOC_TITLES = {
@@ -62,6 +62,7 @@ const DOC_TITLES = {
   'esxtop-06-network-vsan': 'Network and vSAN',
   'esxtop-07-focused-capture': 'Focused captures',
   'esxtop-08-triage-reporting': 'Triage and reporting',
+  'esxtop-09-counter-reference': 'Counter reference',
 };
 
 export async function renderScenarioPage(view, id) {

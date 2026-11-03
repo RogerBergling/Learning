@@ -38,13 +38,20 @@ KAVG includes QAVG (queue wait)
 | `QUED` | Queued commands | Sustained > 1 means commands are waiting |
 | `ACTV` | Active commands | Work in flight; compare with queue depth |
 | `%USD` | Queue depth used | High sustained value means the queue is near its limit |
-| `DQLEN` / `AQLEN` | Device/adapter queue depth | The configured limit; do not increase blindly |
+| `LOAD` | (Active + queued) / queue depth | >1 means outstanding work exceeds depth |
+| `DQLEN` / `AQLEN` / `LQLEN` / `WQLEN` | Device/adapter/LUN/world queue depth | The configured limit; do not increase blindly |
 | `CMDS/s` | Commands per second | IOPS plus metadata/reservation commands |
 | `DAVG/rd`, `KAVG/rd`, `GAVG/rd` | Read-path latency | Cache/media behaviour differs from writes |
 | `DAVG/wr`, `KAVG/wr`, `GAVG/wr` | Write-path latency | Compare with array write policy |
 | `ABRTS/s` | Aborted commands | Hard error/timeout signal |
 | `RESETS/s` | Resets | Recovery after timeouts or path failure |
 | `CONS/s` | SCSI reservation conflicts | Shared-VMFS contention |
+| `ATSF` | Failed Atomic Test and Set | VAAI/VMFS health signal |
+| `DELETE_F` | Failed UNMAP | Storage/VAAI review |
+| `FCMDS/s`, `FREAD/s`, `FWRITE/s` | Failed commands/reads/writes | Direct path/array health signals |
+| `SPLTCMD/s`, `SPLTCP/s` | Split commands/copies | Large/misaligned I/O can add latency |
+
+The complete queue and error reference is in [Counter reference](#/learn/esxtop-09-counter-reference).
 
 ## Read the symptom by layer
 

@@ -46,6 +46,7 @@ const RELATED = {
   'esxtop-06-network-vsan': ['esxtop-network-drops', 'esxtop-triage-report'],
   'esxtop-07-focused-capture': ['esxtop-focused-rc', 'esxtop-batch-capture'],
   'esxtop-08-triage-reporting': ['esxtop-triage-report', 'esxtop-cpu-ready'],
+  'esxtop-09-counter-reference': ['esxtop-cpu-ready', 'esxtop-storage-latency', 'esxtop-triage-report'],
   'esxtop-glossary': ['esxtop-batch-capture'],
 };
 

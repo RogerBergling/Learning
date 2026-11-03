@@ -101,7 +101,7 @@ doc_files = {p.stem for p in DOCS.glob("*.md")}
 check(len(doc_slugs) == len(set(doc_slugs)), "documentation slugs are unique")
 check(set(doc_slugs) == doc_files, "DOCS and public/docs/*.md agree",
       f"DOCS-only={sorted(set(doc_slugs) - doc_files)} files-only={sorted(doc_files - set(doc_slugs))}")
-check(len(doc_slugs) == 47, "documentation chapter count", f"{len(doc_slugs)} chapters")
+check(len(doc_slugs) == 48, "documentation chapter count", f"{len(doc_slugs)} chapters")
 
 for slug in doc_slugs:
     path = DOCS / f"{slug}.md"
