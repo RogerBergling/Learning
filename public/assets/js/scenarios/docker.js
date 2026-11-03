@@ -292,7 +292,7 @@ export const dockerCompose = {
       vault: [add('local', ITEM.compose({
         id: 'compose',
         name: 'compose.yaml',
-        meta: 'services · network · volume · profiles',
+        meta: 'services · network · volume · explicit update',
         value: `name: learning-lab
 
 services:
@@ -378,7 +378,7 @@ services:
     '`compose.yaml` is the modern filename; `docker-compose.yml` is common in older projects. The v2 CLI uses `docker compose` (space), not the legacy `docker-compose` binary.',
     'Environment variable interpolation happens before the file reaches Docker. Precedence is shell environment, `.env`, then the file default; use `docker compose config` to see the result.',
     '`depends_on` controls start order, not application readiness. Use a healthcheck plus a dependency condition when the app truly needs the database ready.',
-    'Watchtower with the Docker socket is a high-privilege design. For enterprise deployments, prefer CI-driven pull/recreate or a managed platform.',
+    'This Compose project deliberately does not mount the Docker socket. Updates are explicit: pull, review the digest, recreate and verify the version stamp.',
     'Resource limits are per container, not per Compose project. Set them deliberately and monitor OOM kills.',
   ],
   config: [
@@ -393,15 +393,15 @@ services:
       '`ports: "8003:8080"` — host port 8003 to container port 8080. Bind `127.0.0.1:8003:8080` for local-only access.',
       '`restart: unless-stopped` — restart on crash and boot, except when an operator deliberately stopped it.',
       '`pull_policy: always` — pull before starting; use a pinned tag/digest for reproducible deployments.',
-      '`labels` — Watchtower discovery and scope; these labels have no meaning to Docker itself.',
-      '`profiles: ["auto-update"]` — Watchtower starts only when the profile is enabled.',
-      '`volumes: /var/run/docker.sock` — control of the Docker daemon; treat as root-equivalent.',
-      '`command: --interval 3600 --label-enable --scope learning --cleanup` — poll hourly, only labeled containers in this scope, clean old images.',
+      '`read_only: true` — the container filesystem is read-only; use tmpfs or a volume for writable paths.',
+      '`security_opt: no-new-privileges:true` — prevents privilege escalation through setuid binaries.',
+      '`cap_drop: ALL` — drops Linux capabilities the static server does not need.',
+      'No Docker socket is mounted. Updates are explicit and auditable.',
     ]),
     cfg('Commands you will use', [
       '`docker compose config` — validate and print the resolved file.',
-      '`docker compose up -d` — create/start the default profile.',
-      '`docker compose --profile auto-update up -d` — include Watchtower.',
+      '`docker compose up -d` — create/start the service.',
+      '`docker compose pull && docker compose up -d --force-recreate` — pull and recreate explicitly.',
       '`docker compose ps` / `logs -f` / `exec app sh` — inspect runtime state.',
       '`docker compose down` — stop/remove containers and network, keep named volumes.',
       '`docker compose down -v` — also delete named volumes; destructive.',
@@ -412,14 +412,14 @@ services:
     'Publishing ports on all interfaces and exposing a local service to the LAN.',
     'Setting `memswap_limit` below `mem_limit`, which confuses the memory/swap behavior.',
     'Running `docker compose down -v` and deleting the database volume.',
-    'Mounting the Docker socket into Watchtower on a host where you would not give that process root.',
+    'Mounting the Docker socket into any helper container; it is root-equivalent control of the Docker host.',
     'Thinking `pull_policy: always` updates a running container without recreating it.',
   ],
   productionChecks: [
     'Pin the image by digest and verify the running digest/version stamp.',
     'Keep state in named volumes or external managed storage; back it up.',
     'Set memory/CPU limits and a healthcheck.',
-    'Run Watchtower only if you accept its host-level privilege; prefer controlled deployment.',
+    'No Docker socket mount; updates are explicit and the running image digest is recorded.',
   ],
 };
 
@@ -486,8 +486,8 @@ export const dockerOps = {
     {
       from: 'daemon', to: 'container', badge: 'docker events', channel: 'engine',
       detail:
-        '`docker events` streams Engine events: create, start, die, health status changes, network connect/disconnect. Filter by container and time window to see what happened around an incident.\n\nIt is read-only and very useful when a container is being recreated by Watchtower or an orchestrator.',
-      tags: ['events', 'timeline', 'watchtower'],
+        '`docker events` streams Engine events: create, start, die, health status changes, network connect/disconnect. Filter by container and time window to see what happened around an incident.\n\nIt is read-only and very useful when a container is being recreated by an orchestrator or a CI deploy.',
+      tags: ['events', 'timeline', 'recreate'],
     },
     {
       from: 'developer', to: 'daemon', badge: 'docker system df', channel: 'cli',
@@ -517,7 +517,7 @@ export const dockerOps = {
     'Diagnose in order: state → logs → exec → inspect → resources → events → cleanup. Changing things before capturing evidence often hides the cause.',
     'Containers are disposable; named volumes are not. Be explicit about which one a command affects.',
     '`docker system prune -a --volumes` is a host-wide data-loss command. Avoid it as a reflex.',
-    'If a container is being recreated constantly, check restart policy, healthcheck and Watchtower before editing the image.',
+    'If a container is being recreated constantly, check restart policy, healthcheck and the deployment/orchestration controller before editing the image.',
   ],
   config: [
     cfg('Diagnostic command order', [
@@ -652,7 +652,7 @@ export const dockerSecurity = {
   pitfalls: [
     'Assuming a container is a VM and therefore isolated from the host kernel.',
     'Running as root because it “just works”, then adding `--privileged` to fix a permission error.',
-    'Mounting the Docker socket into an app container or Watchtower without accepting root-equivalent risk.',
+    'Mounting the Docker socket into an app container or updater without accepting root-equivalent host risk.',
     'Putting secrets in build args and thinking deleting them from the Dockerfile removes them from history.',
     'Setting a memory limit without monitoring OOM kills and application behavior.',
   ],
@@ -672,10 +672,10 @@ export const dockerGhcr = {
   category: 'compose',
   level: 'advanced',
   minutes: 10,
-  tags: ['GHCR', 'tags', 'digest', 'package visibility', 'Watchtower', 'version.json', 'pull'],
+  tags: ['GHCR', 'tags', 'digest', 'package visibility', 'recreate', 'version.json', 'pull'],
   summary:
-    'Take a local image through GHCR to the deployment host. See why a tag can lie, how a digest proves identity, what Watchtower actually polls, and how /version.json closes the update loop.',
-  nodes: ['developer', 'project', 'daemon', 'registry', 'deployment', 'container', 'watchtower'],
+    'Take a local image through GHCR to the deployment host. See why a tag can lie, how a digest proves identity, why the update is explicit, and how /version.json closes the loop.',
+  nodes: ['developer', 'project', 'daemon', 'registry', 'deployment', 'container'],
   stores: ['local', 'docker', 'registry', 'deployment', 'container'],
   steps: [
     {
@@ -719,7 +719,7 @@ export const dockerGhcr = {
     {
       from: 'deployment', to: 'container', badge: 'recreate container', channel: 'deploy',
       detail:
-        'A new image does not change a running container. Compose/Watchtower must stop the old container and create a new one from the new image. The named volume and network are preserved.\n\nAfter recreation, the old image remains on disk until pruned; that is useful for rollback but consumes space.',
+        'A new image does not change a running container. Compose must stop the old container and create a new one from the new image. The named volume and network are preserved.\n\nAfter recreation, the old image remains on disk until pruned; that is useful for rollback but consumes space.',
       vault: [add('container', ITEM.container({ id: 'app', name: 'Deployed container', meta: 'new digest · healthy' }))],
       tags: ['recreate', 'rollback', 'disk'],
     },
@@ -732,18 +732,6 @@ export const dockerGhcr = {
         res: `{"version":"1.1.0","imageTag":"1.1.0","commit":"c4d8cf5","buildDate":"2026-11-01T08:00:00Z"}`,
       },
       tags: ['version stamp', 'proof', 'cache'],
-    },
-    {
-      from: 'registry', to: 'watchtower', badge: 'poll tagged image', channel: 'registry',
-      detail:
-        'Watchtower checks the registry for the label/scope it manages. It compares the remote digest with the running digest; if it changed, it schedules a pull and recreate.\n\nA private package needs the host to be authenticated. If the poll fails, Watchtower may log an error and keep the old container.',
-      tags: ['watchtower', 'poll', 'digest', 'scope'],
-    },
-    {
-      from: 'watchtower', to: 'container', badge: 'replace with newer digest', channel: 'deploy',
-      detail:
-        'The updater recreates the container from the newer digest. This is convenient but high trust: it mounts the Docker socket and can control every container on the host.\n\nFor enterprise or regulated environments, use CI/CD with explicit approval and an immutable digest instead of an automatic updater.',
-      tags: ['automation', 'privilege', 'approval'],
     },
   ],
   notes: [
@@ -773,7 +761,7 @@ export const dockerGhcr = {
     'Comparing only tags; a tag is not a digest.',
     'Forgetting `docker login` for a private package on the deployment host.',
     'Renaming the repository and continuing to pull the old GHCR package path.',
-    'Letting Watchtower update a host without understanding its Docker-socket privilege.',
+    'Letting an updater with Docker-socket access change a host without an explicit approval and rollback plan.',
   ],
   productionChecks: [
     'Publish an immutable version tag and record the digest.',

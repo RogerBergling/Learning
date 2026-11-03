@@ -213,7 +213,7 @@ export const QUIZ = [
     id: 'compose-profile',
     track: 'docker',
     area: 'Docker Compose',
-    question: 'A service has `profiles: ["auto-update"]`. When does it start?',
+    question: 'A service has `profiles: ["debug"]`. When does it start?',
     options: [
       'Every `docker compose up -d`',
       'Only when the profile is selected or explicitly named',
@@ -221,7 +221,7 @@ export const QUIZ = [
       'Never; profiles are comments',
     ],
     answer: 1,
-    explanation: 'Profiles make services opt-in. `docker compose up -d` starts services without a profile (plus explicitly selected services); `--profile auto-update` includes it.',
+    explanation: 'Profiles make services opt-in. `docker compose up -d` starts services without a profile (plus explicitly selected services); `--profile debug` includes it.',
     link: { label: 'Docker Compose, line by line', href: '#/learn/docker-05-compose' },
   },
   {

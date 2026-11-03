@@ -90,8 +90,6 @@ Terms used throughout the Docker track, in plain language.
 
 **Volume** — Persistent storage managed by Docker. Named volumes are the default choice for state.
 
-**Watchtower** — A third-party updater that polls registries and recreates labeled containers. Requires the Docker socket.
-
 **Writable layer** — The per-container filesystem layer that sits above the image; deleted with the container.
 
 ## See also

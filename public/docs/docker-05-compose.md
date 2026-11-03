@@ -18,6 +18,11 @@ services:
       - "8003:8080"
     restart: unless-stopped
     pull_policy: always
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 ```
 
 ## Top-level keys

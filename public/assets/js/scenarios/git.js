@@ -750,7 +750,7 @@ export const gitReleaseGhcr = {
     {
       from: 'server', to: 'server', badge: 'recreate + healthcheck', channel: 'deploy',
       detail:
-        'Start a new container from the pulled image and let the healthcheck prove it can serve traffic. Compose/Watchtower must recreate the container; pulling alone is not enough.\n\nNamed volumes and networks persist. The old container/image can be kept for rollback.',
+        'Start a new container from the pulled image and let the healthcheck prove it can serve traffic. Compose must recreate the container; pulling alone is not enough.\n\nNamed volumes and networks persist. The old container/image can be kept for rollback.',
       tags: ['recreate', 'healthcheck', 'rollback'],
     },
     {

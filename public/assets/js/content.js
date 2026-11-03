@@ -124,7 +124,7 @@ const DOCKER_DOCS = [
   {
     slug: 'docker-05-compose',
     title: 'Docker Compose: the whole file, line by line',
-    blurb: 'A complete compose.yaml reference: services, image, container_name, ports, resources, restart, pull_policy, profiles, networks, volumes, healthchecks and Watchtower.',
+    blurb: 'A complete compose.yaml reference: services, image, container_name, ports, resources, restart, pull_policy, profiles, networks, volumes, healthchecks and explicit updates.',
     chapter: 'Docker in practice',
     minutes: 20,
   },

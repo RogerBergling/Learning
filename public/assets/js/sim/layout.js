@@ -83,10 +83,6 @@ export const DOCKER_NODES = {
     name: 'Bridge network', sub: 'DNS · ports', icon: 'network',
     rect: { x: 792, y: 520, w: 190, h: 92 },
   },
-  watchtower: {
-    name: 'Watchtower', sub: 'pull · recreate', icon: 'clock',
-    rect: { x: 316, y: 512, w: 190, h: 96 },
-  },
   deployment: {
     name: 'Deployment host', sub: 'pull · run · verify', icon: 'server',
     rect: { x: 100, y: 512, w: 170, h: 96 },

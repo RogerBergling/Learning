@@ -387,6 +387,10 @@ workflow = read(ROOT / ".github" / "workflows" / "docker-publish.yml")
 image = "ghcr.io/rogerbergling/learning:latest"
 
 check(image in compose, "compose image matches the repository", image)
+check("watchtower" not in compose.lower(), "compose must not include Watchtower")
+check("/var/run/docker.sock" not in compose, "compose must not mount the Docker socket")
+check("watchtower" not in readme.lower(), "README must not recommend Watchtower")
+check("--profile auto-update" not in readme, "README must not recommend the removed auto-update profile")
 check(image in readme, "README image matches the repository", image)
 check("OIDC-OAUTH-BFF" not in readme and "OIDC-OAUTH-BFF" not in compose,
       "no stale repository name in README/compose")

@@ -136,7 +136,7 @@ CMD ["8080"]
 | Permission denied | UID/GID, volume ownership, capabilities |
 | Container keeps restarting | restart policy + failing command/dependency |
 | Works, then loses data | state was written to writable layer instead of a volume |
-| “No such container” after restart | it was removed or recreated by Compose/Watchtower |
+| “No such container” after restart | it was removed or recreated by Compose or an orchestrator |
 
 ## Simulate it
 

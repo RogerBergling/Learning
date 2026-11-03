@@ -87,7 +87,7 @@ Security consequences:
 
 - Do not expose the daemon TCP socket without TLS and authentication.
 - Do not mount the Docker socket into an application container casually.
-- Watchtower with the socket is convenient but host-level privilege.
+- An updater with the socket is convenient but host-level privilege; this project does not include one.
 - Use rootless Docker or a non-root user where the deployment allows it.
 
 ## Common first commands
