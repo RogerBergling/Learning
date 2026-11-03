@@ -4,11 +4,32 @@
 
 An interactive, offline learning platform for **OneGate federation, Docker on Linux, Git & GHCR, HAProxy and ESXi performance**. Choose a track, read the chapters, run the animated simulations and verify each flow step by step.
 
-**Five learning tracks. Forty-eight written chapters. Forty-six animated simulations. A 41-question quiz with local progress.** No build step, no runtime dependencies, no network calls.
+**Five learning tracks. Forty-eight written chapters. Forty-six animated simulations. A 41-question quiz with local progress.** No build step, no runtime dependencies; once the image or files are present, the lab runs offline.
 
 ```text
 Topics → chapters → simulations → live artifact vault → quiz
 ```
+
+## The easy way
+
+**You only need Docker.** No clone, Python, Node or build step. The Compose file is the only file you download.
+
+```bash
+curl -O https://raw.githubusercontent.com/RogerBergling/Learning/main/compose.yaml
+docker compose up -d
+```
+
+Open **<http://localhost:8003>** and pick a track.
+
+- Read a chapter or jump straight into a simulation.
+- Every token, container, commit, proxy and ESXi counter is simulated.
+- Progress stays in your browser.
+
+Stop it with `docker compose down`. The container runs read-only, drops Linux capabilities and does **not** mount the Docker socket.
+
+If the image pull is denied, the GHCR package is still private: make it public once under **Packages → learning → Package settings → Change visibility → Public**, or run `docker login ghcr.io`.
+
+**No Docker?** Clone the repository and run `./start.sh` (or `python3 start.py`) with Python 3.8+. See [Detailed setup](#detailed-setup) for local, Windows, Node, source-build and operational details.
 
 ## Screenshots
 
@@ -34,9 +55,11 @@ All screenshots are captured from the running site with simulated data.
 
 ---
 
-## Quick start
+## Detailed setup
 
-### Docker — the fastest path if you already run Docker
+Use this section when you need local Python, Windows, the optional Node launcher, a source build, GHCR publishing details or deployment verification.
+
+### Docker (published image)
 
 The repository includes a ready-to-use [`compose.yaml`](compose.yaml). It pulls the published multi-arch image, publishes the lab on port **8003**, keeps the version stamp visible, and uses explicit pull/recreate updates.
 
@@ -116,7 +139,7 @@ Open <http://localhost:8080>. The container runs as an unprivileged user and lis
 
 ### Docker Compose details
 
-Users only need [`compose.yaml`](compose.yaml); the quick start above downloads and starts it. The file defines the published image, port `8003:8080`, read-only/capability hardening, resource limits and restart policy. It deliberately does **not** mount the Docker socket.
+Users only need [`compose.yaml`](compose.yaml); the Docker commands above download and start it. The file defines the published image, port `8003:8080`, read-only/capability hardening, resource limits and restart policy. It deliberately does **not** mount the Docker socket.
 
 Stop it with `docker compose down`.
 
