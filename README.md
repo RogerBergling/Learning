@@ -217,7 +217,7 @@ Local development serves the committed fallback:
 
 ```json
 {
-  "version": "2.5.0",
+  "version": "2.5.1",
   "imageTag": "local",
   "commit": "local",
   "buildDate": null
@@ -245,7 +245,7 @@ For a manual Docker build, stamp it explicitly:
 
 ```bash
 docker build \
-  --build-arg APP_VERSION=2.5.0 \
+  --build-arg APP_VERSION=2.5.1 \
   --build-arg IMAGE_TAG=manual \
   --build-arg GIT_SHA="$(git rev-parse --short HEAD)" \
   --build-arg BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \

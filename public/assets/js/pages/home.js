@@ -49,14 +49,6 @@ export function renderHome(view) {
           animated flows, a live artifact vault and production pitfalls — no real
           credentials leave your browser.
         </p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#/topic/onegate">${icon('gate', 16)} OneGate federation</a>
-          <a class="btn" href="#/topic/docker">${icon('box', 16)} Docker on Linux</a>
-          <a class="btn" href="#/topic/git">${icon('branch', 16)} Git &amp; GHCR</a>
-          <a class="btn" href="#/topic/haproxy">${icon('proxy', 16)} HAProxy</a>
-          <a class="btn" href="#/topic/esxtop">${icon('activity', 16)} ESXtop</a>
-          <a class="btn" href="#/topic/bind">${icon('dns', 16)} BIND &amp; DNS</a>
-        </div>
         <div class="hero-stats">
           <div class="hero-stat"><strong>${TOPIC_ORDER.length}</strong><span>learning tracks</span></div>
           <div class="hero-stat"><strong>${DOCS.length}</strong><span>chapters</span></div>
