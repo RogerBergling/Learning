@@ -48,6 +48,22 @@ const RELATED = {
   'esxtop-08-triage-reporting': ['esxtop-triage-report', 'esxtop-cpu-ready'],
   'esxtop-09-counter-reference': ['esxtop-cpu-ready', 'esxtop-storage-latency', 'esxtop-triage-report'],
   'esxtop-glossary': ['esxtop-batch-capture'],
+  'bind-01-mental-model': ['bind-recursive-query', 'bind-authoritative-answer'],
+  'bind-02-architecture': ['bind-named-conf', 'bind-change-workflow'],
+  'bind-03-named-conf': ['bind-named-conf', 'bind-open-resolver'],
+  'bind-04-zone-files': ['bind-zone-file', 'bind-authoritative-answer'],
+  'bind-05-records': ['bind-zone-file', 'bind-home-lab'],
+  'bind-06-soa-ns-delegation': ['bind-zone-delegation', 'bind-primary-secondary'],
+  'bind-07-dnssec-chain': ['bind-dnssec-chain', 'bind-troubleshoot-servfail'],
+  'bind-08-dnssec-operations': ['bind-dnssec-rollover', 'bind-dnssec-chain'],
+  'bind-09-recursion-security': ['bind-open-resolver', 'bind-home-lab'],
+  'bind-10-transfers-tsig': ['bind-primary-secondary', 'bind-dynamic-update'],
+  'bind-11-views-rpz': ['bind-split-horizon', 'bind-dynamic-update'],
+  'bind-12-operations': ['bind-troubleshoot-servfail', 'bind-change-workflow'],
+  'bind-13-hardening': ['bind-open-resolver', 'bind-split-horizon'],
+  'bind-14-dig-troubleshooting': ['bind-troubleshoot-servfail', 'bind-recursive-query'],
+  'bind-15-reference': ['bind-recursive-query', 'bind-dnssec-chain'],
+  'bind-glossary': ['bind-recursive-query'],
 };
 
 export function renderLearnIndex(view) {
@@ -60,7 +76,7 @@ export function renderLearnIndex(view) {
       <p class="eyebrow">Written track</p>
       <h1>Learn the whole machine</h1>
       <p class="page-lede">
-        ${DOCS.length} chapters across ${TOPIC_ORDER.length} tracks. Start with OneGate federation, Docker on Linux, Git &amp; GHCR, HAProxy or ESXi performance — each track has its own path, but search and progress work across all of them.
+        ${DOCS.length} chapters across ${TOPIC_ORDER.length} tracks. Start with OneGate federation, Docker on Linux, Git &amp; GHCR, HAProxy, ESXi performance or BIND DNS — each track has its own path, but search and progress work across all of them.
       </p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="#/learn/01-architecture">${icon('book', 15)} Start with the big picture</a>
@@ -244,7 +260,7 @@ export async function renderLearnDoc(view, slug, isCurrent = () => true) {
         </div>
       </header>
 
-      ${slug === 'glossary' ? `<div class="glossary-tools">
+      ${(slug === 'glossary' || slug.endsWith('-glossary')) ? `<div class="glossary-tools">
         <label class="search search-wide">
           <span class="sr-only">Filter glossary terms</span>
           <input type="search" placeholder="Filter glossary terms…" data-glossary-filter aria-controls="doc-body" autocomplete="off">
@@ -265,7 +281,7 @@ export async function renderLearnDoc(view, slug, isCurrent = () => true) {
         <article class="prose" id="doc-body" data-doc-body>${html}</article>
       </div>
 
-      ${slug === 'glossary' ? '<p class="glossary-empty dim" data-glossary-empty hidden>No glossary terms match that filter.</p>' : ''}
+      ${(slug === 'glossary' || slug.endsWith('-glossary')) ? '<p class="glossary-empty dim" data-glossary-empty hidden>No glossary terms match that filter.</p>' : ''}
 
       ${related.length ? `<section class="doc-try">
         <div class="section-head"><div><h2>Put it in motion</h2><p>The same ideas, animated with a live token vault.</p></div></div>

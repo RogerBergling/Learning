@@ -50,6 +50,22 @@ export const ITEM = {
   vm: (o = {}) => ({ id: 'vm', kind: 'vm', name: 'Virtual machine', meta: 'vCPUs · guest workload', ...o }),
   lun: (o = {}) => ({ id: 'lun', kind: 'lun', name: 'Datastore / LUN', meta: 'device · queue · latency', ...o }),
   host: (o = {}) => ({ id: 'host', kind: 'host', name: 'ESXi host', meta: 'VMkernel · pCPU · memory', ...o }),
+  query: (o = {}) => ({ id: 'query', kind: 'dnsquery', name: 'DNS query', meta: 'name · type · RD/DO', ...o }),
+  answer: (o = {}) => ({ id: 'answer', kind: 'dnsanswer', name: 'DNS answer', meta: 'RCODE · flags · TTL', ...o }),
+  namedconf: (o = {}) => ({ id: 'namedconf', kind: 'bindconf', name: 'named.conf', meta: 'options · ACL · zone', ...o }),
+  zone: (o = {}) => ({ id: 'zone', kind: 'zone', name: 'Zone file', meta: '$ORIGIN · $TTL · records', ...o }),
+  record: (o = {}) => ({ id: 'record', kind: 'record', name: 'DNS record', meta: 'owner · TTL · type · RDATA', ...o }),
+  rrset: (o = {}) => ({ id: 'rrset', kind: 'rrset', name: 'RRset', meta: 'owner · type · records', ...o }),
+  dnskey: (o = {}) => ({ id: 'dnskey', kind: 'dnskey', name: 'DNSKEY', meta: 'flags · algorithm · key tag', ...o }),
+  ds: (o = {}) => ({ id: 'ds', kind: 'ds', name: 'DS record', meta: 'key tag · algorithm · digest', ...o }),
+  rrsig: (o = {}) => ({ id: 'rrsig', kind: 'rrsig', name: 'RRSIG', meta: 'signer · key tag · validity', ...o }),
+  nsec: (o = {}) => ({ id: 'nsec', kind: 'nsec', name: 'NSEC/NSEC3', meta: 'denial of existence', ...o }),
+  tsig: (o = {}) => ({ id: 'tsig', kind: 'tsig', name: 'TSIG key', meta: 'hmac-sha256 · shared secret', secret: true, ...o }),
+  journal: (o = {}) => ({ id: 'journal', kind: 'journal', name: 'Zone journal', meta: '.jnl · IXFR state', ...o }),
+  cache: (o = {}) => ({ id: 'cache', kind: 'cache', name: 'Resolver cache', meta: 'RRset · TTL · validated', ...o }),
+  dnsacl: (o = {}) => ({ id: 'dnsacl', kind: 'dnsacl', name: 'BIND ACL', meta: 'address/key match', ...o }),
+  bindpolicy: (o = {}) => ({ id: 'policy', kind: 'bindpolicy', name: 'DNSSEC policy', meta: 'keys · algorithms · lifetimes', ...o }),
+  dnserror: (o = {}) => ({ id: 'error', kind: 'dnserror', name: 'DNS error', meta: 'RCODE · extended error', ...o }),
 };
 
 /** Config checklist block. */

@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/RogerBergling/Learning/actions/workflows/ci.yml/badge.svg)](https://github.com/RogerBergling/Learning/actions/workflows/ci.yml)
 
-An interactive, offline learning platform for **OneGate federation, Docker on Linux, Git & GHCR, HAProxy and ESXi performance**. Choose a track, read the chapters, run the animated simulations and verify each flow step by step.
+An interactive, offline learning platform for **OneGate federation, Docker on Linux, Git & GHCR, HAProxy, ESXi performance and BIND DNS**. Choose a track, read the chapters, run the animated simulations and verify each flow step by step.
 
-**Five learning tracks. Forty-eight written chapters. Forty-six animated simulations. A 41-question quiz with local progress.** No build step, no runtime dependencies; once the image or files are present, the lab runs offline.
+**Six learning tracks. Sixty-four written chapters. Sixty animated simulations. A 53-question quiz with local progress.** No build step, no runtime dependencies; once the image or files are present, the lab runs offline.
 
 ```text
 Topics → chapters → simulations → live artifact vault → quiz
@@ -22,7 +22,7 @@ docker compose up -d
 Open **<http://localhost:8003>** and pick a track.
 
 - Read a chapter or jump straight into a simulation.
-- Every token, container, commit, proxy and ESXi counter is simulated.
+- Every token, container, commit, proxy, ESXi counter and DNS answer is simulated.
 - Progress stays in your browser.
 
 Stop it with `docker compose down`. The container runs read-only, drops Linux capabilities and does **not** mount the Docker socket.
@@ -48,6 +48,10 @@ If the image pull is denied, the GHCR package is still private: make it public o
 | ESXtop track | ESXtop simulator |
 |---|---|
 | ![ESXtop learning track](docs/screenshots/esxtop-topic.png) | ![ESXtop batch capture simulation](docs/screenshots/esxtop-simulator.png) |
+
+| BIND & DNS track | BIND simulator |
+|---|---|
+| ![BIND learning track](docs/screenshots/bind-topic.png) | ![BIND recursive query simulation](docs/screenshots/bind-simulator.png) |
 
 More screenshots: [Git & GHCR track](docs/screenshots/git-topic.png) · [Docker quiz](docs/screenshots/docker-quiz.png).
 
@@ -213,7 +217,7 @@ Local development serves the committed fallback:
 
 ```json
 {
-  "version": "2.2.0",
+  "version": "2.3.0",
   "imageTag": "local",
   "commit": "local",
   "buildDate": null
@@ -241,7 +245,7 @@ For a manual Docker build, stamp it explicitly:
 
 ```bash
 docker build \
-  --build-arg APP_VERSION=2.2.0 \
+  --build-arg APP_VERSION=2.3.0 \
   --build-arg IMAGE_TAG=manual \
   --build-arg GIT_SHA="$(git rev-parse --short HEAD)" \
   --build-arg BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -303,14 +307,14 @@ These controls complement the application hardening already present: read-only c
 
 | Page | What it does |
 |---|---|
-| **Topics** (`#/`) | Choose OneGate federation, Docker on Linux, Git & GHCR, HAProxy or ESXtop |
+| **Topics** (`#/`) | Choose OneGate federation, Docker on Linux, Git & GHCR, HAProxy, ESXtop or BIND & DNS |
 | **Topic pages** (`#/topic/{id}`) | A guided path, chapter groups, simulations, progress and glossary for one track |
-| **Learn** (`#/learn`) | Forty-eight chapters across five tracks, full-text search, TOC and completion tracking |
-| **Simulations** (`#/scenarios`) | Filter/search all 46 flows by topic, category, level, tag or keyword |
+| **Learn** (`#/learn`) | Sixty-four chapters across six tracks, full-text search, TOC and completion tracking |
+| **Simulations** (`#/scenarios`) | Filter/search all 60 flows by topic, category, level, tag or keyword |
 | **Simulator** (`#/sim/{id}`) | Animated stage, live artifact vault, HTTP/CLI wire view, config and pitfalls |
 | **Compare** (`#/compare`) | JWT vs opaque, the storage matrix and a decision helper |
-| **Glossary** (`#/glossary`) | OneGate terms; Docker, Git, HAProxy and ESXtop tracks have their own glossaries |
-| **Quiz** (`#/quiz`) | A 41-question knowledge check across the tracks, with saved progress |
+| **Glossary** (`#/glossary`) | OneGate terms; Docker, Git, HAProxy, ESXtop and BIND tracks have their own glossaries |
+| **Quiz** (`#/quiz`) | A 53-question knowledge check across the tracks, with saved progress |
 | **Self-check** (`#/selftest`) | Runtime validation of topics, scenarios, tokens, quizzes and all docs |
 
 Every scenario has five tabs:
@@ -318,7 +322,7 @@ Every scenario has five tabs:
 - **Explain** — the current hop, actors, channel, a “What to notice” rule, tags and the full token journey.
 - **Wire** — the HTTP request/response, shell command or output shape for the hop.
 - **Tokens / artifacts** — decode simulated JWTs/entity statements, inspect tokens, images, commits, Compose files and other artifacts.
-- **Setup** — the OneGate configuration behind the flow, plus design notes.
+- **Setup** — the launcher, zone, resolver or proxy configuration behind the flow, plus design notes.
 - **Watch out** — troubleshooting for the current hop, common traps and a before-production checklist.
 
 The right rail adds a **Scenario guide** (goal, one thing to remember, first trap), the **live artifact vault** and the **step list**.
@@ -420,7 +424,26 @@ Keyboard: `Space` play/pause, `←` `→` step, `R` restart. Click any vault chi
 | 45 | Focused rc | Advanced | 4 | `W`, `-c`, panel letters, no Datastore panel, large-sample sizing |
 | 46 | Triage and report | Advanced | 5 | System worlds, P95/P05, action plan, HTML/PDF hand-off |
 
-Every scenario is reachable from the Simulations page and from the written chapters. The OneGate catalog with “start here if…” guidance is in [chapter 9](public/docs/09-scenario-catalog.md). The HAProxy track is a learning path only — there is no config editor or active debug console. The ESXtop track is simulation-only: it does not connect to an ESXi host, run esxtop, or change a real VM.
+### BIND & DNS
+
+| # | Scenario | Level | Steps | Teaches |
+|---|---|---|---|---|
+| 47 | Recursive query | Core | 8 | Stub → resolver → root → TLD → authority, cache and flags |
+| 48 | Authoritative answers | Core | 6 | AA, positive answer, NXDOMAIN, NODATA and negative TTL |
+| 49 | Zone delegation | Advanced | 6 | Parent NS, glue, zone cut, lame delegation and DS hand-off |
+| 50 | Zone file | Core | 7 | `$ORIGIN`, SOA, records, serial, `named-checkzone`, reload |
+| 51 | named.conf | Core | 7 | Options, ACLs, views, includes and `named-checkconf` |
+| 52 | DNSSEC chain | Advanced | 8 | Trust anchor, DS, DNSKEY, RRSIG, AD and bogus DS |
+| 53 | DNSSEC rollover | Advanced | 7 | `dnssec-policy`, KSK, DS timing, `rndc dnssec` |
+| 54 | Primary and secondary | Advanced | 7 | NOTIFY, IXFR, TSIG, journal, EXPIRE and verification |
+| 55 | Dynamic update | Advanced | 7 | DHCP, TSIG UPDATE, `update-policy`, journal and reverse DNS |
+| 56 | Open resolver | Core | 7 | Recursion exposure, amplification, ACLs, RRL and cookies |
+| 57 | Split horizon | Advanced | 7 | Views, `match-clients`, RPZ and per-view DNSSEC |
+| 58 | Home lab | Core | 7 | DHCP, private zone, forwarders, DoT/DoH and verification |
+| 59 | SERVFAIL troubleshooting | Core | 7 | `dig`, `delv`, delegation, DNSSEC and evidence collection |
+| 60 | Change workflow | Core | 7 | Validate, semantic diff, stage, reload, verify and roll back |
+
+Every scenario is reachable from the Simulations page and from the written chapters. The OneGate catalog with “start here if…” guidance is in [chapter 9](public/docs/09-scenario-catalog.md). The HAProxy track is a learning path only — there is no config editor or active debug console. The ESXtop track is simulation-only: it does not connect to an ESXi host, run esxtop, or change a real VM. The BIND track is simulation-only: it does not bind port 53, run `named`, contact a resolver or change real DNS. All zone data, keys, TSIG secrets and answers are documentation values.
 
 ---
 
@@ -574,6 +597,29 @@ All in [`public/docs/`](public/docs/), rendered by the site and readable on GitH
 
 Primary sources: [Yellow Bricks — ESXTOP](https://www.yellow-bricks.com/esxtop/) · [Broadcom 344099 — storage performance](https://knowledge.broadcom.com/external/article/344099) · [Broadcom 1008205](https://knowledge.broadcom.com/external/article?legacyId=1008205) · [Broadcom 326309 — exporting esxtop data](https://knowledge.broadcom.com/external/article/326309/exporting-esxtop-performance-data-as-a-c.html) · [vSphere 8.0 monitoring and performance](https://techdocs.broadcom.com/us/en/vmware-cis/vsphere/vsphere/8-0/vsphere-monitoring-and-performance.html).
 
+### BIND & DNS track
+
+| Chapter | What it covers |
+|---|---|
+| [Mental model](public/docs/bind-01-mental-model.md) | Names, zones, RRsets, authority vs recursion, caching, flags and EDNS |
+| [Architecture](public/docs/bind-02-architecture.md) | `named`, files, includes, roles, validation, systemd and container layout |
+| [named.conf](public/docs/bind-03-named-conf.md) | Options, ACLs, listen addresses, views, transfers, logging and review |
+| [Zone files](public/docs/bind-04-zone-files.md) | `$ORIGIN`, `$TTL`, owners, escaping, `$INCLUDE`, `$GENERATE`, TXT and reverse zones |
+| [Records](public/docs/bind-05-records.md) | A/AAAA, CNAME/DNAME, MX/SPF/DKIM/DMARC, SRV/SVCB, CAA/TLSA/SSHFP, PTR and DNSSEC records |
+| [SOA, NS and delegation](public/docs/bind-06-soa-ns-delegation.md) | Every SOA field/timer, serial strategies, TTL changes, glue, zone cuts and DS |
+| [DNSSEC chain](public/docs/bind-07-dnssec-chain.md) | DNSKEY, DS, RRSIG, NSEC/NSEC3, algorithms, validation states and `delv` |
+| [DNSSEC operations](public/docs/bind-08-dnssec-operations.md) | `dnssec-policy`, inline signing, KSK/ZSK rollover, NSEC3, expiry and backup |
+| [Recursion security](public/docs/bind-09-recursion-security.md) | Open resolvers, ACLs, cache limits, QNAME minimisation, cookies, RRL and forwarders |
+| [Transfers and TSIG](public/docs/bind-10-transfers-tsig.md) | AXFR/IXFR, NOTIFY, secondaries, journals, TSIG, hidden primary and troubleshooting |
+| [Views, RPZ and updates](public/docs/bind-11-views-rpz.md) | Split horizon, `match-clients`, RPZ, RFC 2136 updates, catalog zones, DoT/DoH |
+| [Operations](public/docs/bind-12-operations.md) | Logging, metrics, `rndc`, reload vs restart, incidents and backups |
+| [Hardening](public/docs/bind-13-hardening.md) | Version, listeners, firewall, recursion, transfers, DNSSEC, management and secrets |
+| [dig and troubleshooting](public/docs/bind-14-dig-troubleshooting.md) | dig anatomy, RCODEs, NXDOMAIN vs NODATA, `+trace`, `+cd`, `delv +rtrace` |
+| [Reference](public/docs/bind-15-reference.md) | Directive and record tables, tooling, RFCs and the scenario map |
+| [BIND glossary](public/docs/bind-glossary.md) | Every DNS/BIND term used in the track |
+
+Primary sources: [BIND 9 ARM](https://bind9.readthedocs.io/en/latest/) · [BIND 9 DNSSEC guide](https://bind9.readthedocs.io/en/latest/dnssec-guide.html) · [RFC 1034](https://www.rfc-editor.org/rfc/rfc1034) · [RFC 1035](https://www.rfc-editor.org/rfc/rfc1035) · [RFC 4033](https://www.rfc-editor.org/rfc/rfc4033) · [RFC 4034](https://www.rfc-editor.org/rfc/rfc4034) · [RFC 4035](https://www.rfc-editor.org/rfc/rfc4035) · [RFC 5155](https://www.rfc-editor.org/rfc/rfc5155) · [RFC 8945](https://www.rfc-editor.org/rfc/rfc8945) · [DNSViz](https://dnsviz.net/).
+
 The Markdown is the single source of truth: the site fetches and renders the same files you read on GitHub.
 
 ---
@@ -601,10 +647,10 @@ Learning/
 │   │       ├── ui.js             Icons, toast, helpers
 │   │       ├── version.js        Build metadata + local clock formatting
 │   │       ├── pages/            Home, topic, learn, list, simulator, quiz, compare, selftest
-│   │       ├── scenarios/        Forty-six scenario definitions + helpers
+│   │       ├── scenarios/        Sixty scenario definitions + helpers
 │   │       └── sim/              Layout geometry + the animation player
 │   ├── version.json              Local fallback; overwritten by Docker build
-│   └── docs/                     Forty-eight Markdown chapters across five tracks
+│   └── docs/                     Sixty-four Markdown chapters across six tracks
 ├── scripts/
 │   ├── verify.py                 Dependency-free static registry/link checks
 │   └── smoke.py                  Starts start.py and checks real HTTP responses
@@ -628,7 +674,7 @@ No bundler, no framework, no runtime dependency. The browser loads ES modules di
 
 ## How the simulation works
 
-- A fixed **1000 × 600** virtual topology per scenario layout (`onegate`, `docker`, `git`, `haproxy`, `esxtop`). Nodes are HTML positioned in percentages; wires are SVG paths in the same coordinate space.
+- A fixed **1000 × 600** virtual topology per scenario layout (`onegate`, `docker`, `git`, `haproxy`, `esxtop`, `bind`). Nodes are HTML positioned in percentages; wires are SVG paths in the same coordinate space.
 - A scenario is plain data: `{ id, topic, layout, title, category, level, minutes, summary, nodes, nodeLabels, initial, variants, steps, notes, config, pitfalls }`.
 - A step is `{ from, to, badge, detail, channel, http, vault, tags }`.
 - The vault is recomputed from `initial` plus every step's `vault` operations (`add`, `del`, `clearStore`), so it is always consistent with the current step.
@@ -667,6 +713,8 @@ If a chapter 404s, make sure you are serving `public/` (the launcher does) rathe
 - **The HAProxy track scope is informed by [`RogerBergling/haproxy-gui`](https://github.com/RogerBergling/haproxy-gui)**, a local-first HAProxy configuration workbench. This lab teaches and simulates the concepts; it deliberately excludes the workbench editor and active debug console.
 - **HAProxy is a registered trademark of HAProxy Technologies.** This lab is unofficial and is not affiliated with or endorsed by HAProxy Technologies. The HAProxy track is a teaching model, not a config editor, live debugger, deployment tool or replacement for `haproxy -c` and the official configuration manual.
 - **The ESXtop track is simulation-only.** It does not connect to an ESXi host, run esxtop, collect a real capture, or change a VM. Every host, world, capture and counter is modeled. Counter semantics and thresholds are based on Broadcom/VMware documentation and Yellow Bricks field guidance; verify against your exact ESXi build. ESXi, ESXtop and VMware are trademarks of Broadcom. This lab is unofficial and not affiliated with Broadcom.
+- **The BIND track is simulation-only.** It does not bind port 53, run `named`, send DNS queries, transfer zones or change real DNS. Every zone, key, signature, TSIG secret and answer is modeled with documentation values. Validate real deployments with the exact BIND tools (`named-checkconf -z`, `named-checkzone`, `dig`, `delv`, `named-checkds`) and a staged rollback. BIND is developed by Internet Systems Consortium; this lab is unofficial and not affiliated with or endorsed by ISC.
+- **The BIND track scope is informed by [`RogerBergling/bind-gui`](https://github.com/RogerBergling/bind-gui)**, a local-first BIND configuration workbench. This lab teaches the concepts and simulations; the workbench itself is not required and no configuration file is imported into the browser here.
 - The lab is an unofficial study aid, not affiliated with the vendor. It is not a substitute for the product documentation or a security review.
 - No analytics, no external fonts, no CDN, no cookies. Chapter and quiz progress is stored in this browser's `localStorage` and never leaves the machine.
 

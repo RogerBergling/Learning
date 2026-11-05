@@ -350,6 +350,121 @@ const ESXTOP_DOCS = [
   },
 ];
 
+const BIND_DOCS = [
+  {
+    slug: 'bind-01-mental-model',
+    title: 'BIND mental model: names, zones, RRsets and resolution',
+    blurb: 'DNS as a hierarchical database: absolute names, zones versus domains, RRsets, authoritative versus recursive resolution, caching, TTL, negative answers and the header flags that matter.',
+    chapter: 'BIND foundations',
+    minutes: 16,
+  },
+  {
+    slug: 'bind-02-architecture',
+    title: 'How BIND is built and where its files live',
+    blurb: 'The named process, named.conf and includes, zone files, working directories, journals, keys, logs, package layouts, systemd, AppArmor/SELinux and the difference between static validation and live truth.',
+    chapter: 'BIND foundations',
+    minutes: 16,
+  },
+  {
+    slug: 'bind-03-named-conf',
+    title: 'named.conf: options, ACLs, views and includes',
+    blurb: 'Read and write named.conf: grammar, options policy, listen addresses, recursion and cache ACLs, transfer and update policy, views, logging, controls and a review checklist.',
+    chapter: 'BIND foundations',
+    minutes: 22,
+  },
+  {
+    slug: 'bind-04-zone-files',
+    title: 'Zone files from first principles',
+    blurb: '$ORIGIN, $TTL, @, relative versus absolute names, omitted owners, parentheses, comments, $INCLUDE, $GENERATE, escaping, TXT limits and the semantic rules named-checkzone enforces.',
+    chapter: 'BIND zones & records',
+    minutes: 20,
+  },
+  {
+    slug: 'bind-05-records',
+    title: 'DNS records and the rules that break zones',
+    blurb: 'A/AAAA, CNAME, DNAME, MX, NS, SOA, TXT, SPF, DKIM, DMARC, SRV, SVCB/HTTPS, CAA, TLSA, SSHFP, PTR and DNSSEC records — with examples, conflicts and operational traps.',
+    chapter: 'BIND zones & records',
+    minutes: 24,
+  },
+  {
+    slug: 'bind-06-soa-ns-delegation',
+    title: 'SOA, NS, TTL and delegation',
+    blurb: 'Every SOA field and timer, serial strategies, TTL migration planning, apex NS redundancy, zone cuts, in-bailiwick glue, reverse DNS, lame delegation and safe delegation changes.',
+    chapter: 'BIND zones & records',
+    minutes: 22,
+  },
+  {
+    slug: 'bind-07-dnssec-chain',
+    title: 'DNSSEC: keys, signatures and the chain of trust',
+    blurb: 'DNSKEY, DS, RRSIG, NSEC/NSEC3, key tags, algorithms, validation states, secure versus insecure versus bogus, and how to verify the chain with dig, delv and named-checkds.',
+    chapter: 'BIND DNSSEC',
+    minutes: 24,
+  },
+  {
+    slug: 'bind-08-dnssec-operations',
+    title: 'DNSSEC operations: policy, rollover and monitoring',
+    blurb: 'dnssec-policy, inline signing, key directories, KSK/ZSK rollover, DS timing, NSEC3 iterations, signature expiry, rndc dnssec, backup/restore and outage prevention.',
+    chapter: 'BIND DNSSEC',
+    minutes: 22,
+  },
+  {
+    slug: 'bind-09-recursion-security',
+    title: 'Recursion security: open resolvers, cache and rate limits',
+    blurb: 'Why an open resolver is abused, how to scope recursion and cache access, cache and query limits, QNAME minimisation, DNS cookies, RRL, forwarders and how to test exposure from outside.',
+    chapter: 'BIND operations',
+    minutes: 20,
+  },
+  {
+    slug: 'bind-10-transfers-tsig',
+    title: 'Zone transfers, TSIG, NOTIFY and secondaries',
+    blurb: 'AXFR versus IXFR, NOTIFY, primaries and secondaries, journals, TSIG algorithms and secrets, hidden primaries, multi-primary trade-offs and transfer troubleshooting.',
+    chapter: 'BIND operations',
+    minutes: 22,
+  },
+  {
+    slug: 'bind-11-views-rpz',
+    title: 'Views, split horizon, RPZ and dynamic updates',
+    blurb: 'Ordered views and match-clients, split-horizon safety, response policy zones, RFC 2136 dynamic updates, update-policy, journals, catalog zones, DNS cookies and EDE.',
+    chapter: 'BIND operations',
+    minutes: 22,
+  },
+  {
+    slug: 'bind-12-operations',
+    title: 'Operating BIND: logs, metrics, reload and incidents',
+    blurb: 'Logging categories and bounded channels, statistics-channels, rndc, reload versus restart, monitoring what matters, troubleshooting transfers and DNSSEC, and incident response.',
+    chapter: 'BIND operations',
+    minutes: 20,
+  },
+  {
+    slug: 'bind-13-hardening',
+    title: 'Hardening BIND: a practical baseline',
+    blurb: 'Version disclosure, listeners, firewall, recursion, transfers, updates, DNSSEC, management channels, rate limiting, RPZ, file permissions, secrets, systemd and change control.',
+    chapter: 'BIND operations',
+    minutes: 20,
+  },
+  {
+    slug: 'bind-14-dig-troubleshooting',
+    title: 'dig, delv and DNS troubleshooting',
+    blurb: 'Read dig output like a support engineer: flags, sections, RCODE, NXDOMAIN versus NODATA, authoritative queries, +trace, DNSSEC with +dnssec/+cd, delv +rtrace and a triage order.',
+    chapter: 'BIND operations',
+    minutes: 22,
+  },
+  {
+    slug: 'bind-15-reference',
+    title: 'BIND reference: directives, record types and RFCs',
+    blurb: 'A compact operator reference for the named.conf directives and DNS record types used in the track, plus the RFCs, BIND ARM chapters and external tools worth bookmarking.',
+    chapter: 'Reference',
+    minutes: 24,
+  },
+  {
+    slug: 'bind-glossary',
+    title: 'BIND & DNS glossary',
+    blurb: 'Zone, RRset, apex, delegation, glue, SOA, serial, AXFR, IXFR, TSIG, DNSKEY, DS, RRSIG, NSEC3, RPZ, RRL, EDE and every other term used in the BIND track.',
+    chapter: 'Reference',
+    minutes: 10,
+  },
+];
+
 const withTopic = (docs, topic) => docs.map((doc) => ({ ...doc, topic }));
 
 export const DOCS = [
@@ -358,6 +473,7 @@ export const DOCS = [
   ...withTopic(GIT_DOCS, 'git'),
   ...withTopic(HAPROXY_DOCS, 'haproxy'),
   ...withTopic(ESXTOP_DOCS, 'esxtop'),
+  ...withTopic(BIND_DOCS, 'bind'),
 ];
 
 export const CHAPTERS = [
@@ -380,6 +496,10 @@ export const CHAPTERS = [
   'ESXtop CPU & memory',
   'ESXtop storage & network',
   'ESXtop operations',
+  'BIND foundations',
+  'BIND zones & records',
+  'BIND DNSSEC',
+  'BIND operations',
   'Deep dives',
   'Reference',
 ];
@@ -522,9 +642,43 @@ export const TOPICS = {
       'esxtop-09-counter-reference',
     ],
   },
+  bind: {
+    id: 'bind',
+    title: 'BIND & DNS',
+    shortTitle: 'BIND',
+    eyebrow: 'DNS, zones, DNSSEC & operations',
+    icon: 'dns',
+    accent: 'pink',
+    summary: 'Learn BIND from a home resolver to a signed authoritative pair: zones, records, delegation, DNSSEC, recursion policy, transfers, TSIG, views, RPZ, operations and troubleshooting.',
+    description: 'A simulation-only DNS track for home users and advanced administrators. Every query, zone, key, transfer and resolver is modeled — no real BIND server, DNS port or credential is used. Start with the DNS mental model, then move through named.conf, zone files, delegation, DNSSEC, hardening and live-style dig diagnosis.',
+    outcomes: [
+      'Explain authoritative versus recursive resolution and caching',
+      'Write a valid named.conf and zone file from first principles',
+      'Delegate a zone, publish glue and verify the parent/child pair',
+      'Sign a zone, follow the DS/DNSKEY chain and plan a rollover',
+      'Restrict recursion, authenticate transfers and use TSIG safely',
+      'Diagnose NXDOMAIN, NODATA, REFUSED, SERVFAIL and DNSSEC bogus',
+    ],
+    path: [
+      'bind-01-mental-model',
+      'bind-02-architecture',
+      'bind-03-named-conf',
+      'bind-04-zone-files',
+      'bind-05-records',
+      'bind-06-soa-ns-delegation',
+      'bind-07-dnssec-chain',
+      'bind-08-dnssec-operations',
+      'bind-09-recursion-security',
+      'bind-10-transfers-tsig',
+      'bind-11-views-rpz',
+      'bind-12-operations',
+      'bind-13-hardening',
+      'bind-14-dig-troubleshooting',
+    ],
+  },
 };
 
-export const TOPIC_ORDER = ['onegate', 'docker', 'git', 'haproxy', 'esxtop'];
+export const TOPIC_ORDER = ['onegate', 'docker', 'git', 'haproxy', 'esxtop', 'bind'];
 
 export const CATEGORIES = {
   foundation: { label: 'Foundations', blurb: 'The primitives, with no browser in the way.' },
@@ -553,6 +707,12 @@ export const CATEGORIES = {
   'esxtop-storage': { label: 'Storage stack', blurb: 'DAVG, KAVG, GAVG, queues, paths and array latency.' },
   'esxtop-network': { label: 'Network & vSAN', blurb: 'Drops, throughput, uplinks, vSAN and power panels.' },
   'esxtop-ops': { label: 'Triage & reporting', blurb: 'Thresholds, false positives, action plans and reports.' },
+  'bind-foundations': { label: 'BIND foundations', blurb: 'named.conf, zone files, records and the DNS model.' },
+  'bind-query': { label: 'Queries & delegation', blurb: 'Recursion, authority, referrals, glue and zone cuts.' },
+  'bind-dnssec': { label: 'DNSSEC', blurb: 'Keys, signatures, chain of trust and rollover.' },
+  'bind-replication': { label: 'Transfers & updates', blurb: 'Primary/secondary, AXFR/IXFR, NOTIFY, TSIG and dynamic updates.' },
+  'bind-security': { label: 'DNS security', blurb: 'Open resolvers, views, RPZ, home labs and exposure.' },
+  'bind-ops': { label: 'DNS operations', blurb: 'Troubleshooting, change control, validation and rollback.' },
 };
 
 export const LEARNING_PATH = TOPICS.onegate.path;

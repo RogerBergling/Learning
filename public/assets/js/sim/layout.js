@@ -193,6 +193,55 @@ export const ESXTOP_SUBNODES = {
   'esxi.metrics': { name: 'PDH counters', sub: 'per-world samples', x: 690, y: 340 },
 };
 
+/* -------------------------------------------------------------------- BIND */
+
+export const BIND_NODES = {
+  client: {
+    name: 'Client / dig', sub: 'stub resolver · UDP/TCP 53', icon: 'terminal',
+    rect: { x: 90, y: 300, w: 174, h: 112 },
+  },
+  home: {
+    name: 'Home devices', sub: 'laptop · phone · IoT', icon: 'browser',
+    rect: { x: 90, y: 90, w: 174, h: 108 },
+  },
+  router: {
+    name: 'Home router', sub: 'DHCP · DNS forwarder', icon: 'network',
+    rect: { x: 90, y: 510, w: 174, h: 96 },
+  },
+  resolver: {
+    name: 'Recursive resolver', sub: 'BIND · cache · DNSSEC', icon: 'server',
+    rect: { x: 330, y: 300, w: 200, h: 132 },
+  },
+  root: {
+    name: 'Root servers', sub: 'root hints · trust anchor', icon: 'cloud',
+    rect: { x: 602, y: 62, w: 174, h: 94 },
+  },
+  tld: {
+    name: 'TLD servers', sub: 'com · net · org', icon: 'cloud',
+    rect: { x: 812, y: 62, w: 174, h: 94 },
+  },
+  parent: {
+    name: 'Parent zone', sub: 'registry · NS · DS', icon: 'layers',
+    rect: { x: 812, y: 190, w: 174, h: 94 },
+  },
+  primary: {
+    name: 'Authoritative primary', sub: 'named · zone files', icon: 'database',
+    rect: { x: 812, y: 330, w: 174, h: 116 },
+  },
+  secondary: {
+    name: 'Secondary', sub: 'AXFR/IXFR · journal', icon: 'database',
+    rect: { x: 812, y: 482, w: 174, h: 100 },
+  },
+  admin: {
+    name: 'DNS operator', sub: 'shell · change control', icon: 'terminal',
+    rect: { x: 330, y: 505, w: 200, h: 96 },
+  },
+  monitor: {
+    name: 'Logs & monitoring', sub: 'queries · transfers · DNSSEC', icon: 'eye',
+    rect: { x: 590, y: 505, w: 184, h: 96 },
+  },
+};
+
 /* --------------------------------------------------------------- layouts */
 
 const onegateNodes = Object.fromEntries(
@@ -250,6 +299,12 @@ export const LAYOUTS = {
       footer: 'CPU scheduler · memory · vSCSI/NMP · vSwitch',
       subnodes: ESXTOP_SUBNODES,
     }],
+  },
+  bind: {
+    id: 'bind',
+    label: 'BIND & DNS',
+    nodes: BIND_NODES,
+    groups: [],
   },
 };
 

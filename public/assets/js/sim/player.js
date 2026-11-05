@@ -21,6 +21,10 @@ const CHANNELS = {
   storage: 'storage path',
   guest: 'guest I/O',
   report: 'analysis',
+  dns: 'DNS query',
+  dnssec: 'DNSSEC',
+  xfer: 'zone transfer',
+  update: 'dynamic update',
 };
 
 const CHANNEL_META = {
@@ -41,6 +45,10 @@ const CHANNEL_META = {
   storage: { label: 'storage path', color: 'var(--accent-2)' },
   guest: { label: 'guest I/O', color: 'var(--teal)' },
   report: { label: 'analysis', color: 'var(--ok)' },
+  dns: { label: 'DNS query', color: 'var(--teal)' },
+  dnssec: { label: 'DNSSEC', color: 'var(--accent-2)' },
+  xfer: { label: 'zone transfer', color: 'var(--orange)' },
+  update: { label: 'dynamic update', color: 'var(--pink)' },
 };
 
 const STORE_ICONS = {
@@ -52,6 +60,8 @@ const STORE_ICONS = {
   haproxy: 'proxy', servers: 'server', logs: 'eye', certs: 'lock',
   esxi: 'server', esxtop: 'terminal', capture: 'table', vmguest: 'box',
   datastore: 'database', vswitch: 'network', physical: 'cloud',
+  dnsclient: 'terminal', resolver: 'server', internet: 'cloud', authority: 'database',
+  zonedata: 'layers', dnssec: 'key', transfer: 'clock', dnslogs: 'eye', home: 'browser', parent: 'cloud', router: 'network',
 };
 
 const STORE_ORDER = [
@@ -59,6 +69,8 @@ const STORE_ORDER = [
   'gitrepo', 'gitremote', 'reflog', 'github', 'registry', 'deployment',
   'haproxy', 'servers', 'certs', 'logs',
   'esxi', 'esxtop', 'capture', 'vmguest', 'datastore', 'vswitch', 'physical',
+  'dnsclient', 'home', 'router', 'resolver', 'internet', 'parent', 'authority',
+  'zonedata', 'dnssec', 'transfer', 'dnslogs',
   'frontend', 'backend', 'idp', 'sp', 'attr',
 ];
 
@@ -657,7 +669,7 @@ export class SimPlayer {
   }
 
   renderWire(step, animate) {
-    const channelClasses = ['front', 'back', 'cookie', 'attr', 'internal', 'saml', 'cli', 'engine', 'network', 'registry', 'git', 'ci', 'deploy', 'host', 'storage', 'guest', 'report'].map((c) => `ch-${c}`);
+    const channelClasses = ['front', 'back', 'cookie', 'attr', 'internal', 'saml', 'cli', 'engine', 'network', 'registry', 'git', 'ci', 'deploy', 'host', 'storage', 'guest', 'report', 'dns', 'dnssec', 'xfer', 'update'].map((c) => `ch-${c}`);
     // fade everything, then bring the current hop to the front
     for (const p of this.wireEls.values()) {
       p.classList.remove('is-active', ...channelClasses);
@@ -998,6 +1010,20 @@ function channelRule(step, topic = 'onegate') {
     };
     return rules[ch] || rules.host;
   }
+  if (topic === 'bind') {
+    const rules = {
+      front: 'The client sends a DNS query with RD=1 and receives the resolver response. Check qname, qtype, flags, RCODE and whether the answer came from cache.',
+      back: 'This is a DNS response on its way back. Check AA, RA, AD, TTL, the answer and authority sections, and whether a negative answer was cached.',
+      dns: 'This is an iterative DNS query on port 53. Check the referral path, glue, whether the target is authoritative or recursive, and the actual RCODE.',
+      dnssec: 'This is a DNSSEC validation step. Check DS↔DNSKEY match, RRSIG validity, signer, key tag, algorithm and the trust anchor.',
+      xfer: 'This is zone replication over TCP/53. Check SOA serial, NOTIFY, AXFR/IXFR, TSIG and the journal.',
+      update: 'This is a dynamic update. Check the TSIG key, update-policy name/type scope, journal state and replication to secondaries.',
+      internal: 'This happens inside BIND: zone load, cache, policy, signing or journal state. Check named-checkconf, rndc zonestatus and the relevant log category.',
+      cli: 'You are operating the server. Confirm the host, BIND version, exact command and rollback; validate with named-checkconf and named-checkzone before reload.',
+      report: 'This is monitoring or analysis. Confirm the exact query, timestamp, resolver and evidence; a cached answer is not authoritative truth.',
+    };
+    return rules[ch] || rules.internal;
+  }
   const front = topic === 'haproxy'
     ? 'The client-facing side. TLS, SNI, Host and request headers are visible here; do not assume the backend sees the same values unless HAProxy forwards them.'
     : 'Front-channel data is visible to the browser. Codes, `state`, `nonce` and cookies belong here; access tokens, refresh tokens and secrets do not.';
@@ -1063,6 +1089,56 @@ function channelChecks(step, topic = 'onegate') {
       ],
     };
     return rules[ch] || rules.host;
+  }
+  if (topic === 'bind') {
+    const rules = {
+      front: [
+        'Write down the exact qname, qtype, resolver and flags (RD, DO).',
+        'Read the RCODE and the ANSWER/AUTHORITY sections before changing anything.',
+        'Check whether the answer came from cache or from an authoritative server.',
+      ],
+      back: [
+        'Confirm AA, RA and AD; each means something different.',
+        'Check the TTL and whether the answer is positive, NXDOMAIN or NODATA.',
+        'Verify negative caching and SOA minimum for a missing name or type.',
+      ],
+      dns: [
+        'Distinguish a referral from an answer; the root and TLD usually refer.',
+        'Check glue for in-bailiwick name servers and the actual parent/child NS sets.',
+        'Confirm UDP and TCP 53 reachability, including IPv6.',
+      ],
+      dnssec: [
+        'Match the parent DS to the child DNSKEY by key tag, algorithm and digest.',
+        'Check RRSIG inception/expiry, signer and key tag; use `delv +rtrace`.',
+        'A missing DS is insecure; a wrong DS is bogus. `+cd` is diagnosis only.',
+      ],
+      xfer: [
+        'Compare SOA serials on primary and secondary.',
+        'Check TCP/53, allow-transfer, TSIG name/algorithm/secret and clock skew.',
+        'Verify journal health, disk space, NOTIFY delivery and EXPIRE.',
+      ],
+      update: [
+        'Confirm the TSIG key and the exact `update-policy` name/type scope.',
+        'Remember that the journal is part of the zone state; back it up.',
+        'Verify forward and reverse records and replication to secondaries.',
+      ],
+      internal: [
+        'Run `named-checkconf -z` and read the actual zone serial.',
+        'Check `rndc status` and `rndc zonestatus` rather than assuming a reload worked.',
+        'Check `security`, `dnssec`, `xfer` and `update` log categories.',
+      ],
+      cli: [
+        'Validate with the production BIND binary and the production paths.',
+        'Keep the previous configuration, zone, journal and key state for rollback.',
+        'Reload, then verify authoritative, recursive and DNSSEC paths.',
+      ],
+      report: [
+        'Record the exact command, resolver, timestamp and output.',
+        'Separate authoritative truth from a resolver cache sample.',
+        'Add a monitor or alert so the same failure is detected earlier next time.',
+      ],
+    };
+    return rules[ch] || rules.internal;
   }
   if (topic === 'haproxy' && ch === 'front') return [
     'Confirm the frontend bind, port, TLS/certificate and SNI/Host matching rules.',

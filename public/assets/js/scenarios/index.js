@@ -20,6 +20,12 @@ import {
   esxtopBatchCapture, esxtopCpuReady, esxtopMemoryReclaim, esxtopStorageLatency,
   esxtopStorageQueue, esxtopNetworkDrops, esxtopFocusedRc, esxtopTriageReport,
 } from './esxtop.js';
+import {
+  bindRecursiveQuery, bindAuthoritativeAnswer, bindZoneDelegation, bindZoneFile,
+  bindNamedConf, bindDnssecChain, bindDnssecRollover, bindPrimarySecondary,
+  bindDynamicUpdate, bindOpenResolver, bindSplitHorizon, bindHomeLab,
+  bindTroubleshootServfail, bindChangeWorkflow,
+} from './bind.js';
 
 const FLOW = {
   'client-credentials': 'Service → token endpoint → API',
@@ -68,6 +74,20 @@ const FLOW = {
   'esxtop-network-drops': 'VM NIC → vSwitch → uplink → physical switch',
   'esxtop-focused-rc': 'Interactive → W rc → -c → large-capture sizing',
   'esxtop-triage-report': 'Findings → action plan → re-capture → report',
+  'bind-recursive-query': 'Stub → resolver → root → TLD → authority → cache',
+  'bind-authoritative-answer': 'dig → authoritative server → AA/NXDOMAIN/NODATA',
+  'bind-zone-delegation': 'Parent NS + glue → child authority → verify',
+  'bind-zone-file': '$ORIGIN → SOA → records → checkzone → reload → secondary',
+  'bind-named-conf': 'options → ACL → recursion → include → checkconf',
+  'bind-dnssec-chain': 'Trust anchor → DS → DNSKEY → RRSIG → AD',
+  'bind-dnssec-rollover': 'Policy → new KSK → DS → wait → retire',
+  'bind-primary-secondary': 'Serial → NOTIFY → IXFR/TSIG → journal → verify',
+  'bind-dynamic-update': 'DHCP → TSIG UPDATE → policy → journal → secondary',
+  'bind-open-resolver': 'Open recursion → abuse → ACL → external test',
+  'bind-split-horizon': 'Internal view → external view → RPZ → test',
+  'bind-home-lab': 'DHCP → BIND → private zone → forwarder → verify',
+  'bind-troubleshoot-servfail': 'SERVFAIL → authority → delegation → DNSSEC → fix',
+  'bind-change-workflow': 'Analyze → validate → diff → stage → reload → verify',
 };
 
 const ALL = [
@@ -117,6 +137,20 @@ const ALL = [
   esxtopNetworkDrops,
   esxtopFocusedRc,
   esxtopTriageReport,
+  bindRecursiveQuery,
+  bindAuthoritativeAnswer,
+  bindZoneDelegation,
+  bindZoneFile,
+  bindNamedConf,
+  bindDnssecChain,
+  bindDnssecRollover,
+  bindPrimarySecondary,
+  bindDynamicUpdate,
+  bindOpenResolver,
+  bindSplitHorizon,
+  bindHomeLab,
+  bindTroubleshootServfail,
+  bindChangeWorkflow,
 ];
 
 const FEATURED = new Set([
@@ -124,6 +158,7 @@ const FEATURED = new Set([
   'docker-run', 'docker-build', 'docker-compose', 'git-first-push', 'git-release-ghcr',
   'haproxy-https-request', 'haproxy-tls-sni',
   'esxtop-batch-capture', 'esxtop-cpu-ready', 'esxtop-storage-latency',
+  'bind-recursive-query', 'bind-dnssec-chain', 'bind-open-resolver', 'bind-troubleshoot-servfail',
 ]);
 
 export const SCENARIOS = ALL.map((s, i) => {

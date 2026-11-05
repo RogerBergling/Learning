@@ -100,6 +100,22 @@ export const KINDS = {
   vm:     { label: 'Virtual machine',             chip: 'VM',       cls: 'k-vm' },
   lun:    { label: 'Datastore / LUN',              chip: 'LUN',      cls: 'k-lun' },
   host:   { label: 'ESXi host',                   chip: 'host',     cls: 'k-host' },
+  dnsquery: { label: 'DNS query',                 chip: 'query',    cls: 'k-request' },
+  dnsanswer: { label: 'DNS answer',               chip: 'answer',   cls: 'k-response' },
+  bindconf: { label: 'BIND configuration',        chip: 'named.conf', cls: 'k-config' },
+  zone:   { label: 'Zone file',                   chip: 'zone',     cls: 'k-config' },
+  record: { label: 'DNS record',                  chip: 'RR',       cls: 'k-claims' },
+  rrset:  { label: 'Resource record set',         chip: 'RRset',    cls: 'k-capture' },
+  dnskey: { label: 'DNSSEC key',                  chip: 'DNSKEY',   cls: 'k-jwk' },
+  ds:     { label: 'Delegation signer',           chip: 'DS',       cls: 'k-jwk' },
+  rrsig:  { label: 'DNSSEC signature',            chip: 'RRSIG',    cls: 'k-jwt' },
+  nsec:   { label: 'Denial of existence',         chip: 'NSEC3',    cls: 'k-tag' },
+  tsig:   { label: 'TSIG key',                    chip: 'TSIG',     cls: 'k-rt' },
+  journal: { label: 'Zone journal',               chip: 'journal',  cls: 'k-log' },
+  cache:  { label: 'Resolver cache',              chip: 'cache',    cls: 'k-session' },
+  dnsacl: { label: 'BIND ACL',                    chip: 'ACL',      cls: 'k-acl' },
+  bindpolicy: { label: 'DNSSEC policy',           chip: 'policy',   cls: 'k-config' },
+  dnserror: { label: 'DNS error',                 chip: 'SERVFAIL', cls: 'k-finding' },
 };
 
 export const STORES = {
@@ -132,6 +148,17 @@ export const STORES = {
   datastore:{ label: 'Datastore / array',    hint: 'VMFS/NFS datastore, LUN, path and array' },
   vswitch:  { label: 'Virtual switch',       hint: 'vSwitch/DVS port, uplink and teaming' },
   physical: { label: 'Physical network',     hint: 'physical switch, NIC and link' },
+  dnsclient:{ label: 'Client / stub resolver', hint: 'a browser, dig, DHCP client or stub resolver' },
+  home:     { label: 'Home network',         hint: 'laptops, phones, IoT and the router DNS path' },
+  router:   { label: 'Home router',          hint: 'DHCP, DNS forwarder, upstream resolver and NAT' },
+  resolver: { label: 'Recursive resolver',   hint: 'BIND resolver: recursion, cache and DNSSEC validation' },
+  internet: { label: 'Root & TLD',           hint: 'root hints, root zone, TLD delegation and trust anchor' },
+  parent:   { label: 'Parent zone / registry', hint: 'parent NS delegation, glue and DS records' },
+  authority:{ label: 'Authoritative server', hint: 'named, zone data and authoritative answers' },
+  zonedata: { label: 'Zone data',            hint: 'master files, RRsets, serial and journals' },
+  dnssec:   { label: 'DNSSEC keys & trust',  hint: 'DNSKEY, DS, RRSIG, NSEC3 and trust anchors' },
+  transfer: { label: 'Transfers & updates',  hint: 'NOTIFY, AXFR/IXFR, TSIG, journal and dynamic updates' },
+  dnslogs:  { label: 'DNS logs & metrics',   hint: 'query, security, xfer, dnssec and update channels' },
 };
 
 /** Turn a scenario token definition into a concrete, displayable token. */

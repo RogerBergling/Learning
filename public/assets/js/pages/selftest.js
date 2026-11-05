@@ -9,7 +9,7 @@ import { searchChapters } from '../search.js';
 import { getProgress, progressSummary } from '../progress.js';
 import { esc, icon } from '../ui.js';
 
-const CHANNELS = new Set(['front', 'back', 'cookie', 'attr', 'internal', 'saml', 'cli', 'engine', 'network', 'registry', 'git', 'ci', 'deploy', 'host', 'storage', 'guest', 'report']);
+const CHANNELS = new Set(['front', 'back', 'cookie', 'attr', 'internal', 'saml', 'cli', 'engine', 'network', 'registry', 'git', 'ci', 'deploy', 'host', 'storage', 'guest', 'report', 'dns', 'dnssec', 'xfer', 'update']);
 const ACTORS = allActors();
 
 export async function renderSelftest(view, isCurrent = () => true) {

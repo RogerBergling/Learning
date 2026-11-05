@@ -27,6 +27,12 @@ const DOCS_FOR = {
   'esxtop-storage': ['esxtop-05-storage-latency'],
   'esxtop-network': ['esxtop-06-network-vsan'],
   'esxtop-ops': ['esxtop-07-focused-capture', 'esxtop-08-triage-reporting', 'esxtop-09-counter-reference'],
+  'bind-foundations': ['bind-03-named-conf', 'bind-04-zone-files', 'bind-05-records'],
+  'bind-query': ['bind-01-mental-model', 'bind-06-soa-ns-delegation', 'bind-14-dig-troubleshooting'],
+  'bind-dnssec': ['bind-07-dnssec-chain', 'bind-08-dnssec-operations'],
+  'bind-replication': ['bind-10-transfers-tsig', 'bind-11-views-rpz'],
+  'bind-security': ['bind-09-recursion-security', 'bind-11-views-rpz', 'bind-13-hardening'],
+  'bind-ops': ['bind-12-operations', 'bind-14-dig-troubleshooting'],
 };
 
 const DOC_TITLES = {
@@ -63,6 +69,19 @@ const DOC_TITLES = {
   'esxtop-07-focused-capture': 'Focused captures',
   'esxtop-08-triage-reporting': 'Triage and reporting',
   'esxtop-09-counter-reference': 'Counter reference',
+  'bind-03-named-conf': 'named.conf',
+  'bind-04-zone-files': 'Zone files',
+  'bind-05-records': 'DNS records',
+  'bind-01-mental-model': 'DNS mental model',
+  'bind-06-soa-ns-delegation': 'SOA, NS and delegation',
+  'bind-14-dig-troubleshooting': 'dig and troubleshooting',
+  'bind-07-dnssec-chain': 'DNSSEC chain',
+  'bind-08-dnssec-operations': 'DNSSEC operations',
+  'bind-10-transfers-tsig': 'Transfers and TSIG',
+  'bind-11-views-rpz': 'Views and RPZ',
+  'bind-09-recursion-security': 'Recursion security',
+  'bind-13-hardening': 'Hardening',
+  'bind-12-operations': 'Operating BIND',
 };
 
 export async function renderScenarioPage(view, id) {
