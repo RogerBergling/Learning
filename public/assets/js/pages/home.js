@@ -8,15 +8,28 @@ import { icon, esc } from '../ui.js';
 function topicCard(topic) {
   const docs = DOCS.filter((doc) => doc.topic === topic.id);
   const scenarios = scenariosByTopic(topic.id);
-  return `<a class="card topic-card ${topic.accent}" href="#/topic/${topic.id}">
-    <div class="topic-card-head">
-      <div class="topic-icon">${icon(topic.icon, 24)}</div>
-      <span class="pill">${docs.length} chapters · ${scenarios.length} sims</span>
-    </div>
-    <h3>${esc(topic.title)}</h3>
-    <p>${esc(topic.summary)}</p>
-    <span class="topic-cta">${icon('arrow', 14)} Enter ${esc(topic.shortTitle)} track</span>
-  </a>`;
+  return `<article class="card topic-card ${topic.accent}">
+    <a class="topic-card-main" href="#/topic/${topic.id}">
+      <div class="topic-card-head">
+        <div class="topic-icon">${icon(topic.icon, 24)}</div>
+        <span class="pill">${docs.length} chapters · ${scenarios.length} sims</span>
+      </div>
+      <h3>${esc(topic.title)}</h3>
+      <p>${esc(topic.summary)}</p>
+      <span class="topic-cta">${icon('arrow', 14)} Enter ${esc(topic.shortTitle)} track</span>
+    </a>
+    ${topic.project ? `<a class="topic-project-mini ${topic.accent}" href="${esc(topic.project.url)}" target="_blank" rel="noopener noreferrer">
+      <span class="topic-project-mini-head">${icon('github', 13)} Companion project</span>
+      <strong>${esc(topic.project.name)}</strong>
+      <span class="topic-project-mini-label">${esc(topic.project.label)}</span>
+      <p>${esc(topic.project.summary)}</p>
+      <span class="topic-project-link">View on GitHub ${icon('arrow', 12)}</span>
+    </a>` : `<div class="topic-project-mini is-note">
+      <span class="topic-project-mini-head">${icon('book', 13)} Learning-only track</span>
+      <strong>No companion tool</strong>
+      <p>Every OneGate role is simulated inside this lab; no external project is required.</p>
+    </div>`}
+  </article>`;
 }
 
 export function renderHome(view) {

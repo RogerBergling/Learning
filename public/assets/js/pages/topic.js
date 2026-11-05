@@ -77,6 +77,7 @@ export function renderTopic(view, id) {
           <span class="topic-project-eyebrow">${icon('github', 13)} Companion project</span>
           <strong>${esc(topic.project.name)}</strong>
           <span class="topic-project-label">${esc(topic.project.label)}</span>
+          <span class="topic-project-url">${esc(topic.project.url.replace(/^https:\/\//, ''))}</span>
           <p>${esc(topic.project.summary)}</p>
           <ul>${topic.project.features.map((feature) => `<li>${esc(feature)}</li>`).join('')}</ul>
           <span class="topic-project-link">Open on GitHub ${icon('arrow', 13)}</span>

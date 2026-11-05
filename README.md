@@ -217,7 +217,7 @@ Local development serves the committed fallback:
 
 ```json
 {
-  "version": "2.4.0",
+  "version": "2.5.0",
   "imageTag": "local",
   "commit": "local",
   "buildDate": null
@@ -245,7 +245,7 @@ For a manual Docker build, stamp it explicitly:
 
 ```bash
 docker build \
-  --build-arg APP_VERSION=2.4.0 \
+  --build-arg APP_VERSION=2.5.0 \
   --build-arg IMAGE_TAG=manual \
   --build-arg GIT_SHA="$(git rev-parse --short HEAD)" \
   --build-arg BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -317,7 +317,7 @@ These controls complement the application hardening already present: read-only c
 | **Quiz** (`#/quiz`) | A 53-question knowledge check across the tracks, with saved progress |
 | **Self-check** (`#/selftest`) | Runtime validation of topics, scenarios, tokens, quizzes and all docs |
 
-Topic pages also include a compact **Companion project** card for Docker (`docker-mgmt`), Git (`git-create`), HAProxy (`haproxy-gui`), ESXtop (`esxtop-perf`) and BIND (`bind-gui`), with a short explanation of what each tool does and a direct GitHub link.
+The home-page track boxes and topic pages also include a **Companion project** card for Docker (`docker-mgmt`), Git (`git-create`), HAProxy (`haproxy-gui`), ESXtop (`esxtop-perf`) and BIND (`bind-gui`), with a short explanation of what each tool does and a direct GitHub link. The learning track remains the primary link.
 
 Every scenario has five tabs:
 
