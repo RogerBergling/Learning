@@ -139,6 +139,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self._resolve_route()
         super().do_HEAD()
 
+    def do_OPTIONS(self) -> None:  # noqa: N802 (stdlib naming)
+        # Reverse proxies commonly probe a backend with OPTIONS before sending
+        # traffic. This is a static GET/HEAD server, but answering OPTIONS with
+        # 200 and an Allow header is safe and keeps health checks working.
+        self.send_response(200)
+        self.send_header("Allow", "GET, HEAD, OPTIONS")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
     def log_message(self, fmt: str, *args) -> None:
         sys.stderr.write("  %s\n" % (fmt % args))
 

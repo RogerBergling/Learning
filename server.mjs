@@ -126,8 +126,20 @@ function listen(port) {
 }
 
 async function handle(req, res) {
+  if (req.method === 'OPTIONS') {
+    // Reverse proxies commonly probe a backend with OPTIONS before sending
+    // traffic. Answer with an empty 200 and the allowed methods.
+    res.writeHead(200, {
+      Allow: 'GET, HEAD, OPTIONS',
+      'Content-Length': 0,
+      'Cache-Control': NO_CACHE,
+      ...SECURITY_HEADERS,
+    });
+    res.end();
+    return;
+  }
   if (req.method !== 'GET' && req.method !== 'HEAD') {
-    sendError(res, 405, 'Method not allowed', { Allow: 'GET, HEAD' });
+    sendError(res, 405, 'Method not allowed', { Allow: 'GET, HEAD, OPTIONS' });
     return;
   }
 

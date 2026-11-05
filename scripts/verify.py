@@ -418,6 +418,8 @@ js_routes = set(re.findall(r"'(/[a-z-]+)'", section(js_server, "APP_ROUTE_PREFIX
 check(py_routes == js_routes, "launchers share one SPA route allowlist",
       f"python-only={sorted(py_routes - js_routes)} node-only={sorted(js_routes - py_routes)}")
 check(len(py_routes) >= 8, "SPA route allowlist is populated", str(sorted(py_routes)))
+check("def do_OPTIONS" in py_server, "Python launcher supports OPTIONS health checks")
+check("req.method === 'OPTIONS'" in js_server, "Node launcher supports OPTIONS health checks")
 check(re.search(r'server_version\s*=\s*"LearningLab"', py_server) is not None,
       "Python launcher uses a generic server identity")
 check(re.search(r"def version_string\(self\).*?return self\.server_version", py_server, re.S) is not None,

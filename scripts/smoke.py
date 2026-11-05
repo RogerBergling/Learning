@@ -156,6 +156,12 @@ def main() -> int:
         check(status == 200, "HEAD / returns 200", str(status))
         check(body == b"", "HEAD / has no response body")
 
+        status, headers, body = fetch(f"{base}/", method="OPTIONS")
+        check(status == 200, "OPTIONS / returns 200 for proxy health checks", str(status))
+        check(body == b"", "OPTIONS / has no response body")
+        check("OPTIONS" in header(headers, "Allow"), "OPTIONS / advertises the allowed methods",
+              header(headers, "Allow"))
+
         return report(process)
     finally:
         if process.poll() is None:
