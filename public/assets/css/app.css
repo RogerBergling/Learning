@@ -1220,6 +1220,9 @@ kbd { font-family: var(--mono); font-size: .74em; border: 1px solid var(--line-s
   .site-search-dialog { height: 100vh; height: 100dvh; }
   .site-search-foot { gap: .55rem; font-size: .6rem; }
 }
+@media (max-width: 360px) {
+  .nav a { padding: .35rem .22rem; font-size: .7rem; }
+}
 
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {

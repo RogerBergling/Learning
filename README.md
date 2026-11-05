@@ -217,7 +217,7 @@ Local development serves the committed fallback:
 
 ```json
 {
-  "version": "2.6.0",
+  "version": "2.6.1",
   "imageTag": "local",
   "commit": "local",
   "buildDate": null
@@ -245,7 +245,7 @@ For a manual Docker build, stamp it explicitly:
 
 ```bash
 docker build \
-  --build-arg APP_VERSION=2.6.0 \
+  --build-arg APP_VERSION=2.6.1 \
   --build-arg IMAGE_TAG=manual \
   --build-arg GIT_SHA="$(git rev-parse --short HEAD)" \
   --build-arg BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -313,12 +313,14 @@ These controls complement the application hardening already present: read-only c
 | **Learn** (`#/learn`) | Sixty-four chapters across six tracks, full-text search, TOC and completion tracking |
 | **Simulations** (`#/scenarios`) | Filter/search all 60 flows by topic, category, level, tag or keyword |
 | **Simulator** (`#/sim/{id}`) | Animated stage, live artifact vault, HTTP/CLI wire view, config and pitfalls |
-| **Compare** (`#/compare`) | JWT vs opaque, the storage matrix and a decision helper |
+| **Compare** (`#/compare`) | JWT vs opaque, the storage matrix and a decision helper (OneGate context only) |
 | **Glossary** (`#/glossary`) | OneGate terms; Docker, Git, HAProxy, ESXtop and BIND tracks have their own glossaries |
 | **Quiz** (`#/quiz`) | A 53-question knowledge check across the tracks, with saved progress |
 | **Self-check** (`#/selftest`) | Runtime validation of topics, scenarios, tokens, quizzes and all docs |
 
 The header search opens with `Ctrl+K` (or `⌘K` on macOS) and searches the full Markdown chapter text plus simulations, learning tracks, quiz questions and site pages. The Learn page keeps its own inline chapter search; both use the same Markdown index.
+
+The header navigation is context-aware. In a learning track, **Glossary** and **Quiz** point at that track's glossary and quiz; **Compare** appears only in the OneGate track. Global pages keep the cross-track navigation.
 
 The home-page track boxes and topic pages also include a **Companion project** card for Docker (`docker-mgmt`), Git (`git-create`), HAProxy (`haproxy-gui`), ESXtop (`esxtop-perf`) and BIND (`bind-gui`), with a short explanation of what each tool does and a direct GitHub link. The learning track remains the primary link.
 

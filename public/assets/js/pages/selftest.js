@@ -239,6 +239,12 @@ async function runTests() {
   add('site search dialog is mounted',
     Boolean(document.querySelector('[data-site-search-open]') && document.querySelector('[data-site-search-dialog]')));
 
+  const navLinks = [...document.querySelectorAll('.nav a')];
+  add('global navigation hides Compare outside OneGate',
+    !navLinks.some((link) => link.getAttribute('href') === '#/compare'));
+  add('global navigation hides topic glossaries outside a track',
+    !document.querySelector('.nav a[data-nav="glossary"]'));
+
   return rows;
 }
 

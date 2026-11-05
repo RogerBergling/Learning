@@ -364,6 +364,10 @@ app_text = read(JS / "app.js")
 check("case 'quiz'" in app_text, "router handles the quiz route")
 check("renderQuiz" in app_text, "router loads the quiz page")
 check("initSiteSearch" in app_text, "app boots the global search")
+check("function resolveTopic" in app_text and "function navItems" in app_text,
+      "header navigation is context-aware")
+check('data-nav="compare"' not in html, "static header does not hard-code Compare")
+check('data-nav="glossary"' not in html, "static header does not hard-code a glossary link")
 
 check("data-site-search-open" in html, "navigation exposes the global search")
 check("<dialog" in html and 'id="site-search-dialog"' in html and "data-site-search-dialog" in html,

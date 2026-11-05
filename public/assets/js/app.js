@@ -2,10 +2,12 @@ import { esc } from './markdown.js';
 import { toast } from './ui.js';
 import { loadBuildInfo, applyBuildInfo } from './version.js';
 import { initSiteSearch } from './site-search.js';
+import { docBySlug, TOPICS } from './content.js';
 
 let activePlayer = null;
 let cleanupDocListeners = null;
 let renderSequence = 0;
+let navSequence = 0;
 
 const view = document.getElementById('view');
 
@@ -30,13 +32,71 @@ const TITLES = {
   selftest: 'Self-check · Learning Lab',
 };
 
-function setNav(page) {
-  const map = { sim: 'scenarios', learn: 'learn', home: 'home', topic: 'home', scenarios: 'scenarios', compare: 'compare', glossary: 'glossary', quiz: 'quiz' };
-  document.querySelectorAll('.nav a').forEach((a) => {
-    const active = Boolean(map[page]) && a.dataset.nav === map[page];
-    a.classList.toggle('active', active);
-    if (active) a.setAttribute('aria-current', 'page');
-    else a.removeAttribute('aria-current');
+const hasTopic = (id) => Boolean(id) && Object.prototype.hasOwnProperty.call(TOPICS, id);
+
+/** Resolve the active topic from the route. Scenarios are only loaded for sim routes. */
+function resolveTopic(page, param) {
+  if (page === 'topic') return Promise.resolve(hasTopic(param) ? param : null);
+  if (page === 'learn') {
+    const doc = param ? docBySlug(param) : null;
+    return Promise.resolve(doc ? doc.topic : null);
+  }
+  if (page === 'quiz') return Promise.resolve(hasTopic(param) ? param : null);
+  if (page === 'compare' || page === 'glossary') return Promise.resolve('onegate');
+  if (page === 'sim') {
+    return import('./scenarios/index.js')
+      .then(({ scenarioById }) => scenarioById(param)?.topic || null)
+      .catch(() => null);
+  }
+  return Promise.resolve(null);
+}
+
+function glossaryLink(topic) {
+  return topic === 'onegate'
+    ? { slug: 'glossary', href: '#/glossary' }
+    : { slug: `${topic}-glossary`, href: `#/learn/${topic}-glossary` };
+}
+
+function navItems(page, param, topic) {
+  const glossary = topic ? glossaryLink(topic) : null;
+  const glossaryActive = Boolean(glossary) && (
+    page === 'glossary' || (page === 'learn' && param === glossary.slug)
+  );
+  const items = [
+    { key: 'home', label: 'Topics', href: '#/', active: page === 'home' || page === 'topic' },
+    { key: 'learn', label: 'Learn', href: '#/learn', active: page === 'learn' && !glossaryActive },
+    { key: 'scenarios', label: 'Simulations', href: '#/scenarios', active: page === 'scenarios' || page === 'sim' },
+  ];
+
+  if (topic === 'onegate') {
+    items.push({ key: 'compare', label: 'Compare', href: '#/compare', active: page === 'compare' });
+  }
+  if (glossary) {
+    items.push({ key: 'glossary', label: 'Glossary', href: glossary.href, active: glossaryActive });
+  }
+  items.push({
+    key: 'quiz',
+    label: 'Quiz',
+    href: topic ? `#/quiz/${topic}` : '#/quiz',
+    active: page === 'quiz',
+  });
+  return items;
+}
+
+function renderNav(page, param, topic) {
+  const nav = document.querySelector('.nav');
+  if (!nav) return;
+  nav.innerHTML = navItems(page, param, topic).map((item) => {
+    const active = item.active ? ' class="active" aria-current="page"' : '';
+    return `<a href="${esc(item.href)}" data-nav="${esc(item.key)}"${active}>${esc(item.label)}</a>`;
+  }).join('');
+}
+
+function setNav(page, param) {
+  const sequence = ++navSequence;
+  renderNav(page, param, null);
+  resolveTopic(page, param).then((topic) => {
+    if (sequence === navSequence) renderNav(page, param, topic);
   });
 }
 
@@ -59,7 +119,7 @@ async function render() {
   const isCurrent = () => sequence === renderSequence;
 
   teardown();
-  setNav(page);
+  setNav(page, param);
   document.title = TITLES[page] || TITLES.home;
   window.scrollTo({ top: 0, behavior: 'instant' });
 

@@ -56,6 +56,13 @@ scenario notes for the wording.
   and dependency-free.
 - Explain the security consequence, not just the configuration field.
 
+## Navigation
+
+The header is context-aware. `Compare` is OneGate-only; the Glossary and Quiz
+links follow the active track. Derive the context from `TOPICS`, `DOCS` and the
+scenario `topic` values in `app.js`; do not hard-code per-page navigation in
+`index.html`.
+
 ## Search, quiz and progress
 
 - The header search and the Learn page share the same Markdown chapter index in
