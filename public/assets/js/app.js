@@ -1,6 +1,7 @@
 import { esc } from './markdown.js';
 import { toast } from './ui.js';
 import { loadBuildInfo, applyBuildInfo } from './version.js';
+import { initSiteSearch } from './site-search.js';
 
 let activePlayer = null;
 let cleanupDocListeners = null;
@@ -199,6 +200,7 @@ export async function loadDoc(slug, { fresh = false } = {}) {
 /* -------------------------------------------------------------------- boot */
 
 initTheme();
+initSiteSearch();
 hydrateBuildInfo();
 window.addEventListener('hashchange', render);
 if (document.readyState === 'loading') {

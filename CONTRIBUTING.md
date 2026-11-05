@@ -58,8 +58,10 @@ scenario notes for the wording.
 
 ## Search, quiz and progress
 
-- The Learn search index is built from the same Markdown files; do not add a
-  second content index.
+- The header search and the Learn page share the same Markdown chapter index in
+  `search.js`; do not add a second chapter index. Simulations, learning tracks,
+  quiz questions and static pages are indexed from their existing registries in
+  the same module.
 - Quiz questions live in `public/assets/js/quiz-data.js`. Every question needs
   a unique id, a `track` from `TOPICS`, an area label, an in-range answer, an
   explanation and a `#/learn/...` or `#/sim/...` link. The self-check validates

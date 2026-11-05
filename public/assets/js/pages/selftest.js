@@ -5,7 +5,7 @@ import { KINDS, STORES, materialize, decodeJwt, mockJwt } from '../tokens.js';
 import { render } from '../markdown.js';
 import { loadDoc } from '../app.js';
 import { QUIZ } from '../quiz-data.js';
-import { searchChapters } from '../search.js';
+import { searchChapters, searchStaticSite } from '../search.js';
 import { getProgress, progressSummary } from '../progress.js';
 import { esc, icon } from '../ui.js';
 
@@ -215,6 +215,29 @@ async function runTests() {
   const pkceResults = await searchChapters('PKCE');
   add('chapter search finds PKCE', pkceResults.some((r) => r.slug === '02-oidc-basics' || r.slug === '07-tokens-and-lifecycle'),
     `${pkceResults.length} matching sections`);
+
+  const dockerSearch = searchStaticSite('docker');
+  add('site search finds simulations',
+    dockerSearch.some((group) => group.id === 'simulations' && group.items.some((item) => item.href === '#/sim/docker-run')),
+    dockerSearch.map((group) => `${group.id}:${group.items.length}`).join(', '));
+
+  const topicSearch = searchStaticSite('bind');
+  add('site search finds learning tracks',
+    topicSearch.some((group) => group.id === 'topics' && group.items.some((item) => item.href === '#/topic/bind')),
+    topicSearch.map((group) => `${group.id}:${group.items.length}`).join(', '));
+
+  const quizSearch = searchStaticSite('PKCE');
+  add('site search finds quiz questions', quizSearch.some((group) => group.id === 'quiz'),
+    quizSearch.map((group) => `${group.id}:${group.items.length}`).join(', '));
+
+  const pageSearch = searchStaticSite('selftest');
+  add('site search finds site pages',
+    pageSearch.some((group) => group.id === 'pages' && group.items.some((item) => item.href === '#/selftest')),
+    pageSearch.map((group) => `${group.id}:${group.items.length}`).join(', '));
+
+  add('site search ignores empty queries', searchStaticSite('').length === 0);
+  add('site search dialog is mounted',
+    Boolean(document.querySelector('[data-site-search-open]') && document.querySelector('[data-site-search-dialog]')));
 
   return rows;
 }

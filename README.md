@@ -4,7 +4,7 @@
 
 An interactive, offline learning platform for **OneGate federation, Docker on Linux, Git & GHCR, HAProxy, ESXi performance and BIND DNS**. Choose a track, read the chapters, run the animated simulations and verify each flow step by step.
 
-**Six learning tracks. Sixty-four written chapters. Sixty animated simulations. A 53-question quiz with local progress.** No build step, no runtime dependencies; once the image or files are present, the lab runs offline.
+**Six learning tracks. Sixty-four written chapters. Sixty animated simulations. A 53-question quiz with local progress and site-wide search in the header.** No build step, no runtime dependencies; once the image or files are present, the lab runs offline.
 
 ```text
 Topics → chapters → simulations → live artifact vault → quiz
@@ -217,7 +217,7 @@ Local development serves the committed fallback:
 
 ```json
 {
-  "version": "2.5.1",
+  "version": "2.6.0",
   "imageTag": "local",
   "commit": "local",
   "buildDate": null
@@ -245,7 +245,7 @@ For a manual Docker build, stamp it explicitly:
 
 ```bash
 docker build \
-  --build-arg APP_VERSION=2.5.1 \
+  --build-arg APP_VERSION=2.6.0 \
   --build-arg IMAGE_TAG=manual \
   --build-arg GIT_SHA="$(git rev-parse --short HEAD)" \
   --build-arg BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -308,6 +308,7 @@ These controls complement the application hardening already present: read-only c
 | Page | What it does |
 |---|---|
 | **Topics** (`#/`) | Choose OneGate federation, Docker on Linux, Git & GHCR, HAProxy, ESXtop or BIND & DNS |
+| **Search** (`Ctrl/⌘ K`) | Search every chapter section, simulation, learning track, quiz question and site page from the header |
 | **Topic pages** (`#/topic/{id}`) | A guided path, chapter groups, simulations, progress and glossary for one track |
 | **Learn** (`#/learn`) | Sixty-four chapters across six tracks, full-text search, TOC and completion tracking |
 | **Simulations** (`#/scenarios`) | Filter/search all 60 flows by topic, category, level, tag or keyword |
@@ -316,6 +317,8 @@ These controls complement the application hardening already present: read-only c
 | **Glossary** (`#/glossary`) | OneGate terms; Docker, Git, HAProxy, ESXtop and BIND tracks have their own glossaries |
 | **Quiz** (`#/quiz`) | A 53-question knowledge check across the tracks, with saved progress |
 | **Self-check** (`#/selftest`) | Runtime validation of topics, scenarios, tokens, quizzes and all docs |
+
+The header search opens with `Ctrl+K` (or `⌘K` on macOS) and searches the full Markdown chapter text plus simulations, learning tracks, quiz questions and site pages. The Learn page keeps its own inline chapter search; both use the same Markdown index.
 
 The home-page track boxes and topic pages also include a **Companion project** card for Docker (`docker-mgmt`), Git (`git-create`), HAProxy (`haproxy-gui`), ESXtop (`esxtop-perf`) and BIND (`bind-gui`), with a short explanation of what each tool does and a direct GitHub link. The learning track remains the primary link.
 
@@ -644,7 +647,8 @@ Learning/
 │   │       ├── markdown.js       Dependency-free Markdown renderer + TOC
 │   │       ├── progress.js       Local-only chapter/quiz progress
 │   │       ├── quiz-data.js      Quiz questions, answers and explanations
-│   │       ├── search.js         Full-text chapter index and snippets
+│   │       ├── search.js         Full-text chapter index and structured site search
+│   │       ├── site-search.js    Header search dialog and keyboard navigation
 │   │       ├── tokens.js         Simulated JWTs, stores, token kinds
 │   │       ├── ui.js             Icons, toast, helpers
 │   │       ├── version.js        Build metadata + local clock formatting
@@ -689,7 +693,7 @@ To add a scenario, create a file in `public/assets/js/scenarios/`, export the ob
 
 ## Verification
 
-- **Static checks** (`python3 scripts/verify.py`) validate the document and scenario registries, quiz data, internal links, actors, token stores, assets, packaging metadata and server headers without a browser.
+- **Static checks** (`python3 scripts/verify.py`) validate the document and scenario registries, quiz data, internal links, actors, token stores, assets, search wiring, packaging metadata and server headers without a browser.
 - **Smoke test** (`python3 scripts/smoke.py`) starts the real `start.py` launcher on a free port and checks the app shell, ES modules, Markdown, known SPA routes, unknown-path 404s, `HEAD`, the `Server` header and security headers.
 - **Self-check** (`#/selftest`) validates scenario shape, actor IDs, channels, vault operations, token kinds, Markdown rendering and every doc fetch at runtime. It should report 100%.
 - **curl** the routes: `/`, `/assets/js/app.js`, `/docs/01-architecture.md`, `/version.json`, `/sim/bff-login` should be 200; `/.git/config`, `/admin` and `/server` should be 404.

@@ -93,6 +93,8 @@ def main() -> int:
         status, headers, body = fetch(f"{base}/")
         check(status == 200, "GET / returns 200", str(status))
         check(b"<main id=\"view\"" in body, "app shell contains the router mount")
+        check(b"data-site-search-open" in body, "app shell contains the global search trigger")
+        check(b"id=\"site-search-dialog\"" in body, "app shell contains the global search dialog")
         check("default-src 'self'" in header(headers, "Content-Security-Policy"),
               "CSP header is present")
         check(header(headers, "X-Content-Type-Options") == "nosniff", "nosniff header is present")
@@ -103,6 +105,12 @@ def main() -> int:
         check("javascript" in header(headers, "Content-Type"), "ES module MIME type",
               header(headers, "Content-Type"))
         check(len(body) > 500, "ES module has content")
+
+        status, headers, body = fetch(f"{base}/assets/js/site-search.js")
+        check(status == 200, "search module returns 200", str(status))
+        check("javascript" in header(headers, "Content-Type"), "search module MIME type",
+              header(headers, "Content-Type"))
+        check(len(body) > 500, "search module has content")
 
         status, headers, body = fetch(f"{base}/assets/css/app.css")
         check(status == 200, "stylesheet returns 200", str(status))

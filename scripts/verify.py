@@ -75,6 +75,7 @@ REQUIRED = [
     "public/assets/js/progress.js",
     "public/assets/js/quiz-data.js",
     "public/assets/js/search.js",
+    "public/assets/js/site-search.js",
     "public/assets/js/tokens.js",
     "public/assets/js/version.js",
     "public/assets/js/pages/quiz.js",
@@ -362,6 +363,21 @@ check("#/quiz" in html, "navigation exposes the quiz")
 app_text = read(JS / "app.js")
 check("case 'quiz'" in app_text, "router handles the quiz route")
 check("renderQuiz" in app_text, "router loads the quiz page")
+check("initSiteSearch" in app_text, "app boots the global search")
+
+check("data-site-search-open" in html, "navigation exposes the global search")
+check("<dialog" in html and 'id="site-search-dialog"' in html and "data-site-search-dialog" in html,
+      "global search dialog exists")
+check("data-site-search-input" in html and 'aria-controls="site-search-results"' in html,
+      "global search dialog has a combobox")
+check("data-site-search-results" in html and "data-site-search-status" in html,
+      "global search dialog has results and a live status")
+
+search_text = read(JS / "search.js")
+check("export function searchStaticSite" in search_text, "site search indexes structured content")
+check("const STATIC_RECORDS = buildStaticRecords()" in search_text, "static search index is built")
+check("QUIZ" in search_text and "SCENARIOS" in search_text and "STATIC_PAGES" in search_text,
+      "site search covers quiz, simulations and pages")
 
 license = read(ROOT / "LICENSE")
 check("MIT License" in license, "LICENSE is MIT")
