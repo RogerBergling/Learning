@@ -255,6 +255,35 @@ code, kbd, pre { font-family: var(--mono); font-size: .88em; }
 .topic-stats span { display: block; color: var(--dim); font-size: .66rem; text-transform: uppercase; letter-spacing: .08em; }
 .topic-side .dim { font-size: .74rem; margin: .6rem 0 .8rem; }
 .topic-links { display: flex; gap: .4rem; flex-wrap: wrap; }
+.topic-project {
+  display: flex; flex-direction: column; gap: .22rem; margin-top: 1rem; padding: .85rem .9rem;
+  border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 5%, var(--panel)); color: var(--text);
+  text-decoration: none; transition: transform .15s ease, border-color .15s ease, background .15s ease;
+}
+.topic-project:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: color-mix(in srgb, var(--accent) 8%, var(--panel)); }
+.topic-project.ok { border-left-color: var(--ok); background: color-mix(in srgb, var(--ok) 5%, var(--panel)); }
+.topic-project.ok:hover { border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); background: color-mix(in srgb, var(--ok) 8%, var(--panel)); }
+.topic-project.orange { border-left-color: var(--orange); background: color-mix(in srgb, var(--orange) 5%, var(--panel)); }
+.topic-project.orange:hover { border-color: color-mix(in srgb, var(--orange) 45%, var(--line)); background: color-mix(in srgb, var(--orange) 8%, var(--panel)); }
+.topic-project.violet { border-left-color: var(--accent-2); background: color-mix(in srgb, var(--accent-2) 5%, var(--panel)); }
+.topic-project.violet:hover { border-color: color-mix(in srgb, var(--accent-2) 45%, var(--line)); background: color-mix(in srgb, var(--accent-2) 8%, var(--panel)); }
+.topic-project.teal { border-left-color: var(--teal); background: color-mix(in srgb, var(--teal) 5%, var(--panel)); }
+.topic-project.teal:hover { border-color: color-mix(in srgb, var(--teal) 45%, var(--line)); background: color-mix(in srgb, var(--teal) 8%, var(--panel)); }
+.topic-project.pink { border-left-color: var(--pink); background: color-mix(in srgb, var(--pink) 5%, var(--panel)); }
+.topic-project.pink:hover { border-color: color-mix(in srgb, var(--pink) 45%, var(--line)); background: color-mix(in srgb, var(--pink) 8%, var(--panel)); }
+.topic-project-eyebrow { display: inline-flex; align-items: center; gap: .35rem; color: var(--dim); font-size: .62rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.topic-project strong { font-size: .92rem; line-height: 1.2; }
+.topic-project-label { color: var(--muted); font-size: .7rem; }
+.topic-project p { margin: .18rem 0 .2rem; color: var(--muted); font-size: .76rem; line-height: 1.42; }
+.topic-project ul { margin: .05rem 0 .3rem; padding-left: 1.05rem; color: var(--muted); font-size: .72rem; line-height: 1.45; }
+.topic-project li { margin: .14rem 0; }
+.topic-project-link { display: inline-flex; align-items: center; gap: .3rem; margin-top: .15rem; color: var(--accent); font-size: .74rem; font-weight: 600; }
+.topic-project.ok .topic-project-link { color: var(--ok); }
+.topic-project.orange .topic-project-link { color: var(--orange); }
+.topic-project.violet .topic-project-link { color: var(--accent-2); }
+.topic-project.teal .topic-project-link { color: var(--teal); }
+.topic-project.pink .topic-project-link { color: var(--pink); }
 
 .topic-learn-block { border-bottom: 1px solid var(--line); padding-bottom: 1.4rem; }
 .topic-learn-head { margin-bottom: .8rem; }

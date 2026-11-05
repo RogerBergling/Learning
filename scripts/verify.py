@@ -427,6 +427,13 @@ check(re.search(r"def version_string\(self\).*?return self\.server_version", py_
 check("## Public internet exposure" in readme,
       "README documents public-internet exposure guidance")
 
+projects_block = section(content, "const COMPANION_PROJECTS = {", "\n};")
+for repo in ("docker-mgmt", "git-create", "haproxy-gui", "esxtop-perf", "bind-gui"):
+    check(f"https://github.com/RogerBergling/{repo}" in projects_block,
+          f"companion project link exists: {repo}")
+check(len(re.findall(r"project: COMPANION_PROJECTS\.\w+", content)) == 5,
+      "five topics declare a companion project")
+
 # ------------------------------------------------------------------------ report
 
 if failures:

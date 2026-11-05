@@ -506,6 +506,64 @@ export const CHAPTERS = [
 
 export const docBySlug = (slug) => DOCS.find((d) => d.slug === slug);
 
+const COMPANION_PROJECTS = {
+  docker: {
+    name: 'docker-mgmt',
+    label: 'Docker Compose updater',
+    url: 'https://github.com/RogerBergling/docker-mgmt',
+    summary: 'A safer, menu-driven way to inspect and update Docker Compose services on one host.',
+    features: [
+      'Scans your Compose files and shows what is actually running',
+      'Checks image updates without restarting anything',
+      'Applies updates only after an explicit confirmation',
+    ],
+  },
+  git: {
+    name: 'git-create',
+    label: 'Git & GitHub assistant',
+    url: 'https://github.com/RogerBergling/git-create',
+    summary: 'A safe, menu-driven Git and GitHub assistant for Linux with no third-party dependencies.',
+    features: [
+      'Creates, clones, publishes and verifies repositories',
+      'Scans many repositories and flags missing settings or secret files',
+      'Explains commands and protects shared history from accidental rewrites',
+    ],
+  },
+  haproxy: {
+    name: 'haproxy-gui',
+    label: 'HAProxy configuration studio',
+    url: 'https://github.com/RogerBergling/haproxy-gui',
+    summary: 'A local-first HAProxy workbench for importing, understanding and safely changing configurations.',
+    features: [
+      'Imports and analyzes configs with explainable findings',
+      'Visualizes routing and simulates requests',
+      'Plans services, compares versions and exports reviewed changes',
+    ],
+  },
+  esxtop: {
+    name: 'esxtop-perf',
+    label: 'ESXtop Lens',
+    url: 'https://github.com/RogerBergling/esxtop-perf',
+    summary: 'Turns a raw esxtop batch capture into a drillable performance diagnosis.',
+    features: [
+      'Imports PDH-CSV or gzip captures',
+      'Charts every counter and applies transparent threshold rules',
+      'Explains findings and the next checks to run',
+    ],
+  },
+  bind: {
+    name: 'bind-gui',
+    label: 'BIND configuration studio',
+    url: 'https://github.com/RogerBergling/bind-gui',
+    summary: 'A local-first BIND workbench for importing, understanding and safely exporting DNS configuration.',
+    features: [
+      'Imports, explains and analyzes named.conf and zone files',
+      'Compares changes and inspects DNSSEC state',
+      'Exports a validated bundle with a manifest and checks',
+    ],
+  },
+};
+
 export const TOPICS = {
   onegate: {
     id: 'onegate',
@@ -544,6 +602,7 @@ export const TOPICS = {
     eyebrow: 'Containers, Compose & operations',
     icon: 'box',
     accent: 'ok',
+    project: COMPANION_PROJECTS.docker,
     summary: 'Run, inspect, debug and ship containers on your own Linux machine. Learn the Dockerfile, Compose, storage, networking, hardening and GHCR update loop.',
     description: 'A practical container track built around commands you will actually run. Start with the mental model, then move through builds, container lifecycle, volumes, networks, Compose and production operations.',
     outcomes: [
@@ -569,6 +628,7 @@ export const TOPICS = {
     eyebrow: 'Version control & delivery',
     icon: 'branch',
     accent: 'orange',
+    project: COMPANION_PROJECTS.git,
     summary: 'Learn Git from the object model to a safe daily workflow, then take a commit all the way through tags, GitHub Actions and a verified GHCR deployment.',
     description: 'A safety-first Git track. Understand the index, branches, merge/rebase, undo and recovery, remote authentication, global settings, secret hygiene and the release pipeline.',
     outcomes: [
@@ -596,6 +656,7 @@ export const TOPICS = {
     eyebrow: 'Proxying, TLS & traffic control',
     icon: 'proxy',
     accent: 'violet',
+    project: COMPANION_PROJECTS.haproxy,
     summary: 'Learn how HAProxy receives a connection, applies ACLs, chooses a backend, balances servers and survives TLS, timeouts and failures — without an editor or live debug console.',
     description: 'A traffic-control track built around the request path: bind/TLS → ACL order → backend → server → response. The lab teaches the model and simulations; use the official HAProxy manual and haproxy -c for real deployments.',
     outcomes: [
@@ -621,6 +682,7 @@ export const TOPICS = {
     eyebrow: 'ESXi performance & support triage',
     icon: 'activity',
     accent: 'teal',
+    project: COMPANION_PROJECTS.esxtop,
     summary: 'Read esxtop like a level-3 support engineer: capture the right counters, separate CPU ready from limits, follow storage latency through DAVG/KAVG/GAVG, inspect memory reclaim and NUMA, then turn findings into a verified action plan.',
     description: 'A simulation-only ESXi performance track built around the counter path. Every host, VM, datastore and packet is modeled — no real ESXi host or credentials are required. Covers interactive, batch, replay and focused -c captures, CPU/memory/storage/network counters, thresholds, false positives, large-sample sizing and reporting.',
     outcomes: [
@@ -649,6 +711,7 @@ export const TOPICS = {
     eyebrow: 'DNS, zones, DNSSEC & operations',
     icon: 'dns',
     accent: 'pink',
+    project: COMPANION_PROJECTS.bind,
     summary: 'Learn BIND from a home resolver to a signed authoritative pair: zones, records, delegation, DNSSEC, recursion policy, transfers, TSIG, views, RPZ, operations and troubleshooting.',
     description: 'A simulation-only DNS track for home users and advanced administrators. Every query, zone, key, transfer and resolver is modeled — no real BIND server, DNS port or credential is used. Start with the DNS mental model, then move through named.conf, zone files, delegation, DNSSEC, hardening and live-style dig diagnosis.',
     outcomes: [
