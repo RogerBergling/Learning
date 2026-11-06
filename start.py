@@ -149,7 +149,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
 
     def log_message(self, fmt: str, *args) -> None:
-        sys.stderr.write("  %s\n" % (fmt % args))
+        message = "".join(
+            char if char.isprintable() else " "
+            for char in (fmt % args)
+        )
+        if len(message) > 512:
+            message = f"{message[:509]}..."
+        sys.stderr.write("  %s\n" % message)
 
 
 def port_available(host: str, port: int) -> bool:

@@ -1,6 +1,5 @@
 import { DOCS, TOPICS, TOPIC_ORDER } from '../content.js';
 import { SCENARIOS, scenariosByTopic, scenarioById } from '../scenarios/index.js';
-import { formatLocalClock } from '../version.js';
 import { scenarioCard } from './cards.js';
 import { progressSummary } from '../progress.js';
 import { icon, esc } from '../ui.js';
@@ -70,6 +69,7 @@ export function renderHome(view) {
 
     <section class="deploy-status" aria-label="Deployment and clock information">
       <span class="pill">Version <strong data-app-version>dev</strong></span>
+      <span class="pill">Build <strong data-build-number>local</strong></span>
       <span class="pill">Image <strong data-image-tag>local</strong></span>
       <span class="pill">Commit <strong data-commit>local</strong></span>
       <span class="pill">Built <span data-build-date>local build</span></span>
@@ -118,20 +118,4 @@ export function renderHome(view) {
         <a href="#/selftest">Run the self-check</a> if something looks broken.</p>
     </div>
   `;
-
-  const clock = view.querySelector('[data-clock]');
-  if (clock) {
-    let timer = null;
-    const tick = () => {
-      if (!document.body.contains(clock)) {
-        clearInterval(timer);
-        return;
-      }
-      const now = new Date();
-      clock.textContent = formatLocalClock(now);
-      clock.dateTime = now.toISOString();
-    };
-    tick();
-    timer = setInterval(tick, 1000);
-  }
 }

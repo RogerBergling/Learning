@@ -393,6 +393,14 @@ check(package.get("type") == "module", "package.json uses ES modules")
 check("start" in package.get("scripts", {}), "package.json has a start script")
 check(package.get("license") == "MIT", "package.json declares the MIT license")
 
+index_html = read(PUBLIC / "index.html")
+for marker in ("data-build-number", "data-live-clock", "data-build-date"):
+    check(marker in index_html, f"index.html build stamp slot: {marker}")
+
+version_js = read(JS / "version.js")
+for marker in ("hourCycle: 'h23'", "data-build-number", "buildNumber", "formatBuildDate"):
+    check(marker in version_js, f"version.js build/clock marker: {marker}")
+
 version_info = json.loads(read(PUBLIC / "version.json"))
 check(version_info.get("version") == package.get("version"), "version.json matches package.json",
       f"{version_info.get('version')} vs {package.get('version')}")

@@ -332,6 +332,8 @@ html.search-open { overflow: hidden; }
 .deploy-status .pill time { color: var(--text); font-family: var(--mono); font-weight: 600; font-size: .72rem; }
 .deploy-status .pill a { color: inherit; }
 .build-stamp { word-break: break-word; }
+.build-stamp a { color: inherit; }
+.build-stamp time { font-family: var(--mono); color: var(--text); }
 
 /* ---------- topics / learning hub ---------- */
 .topic-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }

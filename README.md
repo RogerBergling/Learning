@@ -199,15 +199,16 @@ If you meant Docker Hub rather than GHCR, the same workflow can also push there 
 
 ### Version and deployment status
 
-The home page shows a deployment stamp:
+The home page and footer show the same deployment stamp:
 
 - **Version** — the application version from `package.json`
+- **Build** — the UTC build timestamp as `YYYYMMDD.HHMM`
 - **Image** — the Docker tag/ref produced by the publish workflow
-- **Commit** — the short Git SHA baked into the image
-- **Built** — the UTC build timestamp
-- **Local time** — a live clock in the visitor's browser
+- **Commit** — the 12-character Git SHA baked into the image
+- **Built** — the UTC build timestamp, always displayed with a 24-hour clock
+- **Local time** — a live clock in the visitor's browser, forced to a 24-hour cycle in every locale
 
-The same version, image tag, commit and build date appear in the footer of every page. The raw metadata is available at:
+The same version, build, image, commit, build date and clock appear in the footer of every page. The raw metadata is available at:
 
 ```text
 /version.json
@@ -217,14 +218,14 @@ Local development serves the committed fallback:
 
 ```json
 {
-  "version": "2.6.1",
+  "version": "2.6.2",
   "imageTag": "local",
   "commit": "local",
   "buildDate": null
 }
 ```
 
-The Docker build overwrites that file with real build metadata. The publish workflow passes `APP_VERSION` from `package.json`, `IMAGE_TAG` from the generated image metadata, `GIT_SHA`, and a UTC `BUILD_DATE` as Docker build arguments.
+The Docker build overwrites that file with real build metadata. The publish workflow passes `APP_VERSION` from `package.json`, `IMAGE_TAG` from the generated image metadata, `GIT_SHA`, and a UTC `BUILD_DATE` as Docker build arguments. The build number is derived in the browser from `buildDate` as `YYYYMMDD.HHMM`, so the JSON schema is unchanged.
 
 To verify that a web server has pulled the newest image:
 
@@ -245,7 +246,7 @@ For a manual Docker build, stamp it explicitly:
 
 ```bash
 docker build \
-  --build-arg APP_VERSION=2.6.1 \
+  --build-arg APP_VERSION=2.6.2 \
   --build-arg IMAGE_TAG=manual \
   --build-arg GIT_SHA="$(git rev-parse --short HEAD)" \
   --build-arg BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
