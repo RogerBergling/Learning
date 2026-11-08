@@ -116,6 +116,9 @@ function listen(port) {
         else res.destroy();
       });
     });
+    server.requestTimeout = 30_000;
+    server.headersTimeout = 10_000;
+    server.keepAliveTimeout = 5_000;
     const onError = (err) => reject(err);
     server.once('error', onError);
     server.listen(port, host, () => {

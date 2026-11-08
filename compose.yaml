@@ -12,7 +12,7 @@ services:
     mem_reservation: 32m
     memswap_limit: 100m      # same as mem_limit = no swap
     ports:
-      - "8003:8080"
+      - "127.0.0.1:8003:8080"
     restart: unless-stopped
     pull_policy: always
     read_only: true

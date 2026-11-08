@@ -78,6 +78,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     # Do not disclose the Python runtime version in the Server response header.
     server_version = "LearningLab"
     sys_version = ""
+    # Bound slow or idle clients so one connection cannot pin a handler thread.
+    timeout = 15
 
     def version_string(self) -> str:  # noqa: N802 (stdlib naming)
         return self.server_version
