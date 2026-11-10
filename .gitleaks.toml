@@ -1,0 +1,7 @@
+title = "Learning Lab Gitleaks configuration"
+
+[allowlist]
+description = "Documentation example access token is intentionally synthetic"
+paths = [
+  '''public/docs/08-server-to-server\.md$''',
+]
